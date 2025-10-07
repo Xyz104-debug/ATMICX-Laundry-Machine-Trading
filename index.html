@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ATMICX Admin Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2e79b1;
+      --sidebar-bg: #2e79b1;
+      --topbar-bg: #ffffff;
+      --content-bg: #f3f4f6;
+      --text-dark: #1f2937;
+      --text-light: #6b7280;
+      --white: #ffffff;
+      --border: #e5e7eb;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--content-bg);
+      height: 100vh;
+      display: flex;
+    }
+
+    /* 📌 SIDEBAR */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 230px;
+      height: 100vh;
+      background: var(--sidebar-bg);
+      color: var(--white);
+      display: flex;
+      flex-direction: column;
+      padding-top: 1rem;
+    }
+
+    .sidebar h2 {
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      letter-spacing: 1px;
+    }
+
+    .sidebar ul {
+      list-style: none;
+    }
+
+    .sidebar ul li {
+      padding: 12px 20px;
+      cursor: pointer;
+      color: var(--white);
+      opacity: 0.9;
+      transition: background 0.2s, opacity 0.2s;
+    }
+
+    .sidebar ul li:hover,
+    .sidebar ul li.active {
+      background: rgba(255, 255, 255, 0.15);
+      opacity: 1;
+    }
+
+    /* 🧭 TOPBAR */
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 230px;
+      right: 0;
+      height: 60px;
+      background: var(--topbar-bg);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.5rem;
+      border-bottom: 1px solid var(--border);
+      z-index: 10;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .topbar-left img {
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .topbar-left span {
+      font-weight: 800;
+      font-size: 1.2rem;
+      letter-spacing: 0.5px;
+      color: var(--text-dark);
+    }
+
+    /* 👤 Profile / Sign Up */
+    .profile {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+      color: var(--text-dark);
+      padding: 6px 10px;
+      border-radius: 20px;
+      transition: background 0.2s ease, color 0.2s ease;
+      cursor: pointer;
+    }
+
+    .profile img {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .profile:hover {
+      background: var(--primary);
+      color: var(--white);
+    }
+
+    .profile:hover img {
+      border: 2px solid var(--white);
+    }
+
+    /* 📝 MAIN CONTENT */
+    .main {
+      margin-left: 230px;
+      margin-top: 60px;
+      padding: 1.5rem;
+      overflow-y: auto;
+      height: calc(100vh - 60px);
+      width: calc(100% - 230px);
+    }
+
+    .main h1 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: var(--text-dark);
+      margin-bottom: 1rem;
+    }
+
+    /* 📊 STAT BOXES */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .stat-box {
+      background: var(--white);
+      padding: 15px;
+      text-align: center;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .stat-box h3 {
+      font-size: 0.9rem;
+      margin-bottom: 10px;
+      color: var(--text-dark);
+    }
+
+    .stat-box p {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    /* 📦 CONTENT BOXES */
+    .box {
+      background: var(--white);
+      padding: 15px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .box h4 {
+      font-size: 1rem;
+      margin-bottom: 10px;
+      color: var(--text-dark);
+    }
+
+    .box ul {
+      list-style: none;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: var(--text-light);
+    }
+
+    .box ul li::before {
+      content: "• ";
+      color: var(--primary);
+    }
+
+    /* 📱 Responsive */
+    @media (max-width: 768px) {
+      .sidebar {
+        display: none;
+      }
+      .topbar {
+        left: 0;
+      }
+      .main {
+        margin-left: 0;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- 📌 SIDEBAR -->
+<div class="sidebar">
+  <h2>ADMIN</h2>
+  <ul>
+    <li class="active" onclick="showSection('overview', event)">Overview</li>
+    <li onclick="showSection('users', event)">User Management</li>
+    <li onclick="showSection('jobs', event)">Job Posts</li>
+    <li onclick="showSection('payments', event)">Payments</li>
+    <li onclick="showSection('reports', event)">Reports</li>
+    <li onclick="showSection('settings', event)">Settings</li>
+  </ul>
+</div>
+
+<!-- 🧭 TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <img src="https://scontent.fcrk4-2.fna.fbcdn.net/v/t39.30808-6/347256926_553654376920802_2011026051783363563_n.jpg?_nc_cat=109&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeGn5MGUmOqGfWI16T8lMXomusv4dB9KAXW6y_h0H0oBdcRROjCgd9VsdLYgM5srzCAl5JJfZj5RVCjIhNMkwXMi&_nc_ohc=ARys2ugI7j0Q7kNvwEChoiN&_nc_oc=AdkDH-DV_IcKrMnOCZisRkPVTU4a7Q1wrgXL6Yi15X0zyPX7E74zww62iShZfXPgwOA&_nc_zt=23&_nc_ht=scontent.fcrk4-2.fna&_nc_gid=mRYcPOx876hWkBCJ-aUKug&oh=00_Afdit6RGp12qAEX4hwmuskDtzDLBVITYDyPqIstUdCefHA&oe=68EB16EC" alt="Logo">
+    <span>ATMICX Laundry Machine Trading</span>
+  </div>
+
+  <div class="profile">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Default_pfp.jpg/600px-Default_pfp.jpg" alt="Admin">
+    <span>Sign Up</span>
+  </div>
+</div>
+
+<!-- 📝 MAIN CONTENT -->
+<div class="main">
+  <h1 id="page-title">Overview</h1>
+
+  <section id="overview" class="section">
+    <div class="stats">
+      <div class="stat-box"><h3>Active Service Technicians</h3><p>12</p></div>
+      <div class="stat-box"><h3>Active Clients</h3><p>45</p></div>
+      <div class="stat-box"><h3>Total Projects</h3><p>80</p></div>
+      <div class="stat-box"><h3>Completed Projects</h3><p>50</p></div>
+    </div>
+
+    <div class="box">
+      <h4>📝 Pending Job & Service Approvals</h4>
+      <ul>
+        <li>Washer installation - Cebu Branch</li>
+        <li>Dryer maintenance - Bacolod</li>
+        <li>New client onboarding - Laundry Express</li>
+      </ul>
+    </div>
+
+    <div class="box">
+      <h4>📊 Reports & Financial Overview</h4>
+      <ul>
+        <li>Total Sales This Month: ₱150,000</li>
+        <li>Released Payments: ₱95,000</li>
+        <li>Pending Invoices: 2 cases</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="users" class="section" style="display:none;">
+    <div class="box"><h4>User Management</h4><p>Manage admins, sales agents, and technicians here.</p></div>
+  </section>
+  <section id="jobs" class="section" style="display:none;">
+    <div class="box"><h4>Job Posts</h4><p>View and approve service/job requests.</p></div>
+  </section>
+  <section id="payments" class="section" style="display:none;">
+    <div class="box"><h4>Payments</h4><p>Track invoices, payments, and disputes.</p></div>
+  </section>
+  <section id="reports" class="section" style="display:none;">
+    <div class="box"><h4>Reports</h4><p>Generate and view financial or service performance reports.</p></div>
+  </section>
+  <section id="settings" class="section" style="display:none;">
+    <div class="box"><h4>Settings</h4><p>Configure account settings and system preferences.</p></div>
+  </section>
+</div>
+
+<script>
+  function showSection(sectionId, e) {
+    document.querySelectorAll('.section').forEach(sec => sec.style.display = 'none');
+    document.getElementById(sectionId).style.display = 'block';
+    document.getElementById('page-title').innerText = sectionId.charAt(0).toUpperCase() + sectionId.slice(1);
+    document.querySelectorAll('.sidebar ul li').forEach(li => li.classList.remove('active'));
+    e.target.classList.add('active');
+  }
+</script>
+
+</body>
+</html>

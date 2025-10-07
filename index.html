@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>ATMICX Admin Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
       --primary: #2e79b1;
@@ -17,11 +19,7 @@
       --border: #e5e7eb;
     }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: 'Inter', sans-serif;
@@ -30,53 +28,111 @@
       display: flex;
     }
 
-    /* 📌 SIDEBAR */
+    /* 📌 SIDEBAR (Redesigned Layout) */
     .sidebar {
       position: fixed;
       top: 0;
       left: 0;
-      width: 230px;
+      width: 250px;
       height: 100vh;
       background: var(--sidebar-bg);
       color: var(--white);
       display: flex;
       flex-direction: column;
-      padding-top: 1rem;
+      justify-content: space-between;
+      border-top-right-radius: 50px;
+      border-bottom-right-radius: 50px;
+      overflow: hidden;
+      padding: 1.5rem 1rem;
     }
 
-    .sidebar h2 {
-      text-align: center;
-      font-size: 1.1rem;
-      font-weight: 700;
-      margin-bottom: 1.5rem;
-      letter-spacing: 1px;
+    .profile-section {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      margin-bottom: 2rem;
+      padding: 0 0.5rem;
+    }
+    .profile-section img {
+      width: 55px;
+      height: 55px;
+      border-radius: 50%;
+      border: 3px solid rgba(255, 255, 255, 0.2);
+      object-fit: cover;
+    }
+    .profile-info h3 {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .profile-info p {
+      font-size: 0.8rem;
+      opacity: 0.8;
     }
 
-    .sidebar ul {
+    .nav-menu {
       list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
-
-    .sidebar ul li {
-      padding: 12px 20px;
+    .nav-menu li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 15px;
+      border-radius: 10px;
       cursor: pointer;
+      transition: all 0.3s;
       color: var(--white);
       opacity: 0.9;
-      transition: background 0.2s, opacity 0.2s;
     }
-
-    .sidebar ul li:hover,
-    .sidebar ul li.active {
+    .nav-menu li i {
+      width: 20px;
+      text-align: center;
+    }
+    .nav-menu li:hover,
+    .nav-menu li.active {
       background: rgba(255, 255, 255, 0.15);
       opacity: 1;
+    }
+
+    .active-users {
+      margin-top: auto;
+      padding: 1rem 0.5rem 0.5rem;
+    }
+    .active-users p {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      opacity: 0.8;
+      margin-bottom: 0.5rem;
+    }
+    .avatars {
+      display: flex;
+      align-items: center;
+    }
+    .avatars img {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 2px solid var(--sidebar-bg);
+      margin-right: -8px;
+    }
+    .avatars .more {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      font-size: 0.8rem;
+      padding: 6px 8px;
+      border-radius: 50%;
+      border: 2px solid var(--sidebar-bg);
     }
 
     /* 🧭 TOPBAR */
     .topbar {
       position: fixed;
       top: 0;
-      left: 230px;
+      left: 250px;
       right: 0;
-      height: 60px;
+      height: 69px;
       background: var(--topbar-bg);
       display: flex;
       align-items: center;
@@ -85,28 +141,19 @@
       border-bottom: 1px solid var(--border);
       z-index: 10;
     }
-
-    .topbar-left {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
+    .topbar-left { display: flex; align-items: center; gap: 10px; }
     .topbar-left img {
       width: 35px;
       height: 35px;
       border-radius: 50%;
       object-fit: cover;
     }
-
     .topbar-left span {
       font-weight: 800;
       font-size: 1.2rem;
       letter-spacing: 0.5px;
       color: #2e79b1;
     }
-
-    /* 👤 Profile / Sign Up */
     .profile {
       display: flex;
       align-items: center;
@@ -115,36 +162,29 @@
       color: var(--text-dark);
       padding: 6px 10px;
       border-radius: 20px;
-      transition: background 0.2s ease, color 0.2s ease;
       cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease;
     }
-
     .profile img {
       width: 32px;
       height: 32px;
       border-radius: 50%;
       object-fit: cover;
     }
-
     .profile:hover {
       background: var(--primary);
       color: var(--white);
     }
 
-    .profile:hover img {
-      border: 2px solid var(--white);
-    }
-
     /* 📝 MAIN CONTENT */
     .main {
-      margin-left: 230px;
+      margin-left: 250px;
       margin-top: 60px;
       padding: 1.5rem;
       overflow-y: auto;
       height: calc(100vh - 60px);
-      width: calc(100% - 230px);
+      width: calc(100% - 250px);
     }
-
     .main h1 {
       font-size: 1.4rem;
       font-weight: 600;
@@ -159,7 +199,6 @@
       gap: 15px;
       margin-bottom: 25px;
     }
-
     .stat-box {
       background: var(--white);
       padding: 15px;
@@ -168,18 +207,8 @@
       border-radius: 10px;
       box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
-
-    .stat-box h3 {
-      font-size: 0.9rem;
-      margin-bottom: 10px;
-      color: var(--text-dark);
-    }
-
-    .stat-box p {
-      font-size: 1.4rem;
-      font-weight: 600;
-      color: var(--primary);
-    }
+    .stat-box h3 { font-size: 0.9rem; margin-bottom: 10px; color: var(--text-dark); }
+    .stat-box p { font-size: 1.4rem; font-weight: 600; color: var(--primary); }
 
     /* 📦 CONTENT BOXES */
     .box {
@@ -190,37 +219,32 @@
       margin-bottom: 20px;
       box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
-
     .box h4 {
       font-size: 1rem;
       margin-bottom: 10px;
       color: var(--text-dark);
     }
-
     .box ul {
       list-style: none;
       font-size: 0.9rem;
       line-height: 1.6;
       color: var(--text-light);
     }
-
     .box ul li::before {
       content: "• ";
       color: var(--primary);
     }
+    canvas {
+      max-width: 100%;
+      margin-top: 15px;
+      height: 300px !important;
+    }
 
     /* 📱 Responsive */
     @media (max-width: 768px) {
-      .sidebar {
-        display: none;
-      }
-      .topbar {
-        left: 0;
-      }
-      .main {
-        margin-left: 0;
-        width: 100%;
-      }
+      .sidebar { display: none; }
+      .topbar { left: 0; }
+      .main { margin-left: 0; width: 100%; }
     }
   </style>
 </head>
@@ -228,15 +252,32 @@
 
 <!-- 📌 SIDEBAR -->
 <div class="sidebar">
-  <h2>ADMIN</h2>
-  <ul>
-    <li class="active" onclick="showSection('overview', event)">Overview</li>
-    <li onclick="showSection('users', event)">User Management</li>
-    <li onclick="showSection('jobs', event)">Job Posts</li>
-    <li onclick="showSection('payments', event)">Payments</li>
-    <li onclick="showSection('reports', event)">Reports</li>
-    <li onclick="showSection('settings', event)">Settings</li>
+  <div class="profile-section">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Default_pfp.jpg/600px-Default_pfp.jpg" alt="Admin">
+    <div class="profile-info">
+      <h3>Admin</h3>
+      <p>admin@atmicx.com</p>
+    </div>
+  </div>
+
+  <ul class="nav-menu">
+    <li class="active" onclick="showSection('overview', event)"><i class="fas fa-home"></i><span>Overview</span></li>
+    <li onclick="showSection('users', event)"><i class="fas fa-users"></i><span>User Management</span></li>
+    <li onclick="showSection('jobs', event)"><i class="fas fa-briefcase"></i><span>Job Posts</span></li>
+    <li onclick="showSection('payments', event)"><i class="fas fa-wallet"></i><span>Payments</span></li>
+    <li onclick="showSection('reports', event)"><i class="fas fa-chart-bar"></i><span>Reports</span></li>
+    <li onclick="showSection('settings', event)"><i class="fas fa-cog"></i><span>Settings</span></li>
   </ul>
+
+  <div class="active-users">
+    <p>Active Users</p>
+    <div class="avatars">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Default_pfp.jpg/600px-Default_pfp.jpg" alt="">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Default_pfp.jpg/600px-Default_pfp.jpg" alt="">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Default_pfp.jpg/600px-Default_pfp.jpg" alt="">
+      <div class="more">+70</div>
+    </div>
+  </div>
 </div>
 
 <!-- 🧭 TOPBAR -->
@@ -245,7 +286,6 @@
     <img src="https://scontent.fcrk4-2.fna.fbcdn.net/v/t39.30808-6/347256926_553654376920802_2011026051783363563_n.jpg?_nc_cat=109&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeGn5MGUmOqGfWI16T8lMXomusv4dB9KAXW6y_h0H0oBdcRROjCgd9VsdLYgM5srzCAl5JJfZj5RVCjIhNMkwXMi&_nc_ohc=ARys2ugI7j0Q7kNvwEChoiN&_nc_oc=AdkDH-DV_IcKrMnOCZisRkPVTU4a7Q1wrgXL6Yi15X0zyPX7E74zww62iShZfXPgwOA&_nc_zt=23&_nc_ht=scontent.fcrk4-2.fna&_nc_gid=mRYcPOx876hWkBCJ-aUKug&oh=00_Afdit6RGp12qAEX4hwmuskDtzDLBVITYDyPqIstUdCefHA&oe=68EB16EC" alt="Logo">
     <span>ATMICX Laundry Machine Trading</span>
   </div>
-
   <div class="profile">
     <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Default_pfp.jpg/600px-Default_pfp.jpg" alt="Admin">
     <span>Sign Up</span>
@@ -271,6 +311,7 @@
         <li>Dryer maintenance - Bacolod</li>
         <li>New client onboarding - Laundry Express</li>
       </ul>
+      <canvas id="pendingJobsChart"></canvas>
     </div>
 
     <div class="box">
@@ -280,9 +321,11 @@
         <li>Released Payments: ₱95,000</li>
         <li>Pending Invoices: 2 cases</li>
       </ul>
+      <canvas id="financialChart"></canvas>
     </div>
   </section>
 
+  <!-- Other sections -->
   <section id="users" class="section" style="display:none;">
     <div class="box"><h4>User Management</h4><p>Manage admins, sales agents, and technicians here.</p></div>
   </section>
@@ -305,10 +348,42 @@
     document.querySelectorAll('.section').forEach(sec => sec.style.display = 'none');
     document.getElementById(sectionId).style.display = 'block';
     document.getElementById('page-title').innerText = sectionId.charAt(0).toUpperCase() + sectionId.slice(1);
-    document.querySelectorAll('.sidebar ul li').forEach(li => li.classList.remove('active'));
-    e.target.classList.add('active');
+    document.querySelectorAll('.nav-menu li').forEach(li => li.classList.remove('active'));
+    e.currentTarget.classList.add('active');
   }
+
+  // 📊 Charts
+  const pendingCtx = document.getElementById('pendingJobsChart');
+  new Chart(pendingCtx, {
+    type: 'bar',
+    data: {
+      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+      datasets: [
+        { label: 'Pending Jobs', data: [12, 15, 10, 18, 20, 9, 13], backgroundColor: 'rgba(46, 121, 177, 0.8)', borderRadius: 5, barThickness: 25 },
+        { label: 'Approved Jobs', data: [8, 12, 7, 14, 16, 5, 10], backgroundColor: 'rgba(144, 202, 249, 0.8)', borderRadius: 5, barThickness: 25 }
+      ]
+    },
+    options: { responsive: true, plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 5 } } } }
+  });
+
+  const financialCtx = document.getElementById('financialChart');
+  new Chart(financialCtx, {
+    type: 'bar',
+    data: {
+      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+      datasets: [
+        { label: 'Revenue', data: [8000, 9000, 10000, 9500, 11000, 7000, 8500], backgroundColor: 'rgba(46, 121, 177, 0.8)', borderRadius: 5, barThickness: 25 },
+        { label: 'Expenses', data: [5000, 6000, 8000, 7200, 8800, 5000, 6500], backgroundColor: 'rgba(144, 202, 249, 0.8)', borderRadius: 5, barThickness: 25 }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'bottom' } },
+      scales: { y: { beginAtZero: true, ticks: { callback: (value) => '₱' + value.toLocaleString() } } }
+    }
+  });
 </script>
+
 
 </body>
 </html>

@@ -19,6 +19,7 @@
       --content-bg: #f3f4f6;
       --border: #e5e7eb;
     }
+
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
     body { background: var(--light-bg); height: 100vh; }
 
@@ -65,28 +66,45 @@
     .sidebar {
       position: fixed; top: 0; left: 0; width: 250px; height: 100vh;
       background: var(--sidebar-bg); color: var(--white);
-      display: flex; flex-direction: column; justify-content: space-between;
+      display: flex; flex-direction: column; align-items: center;
       border-top-right-radius: 50px; border-bottom-right-radius: 50px;
       overflow: hidden; padding: 1.5rem 1rem;
     }
-    .profile-section { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 2rem; padding: 0 0.5rem; }
-    .profile-section img { width: 55px; height: 55px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.2); object-fit: cover; }
+
+    /* Fixed spacing below profile */
+    .profile-section {
+      display: flex; align-items: center; gap: 0.8rem;
+      margin-bottom: 10px; padding: 0 0.5rem;
+    }
+    .profile-section img {
+      width: 55px; height: 55px; border-radius: 50%;
+      border: 3px solid rgba(255,255,255,0.2); object-fit: cover;
+    }
     .profile-info h3 { font-size: 1rem; font-weight: 600; }
     .profile-info p { font-size: 0.8rem; opacity: 0.8; }
-    .nav-menu { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+
+    .nav-menu {
+      list-style: none;
+      display: flex; flex-direction: column;
+      gap: 8px; margin-top: 0; padding: 0; width: 100%;
+    }
     .nav-menu li {
-      display: flex; align-items: center; gap: 10px; padding: 10px 15px;
-      border-radius: 10px; cursor: pointer; transition: all 0.3s;
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 15px; border-radius: 10px;
+      cursor: pointer; transition: all 0.3s;
       color: var(--white); opacity: 0.9;
     }
-    .nav-menu li:hover, .nav-menu li.active { background: rgba(255,255,255,0.15); opacity: 1; }
+    .nav-menu li:hover, .nav-menu li.active {
+      background: rgba(255,255,255,0.15); opacity: 1;
+    }
     .nav-menu li i { width: 20px; text-align: center; }
 
     .topbar {
       position: fixed; top: 0; left: 250px; right: 0; height: 69px;
-      background: var(--topbar-bg); display: flex; align-items: center;
-      justify-content: space-between; padding: 0 1.5rem;
-      border-bottom: 1px solid var(--border); z-index: 10;
+      background: var(--topbar-bg);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 1.5rem; border-bottom: 1px solid var(--border);
+      z-index: 10;
     }
     .topbar-left { display: flex; align-items: center; gap: 10px; }
     .topbar-left img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; }
@@ -126,7 +144,7 @@
 <body>
   <!-- LOGIN PAGE -->
   <div class="login-container" id="loginPage">
-    <img src="https://scontent.fmnl9-5.fna.fbcdn.net/v/t39.30808-6/347256926_553654376920802_2011026051783363563_n.jpg?_nc_cat=109&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeGn5MGUmOqGfWI16T8lMXomusv4dB9KAXW6y_h0H0oBdcRROjCgd9VsdLYgM5srzCAl5JJfZj5RVCjIhNMkwXMi&_nc_ohc=bdiyVl8CaCcQ7kNvwEkPvBR&_nc_oc=AdkgNBjqbj0ADmeTcL-kfgY8b9zVEJoxG5WYWn7Fvxht1szKH0X_uslJi8oGgZawvZg&_nc_zt=23&_nc_ht=scontent.fmnl9-5.fna&_nc_gid=zyJY4Hllpn46UQuTVyWn-Q&oh=00_Afj0IsfM767tcLVSnssLa2szgjR1AKVHtENo-6R4sNVmiQ&oe=690E3EEC" alt="Logo">
+    <img src="https://scontent.fmnl9-5.fna.fbcdn.net/v/t39.30808-6/347256926_553654376920802_2011026051783363563_n.jpg" alt="Logo">
     <h2>ATMICX Portal</h2>
     <p>Select your role and log in to continue</p>
     <div class="role-select">
@@ -163,7 +181,7 @@
 
     <div class="topbar">
       <div class="topbar-left">
-        <img src="https://scontent.fmnl9-5.fna.fbcdn.net/v/t39.30808-6/347256926_553654376920802_2011026051783363563_n.jpg?_nc_cat=109&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeGn5MGUmOqGfWI16T8lMXomusv4dB9KAXW6y_h0H0oBdcRROjCgd9VsdLYgM5srzCAl5JJfZj5RVCjIhNMkwXMi&_nc_ohc=bdiyVl8CaCcQ7kNvwEkPvBR&_nc_oc=AdkgNBjqbj0ADmeTcL-kfgY8b9zVEJoxG5WYWn7Fvxht1szKH0X_uslJi8oGgZawvZg&_nc_zt=23&_nc_ht=scontent.fmnl9-5.fna&_nc_gid=zyJY4Hllpn46UQuTVyWn-Q&oh=00_Afj0IsfM767tcLVSnssLa2szgjR1AKVHtENo-6R4sNVmiQ&oe=690E3EEC">
+        <img src="https://scontent.fmnl9-5.fna.fbcdn.net/v/t39.30808-6/347256926_553654376920802_2011026051783363563_n.jpg">
         <span>ATMICX Laundry Machine Trading</span>
       </div>
     </div>

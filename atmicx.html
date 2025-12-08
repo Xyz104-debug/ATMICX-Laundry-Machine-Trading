@@ -76,7 +76,7 @@
         .hero-content { 
             position: relative; 
             max-width: 600px; /* Keep max-width to constrain the text block */
-            margin: 0 0 49px 0; /* Override the centering effect of margin: 0 auto; on the container */
+            margin: 0 0 -64px 0; /* Override the centering effect of margin: 0 auto; on the container */
         }
         
         /* MODIFIED: Combined h1 and h2 styling and forced left alignment for text block */
@@ -87,10 +87,11 @@
             line-height: 1.2; 
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5); /* Helps text stand out */
             text-align: left; /* Ensure the text itself is left-aligned */
+			margin-left: 39px;
         }
         
-        .hero p { font-size: 1.1rem; margin-bottom: 30px; opacity: 0.9; text-align: left; }
-        .hero-actions { display: flex; gap: 15px; justify-content: flex-start; /* Align buttons left */ }
+        .hero p { font-size: 1.1rem; margin-bottom: 30px; opacity: 0.9; text-align: left; margin-left: 39px;}
+        .hero-actions { display: flex; gap: 15px; justify-content: flex-start; margin-left: 39px; /* Align buttons left */ }
         
         /* NEW: Style for the image placed inside the hero content */
         .hero-image {

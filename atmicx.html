@@ -59,15 +59,48 @@
 
         /* --- 3. Hero Section --- */
         .hero {
-            background: url('https://scontent.fcgy2-2.fna.fbcdn.net/v/t39.30808-6/447428882_442230028578564_8971052378412313400_n.png?_nc_cat=109&ccb=1-7&_nc_sid=cc71e4&_nc_eui2=AeFVUGkdJLvfxlSMkQ6fYsDvLWVf9to4-VgtZV_22jj5WNOhK-Q2HKurWystniU3Ome2OIr-RAUPCXjLUqX0Flf8&_nc_ohc=fm3BEPt7kBkQ7kNvwEdc79y&_nc_oc=AdnpIGUFCvdcSJ-iWMX5tshCSDJWG5aKqjFU5xp3H8bFG0xprFOYdh2u5yDJZmuTlyU&_nc_zt=23&_nc_ht=scontent.fcgy2-2.fna&_nc_gid=nXp-vKuf80Jub_octNWy5w&oh=00_AfnL6eZpyDfhJN4rEJWoqT3zYokqeHzWm8Acxn9i_vOVjg&oe=693CA0DA') no-repeat center center/cover;
-            color: var(--white); padding: 150px 0 100px 0; margin-top: 60px;
+            /* INCREASED PADDING to make the cover area taller */
+            background: url('index/bgbg.png') no-repeat center center/cover;
+            color: var(--white); padding: 200px 0 150px 0; margin-top: 60px; /* UPDATED PADDING FOR HEIGHT */
             position: relative;
+            display: flex; /* Added flex to center content vertically */
+            align-items: center;
         }
         .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.45); }
-        .hero-content { position: relative; max-width: 600px; }
-        .hero h1 { font-size: 3rem; font-weight: 800; margin-bottom: 15px; line-height: 1.2; }
-        .hero p { font-size: 1.1rem; margin-bottom: 30px; opacity: 0.9; }
-        .hero-actions { display: flex; gap: 15px; }
+        
+        /* MODIFIED: Left-Align the Hero Content 
+           - Removed 'max-width' to allow it to fill the left side of the container. 
+           - Set margin-left: auto/margin-right: 0 to force it left if max-width were present, but 
+             removing max-width/margin altogether on the container should suffice for left alignment.
+        */
+        .hero-content { 
+            position: relative; 
+            max-width: 600px; /* Keep max-width to constrain the text block */
+            margin: 0 0 49px 0; /* Override the centering effect of margin: 0 auto; on the container */
+        }
+        
+        /* MODIFIED: Combined h1 and h2 styling and forced left alignment for text block */
+        .hero-content h1, .hero-content h2 { 
+            font-size: 3rem; 
+            font-weight: 800; 
+            margin-bottom: 15px; 
+            line-height: 1.2; 
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5); /* Helps text stand out */
+            text-align: left; /* Ensure the text itself is left-aligned */
+        }
+        
+        .hero p { font-size: 1.1rem; margin-bottom: 30px; opacity: 0.9; text-align: left; }
+        .hero-actions { display: flex; gap: 15px; justify-content: flex-start; /* Align buttons left */ }
+        
+        /* NEW: Style for the image placed inside the hero content */
+        .hero-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px; /* Optional: adds a nice touch */
+            margin-bottom: 25px; /* Adds space before buttons */
+            object-fit: cover;
+            display: block; /* Ensures margin works correctly */
+        }
 
         /* --- 4. Section Styling --- */
         section { padding: 80px 0; }
@@ -91,7 +124,6 @@
         .excellence-section { text-align: center; }
         .excellence-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; max-width: 900px; margin: 40px auto 0; }
         .excellence-item { padding: 20px; border: 1px solid var(--border-color); border-radius: 8px; }
-        /* Removed .excellence-item i styling here as it uses Font Awesome icons, not the new logo image */
         .excellence-item i { font-size: 1.8rem; color: var(--primary-blue); margin-bottom: 10px; }
         .excellence-item h4 { font-size: 1rem; font-weight: 600; }
 
@@ -126,6 +158,8 @@
         .story-section { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
         .report-box { padding: 15px; border: 1px solid var(--border-color); border-radius: 8px; text-align: center; font-size: 0.9rem; color: var(--medium-text); }
         .report-box h4 { color: var(--primary-blue); margin-bottom: 5px; font-weight: 700; }
+        .report-box p { font-size: 0.9rem; color: var(--medium-text); } /* Ensure p style is consistent */
+
         .video-player { grid-column: 1 / 3; position: relative; background: #000; border-radius: 8px; overflow: hidden; cursor: pointer; }
         .video-player img { width: 100%; height: 250px; object-fit: cover; opacity: 0.8; }
         .video-player i { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 3rem; color: var(--white); cursor: pointer; opacity: 0.9; }
@@ -187,13 +221,15 @@
         @media (max-width: 768px) {
             .nav-links, .nav-actions { display: none; }
             .logo { font-size: 1.3rem; }
-            .hero { padding: 120px 0 80px 0; }
-            .hero h1 { font-size: 2.2rem; }
+            /* Adjusted for mobile */
+            .hero { padding: 120px 0 80px 0; } 
+            .hero h1, .hero h2 { font-size: 2.2rem; } /* Adjusted h2 for mobile */
             .steaming-card-grid { grid-template-columns: 1fr; }
             .partner-grid { flex-direction: column; }
             .form-grid { grid-template-columns: 1fr; }
             .form-full { grid-column: 1 / 2; }
             .footer-content { flex-direction: column; text-align: center; gap: 15px; }
+            .footer-socials { justify-content: center; } /* Center socials on small screen */
             .footer-bottom { flex-direction: column; text-align: center; gap: 5px; }
         }
     </style>
@@ -203,7 +239,7 @@
     <header>
         <div class="container nav-content">
             <a href="#hero" class="logo">
-                <img src="https://scontent.fmnl9-5.fna.fbcdn.net/v/t39.30808-6/347256926_553654376920802_2011026051783363563_n.jpg?_nc_cat=109&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeGn5MGUmOqGfWI16T8lMXomusv4dB9KAXW6y_h0H0oBdcRROjCgd9VsdLYgM5srzCAl5JJfZj5RVCjIhNMkwXMi&_nc_ohc=CBfDwrgiiZ8Q7kNvwHbpdGp&_nc_oc=Adm8mrRyAtgzWWsYT_7qs_eYM2oqzGK9Cr2mSFffcJ684ZS-uJYBprYMG1H67zj_1jc&_nc_zt=23&_nc_ht=scontent.fmnl9-5.fna&_nc_gid=gzaDkY81Lpft7hnXJWG6vQ&oh=00_AfnxN_3KOWvCudW5JDKcfR-nYgJUgHKNXyCzOJWnixsLTg&oe=693C9BAC" alt="ATMICX Laundry Logo" class="logo-image"> ATMICX
+                <img src="index/image.jpg" alt="ATMICX Laundry Logo" class="logo-image"> ATMICX
                 <span style="font-size: 1rem; font-weight: 400; margin-left: 5px;">Laundry Management</span>
             </a>
             <div class="nav-links">
@@ -213,16 +249,20 @@
             </div>
             <div class="nav-actions">
                 <a href="#" class="btn btn-outline" onclick="alert('Redirecting to Client Login Portal...')">Login</a>
-                <a href="#contact" class="btn btn-primary">Get Quote</a>
+                <a href="#contact" class="btn btn-primary">Contact Us</a>
             </div>
         </div>
     </header>
 
     <section class="hero" id="hero">
         <div class="container hero-content">
-			 <img src="https://i.imgur.com/Xy1jP5Q.jpg" >
+            <img src="https://i.imgur.com/Xy1jP5Q.jpg" alt="Industrial Dryer Repair" class="hero-image">
+            
+            <h2>The Smart solution to Your Laundry Business Needs</h2>
+            <p>We provide full-service solutions, from equipment supply to scheduled maintenance and emergency repair.</p> 
+            
             <div class="hero-actions">
-                <a href="#contact" class="btn btn-primary">Explore a Quote</a>
+                <a href="#contact" class="btn btn-primary">Contact Us</a>
                 <a href="#services" class="btn btn-outline">Discover Our Services</a>
             </div>
         </div>
@@ -235,14 +275,14 @@
                 <p>We provide full-service solutions, from equipment supply to scheduled maintenance and emergency repair. Our systems ensure your machines run at peak efficiency, minimizing downtime and maximizing profit.</p>
                 <div class="steaming-card-grid">
                     <div class="service-card">
-                        <img src="https://i.imgur.com/gK9xJ6D.jpg" alt="Install Laundry Install">
+                        <img src="index/machine.jpg" alt="Install Laundry Install">
                         <div class="card-info">
                             <h3>Install Laundry Install</h3>
                             <p>New Facility Setups</p>
                         </div>
                     </div>
                     <div class="service-card">
-                        <img src="https://i.imgur.com/Xy1jP5Q.jpg" alt="Industrial Dryer Repair">
+                        <img src="index/repair.jpg" alt="Industrial Dryer Repair">
                         <div class="card-info">
                             <h3>Industrial Equip Repair</h3>
                             <p>Maintenance and Repair</p>
@@ -252,14 +292,14 @@
             </div>
             <div class="steaming-card-grid" style="margin-top: 30px;">
                 <div class="service-card">
-                    <img src="https://i.imgur.com/8Q0hV7G.jpg" alt="Consulting Service">
+                    <img src="index/consult.jpg" alt="Consulting Service">
                     <div class="card-info">
                         <h3>Consulting Services</h3>
                         <p>Optimizing Your Operations</p>
                     </div>
                 </div>
                 <div class="service-card">
-                    <img src="https://i.imgur.com/E8Tj0V3.jpg" alt="Service Scheduling">
+                    <img src="index/cp.jpg" alt="Service Scheduling">
                     <div class="card-info">
                         <h3>Automated Scheduling</h3>
                         <p>Preventive Maintenance Plans</p>
@@ -347,20 +387,20 @@
 
                 <div class="story-section">
                     <div class="report-box">
-                        <h4>📈 Q1FY24 REPORT</h4>
+                        <h4>Q1FY24 REPORT</h4>
                         <p>Successful equipment installation across 10 sites.</p>
                     </div>
                     <div class="report-box">
-                        <h4>✅ CLIENT REPORT</h4>
+                        <h4>CLIENT REPORT</h4>
                         <p>"Their seamless process streamlined our operations."</p>
                     </div>
                     <div class="report-box">
-                        <h4>📊 Q4 REPORT</h4>
+                        <h4>Q4 REPORT</h4>
                         <p>Our systems maintained 99% uptime.</p>
                     </div>
                     
                     <div class="video-player" onclick="alert('Simulating Video Playback...')">
-                        <img src="https://i.imgur.com/wVf5LhS.jpg" alt="Video Placeholder of technicians working">
+                        <img src="<iframe width="560" height="315" src="https://www.youtube.com/embed/0Tw0mKsj-0E?si=lkznJ239geto63zx" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>" alt="Video Placeholder of technicians working">
                         <i class="fas fa-play"></i>
                     </div>
 
@@ -402,7 +442,7 @@
 
     <section class="contact-section" id="contact">
         <div class="container">
-            <h2>Ready or Free Quote Today!</h2>
+            <h2>Contact us here</h2>
             <form class="form-grid" id="quoteForm">
                 <div class="form-group"><input type="text" id="fullName" placeholder="Full Name" required></div>
                 <div class="form-group"><input type="email" id="email" placeholder="Email Address" required></div>

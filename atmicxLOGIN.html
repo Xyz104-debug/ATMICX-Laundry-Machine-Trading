@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Admin Portal - ATMICX Trading</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* --- VARIABLES --- */
+        :root {
+            --bg-dark: #0B1623;         /* Deep Midnight Blue */
+            --bg-gradient-start: #132035; 
+            
+            --card-bg: #ffffff;         /* Pure White */
+            
+            --primary-btn: #152238;     /* Dark Navy */
+            --accent-gold: #FBBF24;     /* Mustard Gold */
+            
+            --text-light: #9ca3af;      
+            --text-dark: #1f2937;       
+            
+            --input-bg: #F8FAFC;        
+            --input-border: #E5E7EB;    
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            min-height: 100vh;
+            background: radial-gradient(circle at center, var(--bg-gradient-start) 0%, var(--bg-dark) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden; 
+            padding: 20px;
+        }
+
+        /* --- BACKGROUND BUBBLES --- */
+        .circles {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            overflow: hidden; z-index: 0; pointer-events: none;
+        }
+        .circles li {
+            position: absolute; display: block; list-style: none;
+            width: 20px; height: 20px; 
+            background: rgba(255, 255, 255, 0.03); 
+            animation: animateBubbles 25s linear infinite; bottom: -150px; border-radius: 50%;
+        }
+        .circles li:nth-child(1) { left: 25%; width: 80px; height: 80px; animation-delay: 0s; }
+        .circles li:nth-child(2) { left: 10%; width: 20px; height: 20px; animation-delay: 2s; animation-duration: 12s; }
+        .circles li:nth-child(3) { left: 70%; width: 20px; height: 20px; animation-delay: 4s; }
+        .circles li:nth-child(4) { left: 40%; width: 60px; height: 60px; animation-delay: 0s; animation-duration: 18s; }
+        .circles li:nth-child(5) { left: 65%; width: 20px; height: 20px; animation-delay: 0s; }
+        .circles li:nth-child(6) { left: 75%; width: 110px; height: 110px; animation-delay: 3s; }
+
+        @keyframes animateBubbles {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; border-radius: 50%; }
+            100% { transform: translateY(-1000px) rotate(720deg); opacity: 0; border-radius: 50%; }
+        }
+
+        /* --- MAIN CONTENT CONTAINER --- */
+        .main-container {
+            display: flex;
+            width: 100%;
+            max-width: 1200px;
+            z-index: 2; 
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* --- LEFT SIDE: INTRO TEXT --- */
+        .intro-side {
+            width: 50%;
+            padding-right: 50px;
+            color: white; 
+        }
+
+        .intro-title { 
+            font-size: 42px; 
+            font-weight: 700; 
+            line-height: 1.1; 
+            margin-bottom: 20px; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            color: white; 
+        }
+        
+        .intro-title span { 
+            color: var(--accent-gold); 
+            display: block; 
+        }
+        
+        /* Helper to force white text inside the span structure */
+        .text-white {
+            color: #ffffff !important;
+        }
+        
+        .intro-text { 
+            font-size: 16px; 
+            line-height: 1.6; 
+            font-weight: 300; 
+            color: #d1d5db; 
+        }
+
+        /* --- RIGHT SIDE: FLOATING FORM BOX --- */
+        .form-side {
+            width: 50%;
+            display: flex;
+            justify-content: center;
+        }
+
+        .floating-card {
+            background: var(--card-bg); 
+            width: 100%;
+            max-width: 480px;
+            border-radius: 20px; 
+            padding: 40px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+            animation: slideUp 0.8s ease forwards;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- FORM ELEMENTS --- */
+        .form-header { text-align: center; margin-bottom: 30px; }
+        .form-header h2 { font-size: 24px; color: var(--primary-btn); text-transform: uppercase; font-weight: 700; }
+        .form-header p { font-size: 14px; color: var(--text-light); margin-top: 5px; }
+
+        /* Slide Tabs */
+        .slide-controls {
+            position: relative; display: flex; height: 50px; width: 100%; overflow: hidden;
+            background: #f1f5f9; 
+            border-radius: 50px; margin-bottom: 30px; padding: 4px;
+        }
+        .slide-controls .slide {
+            height: 100%; width: 50%; color: var(--text-light); font-size: 15px; font-weight: 600;
+            text-align: center; line-height: 42px; cursor: pointer; z-index: 1;
+            transition: all 0.4s ease; border-radius: 50px;
+        }
+        .slide-controls .slider-tab {
+            position: absolute; height: calc(100% - 8px); width: calc(50% - 8px); top: 4px; left: 4px;
+            z-index: 0; border-radius: 50px; 
+            
+            /* UPDATED: Background is now Yellow (Gold) */
+            background: var(--accent-gold);
+            
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        /* UPDATED: Active Text becomes Dark Navy to contrast against Yellow background */
+        .slide.active { color: var(--primary-btn); } 
+        
+        .slide.inactive { color: var(--text-dark); opacity: 0.6; }
+
+        /* Form Masking */
+        .form-mask { width: 100%; overflow: hidden; }
+        .form-container { display: flex; width: 200%; transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+        .form-inner { width: 50%; padding: 0 5px; }
+
+        /* Inputs */
+        .field { height: 50px; width: 100%; margin-top: 20px; position: relative; }
+        .field input, .field select {
+            height: 100%; width: 100%; outline: none; padding-left: 45px; padding-right: 15px;
+            border-radius: 8px; 
+            border: 1px solid var(--input-border); 
+            background: var(--input-bg);
+            color: var(--text-dark); font-size: 14px; font-weight: 500; transition: all 0.3s ease; appearance: none;
+        }
+        
+        .field input:focus, .field select:focus {
+            border-color: var(--accent-gold); 
+            background: white; 
+            box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.1);
+        }
+        
+        .field i { position: absolute; top: 50%; left: 15px; transform: translateY(-50%); color: var(--text-light); font-size: 16px; pointer-events: none; transition: 0.3s; }
+        .field input:focus ~ i, .field select:focus ~ i { color: var(--accent-gold); }
+        .select-arrow { right: 15px; left: auto !important; font-size: 12px; color: var(--accent-gold); }
+
+        /* Button */
+        .btn-layer {
+            height: 50px; width: 100%; position: relative; 
+            background: var(--primary-btn);
+            border-radius: 8px; margin-top: 30px; overflow: hidden; cursor: pointer; transition: 0.3s;
+        }
+        
+        /* UPDATED: Hover state turns background Yellow */
+        .btn-layer:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            background: var(--accent-gold); 
+        }
+        
+        .btn-layer input { 
+            height: 100%; width: 100%; background: none; border: none; 
+            color: white; /* Default text color */
+            font-size: 16px; font-weight: 600; cursor: pointer; 
+            padding-left: 0; text-align: center;
+            transition: color 0.3s ease;
+        }
+
+        /* UPDATED: Button Text turns Dark when background is Yellow */
+        .btn-layer:hover input {
+            color: var(--primary-btn);
+        }
+
+        .pass-link { margin-top: 15px; text-align: right; font-size: 13px; }
+        .pass-link a { color: var(--text-light); text-decoration: none; }
+        .pass-link a:hover { color: var(--accent-gold); }
+
+        /* Responsive */
+        @media (max-width: 950px) {
+            .main-container { flex-direction: column; text-align: center; }
+            .intro-side { width: 100%; padding: 0; margin-bottom: 50px; }
+            .form-side { width: 100%; }
+            .intro-title { font-size: 32px; }
+            .floating-card { max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <ul class="circles">
+        <li></li><li></li><li></li><li></li><li></li>
+        <li></li><li></li><li></li><li></li><li></li>
+    </ul>
+
+    <div class="main-container">
+        
+        <div class="intro-side">
+            <h1 class="intro-title">
+                <span><b class="text-white">ATMICX</b> Laundry</span>
+                <span> Machine Trading</span>
+            </h1>
+            
+            <p class="intro-text">
+                Secure portal for Managers and Secretaries. <br>
+                Streamline your operations, manage technician schedules, and oversee machine inventory in one place.
+            </p>
+        </div>
+
+        <div class="form-side">
+            <div class="floating-card">
+                
+                <div class="form-header">
+                    <h2>ATMICX Management</h2>
+                    <p>Welcome back! Please log in</p>
+                </div>
+
+                <div class="slide-controls">
+                    <input type="radio" name="slide" id="login" checked hidden>
+                    <input type="radio" name="slide" id="signup" hidden>
+                    <label for="login" class="slide login active">Sign In</label>
+                    <label for="signup" class="slide signup inactive">Sign Up</label>
+                    <div class="slider-tab"></div>
+                </div>
+
+                <div class="form-mask">
+                    <div class="form-container">
+                        
+                        <div class="form-inner">
+                            <form action="#">
+                                <div class="field">
+                                    <select required>
+                                        <option value="" disabled selected>Select Role</option>
+                                        <option value="manager">Manager</option>
+                                        <option value="secretary">Secretary</option>
+                                    </select>
+                                    <i class="fas fa-user-tie"></i>
+                                    <i class="fas fa-chevron-down select-arrow"></i>
+                                </div>
+
+                                <div class="field">
+                                    <input type="text" placeholder="Username" required>
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                
+                                <div class="field">
+                                    <input type="password" placeholder="Password" required>
+                                    <i class="fas fa-lock"></i>
+                                </div>
+
+                                <div class="pass-link"><a href="#">Forgot password?</a></div>
+                                
+                                <div class="field btn-layer">
+                                    <input type="submit" value="Sign In" onclick="window.location.href='client-dashboard.html'; return false;">
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="form-inner">
+                            <form action="#">
+                                <div class="field">
+                                    <select required>
+                                        <option value="" disabled selected>Select Role</option>
+                                        <option value="manager">Manager</option>
+                                        <option value="secretary">Secretary</option>
+                                    </select>
+                                    <i class="fas fa-user-tie"></i>
+                                    <i class="fas fa-chevron-down select-arrow"></i>
+                                </div>
+
+                                <div class="field">
+                                    <input type="email" placeholder="Work Email" required>
+                                    <i class="fas fa-envelope"></i>
+                                </div>
+
+                                <div class="field">
+                                    <input type="text" placeholder="Username" required>
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                
+                                <div class="field">
+                                    <input type="password" placeholder="Password" required>
+                                    <i class="fas fa-lock"></i>
+                                </div>
+
+                                <div class="field btn-layer">
+                                    <input type="submit" value="Register">
+                                </div>
+                            </form>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const loginBtn = document.querySelector("label.login");
+        const signupBtn = document.querySelector("label.signup");
+        const formContainer = document.querySelector(".form-container");
+        const sliderTab = document.querySelector(".slider-tab");
+
+        function showSignup() {
+            formContainer.style.marginLeft = "-100%"; 
+            loginBtn.classList.remove("active");
+            loginBtn.classList.add("inactive");
+            signupBtn.classList.remove("inactive");
+            signupBtn.classList.add("active");
+            sliderTab.style.left = "calc(50% + 4px)"; 
+        }
+
+        function showLogin() {
+            formContainer.style.marginLeft = "0%"; 
+            signupBtn.classList.remove("active");
+            signupBtn.classList.add("inactive");
+            loginBtn.classList.remove("inactive");
+            loginBtn.classList.add("active");
+            sliderTab.style.left = "4px"; 
+        }
+
+        signupBtn.onclick = () => { showSignup(); }
+        loginBtn.onclick = () => { showLogin(); }
+    </script>
+
+</body>
+</html>

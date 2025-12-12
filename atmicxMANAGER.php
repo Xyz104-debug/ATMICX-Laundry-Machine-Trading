@@ -1,4 +1,11 @@
 <!DOCTYPE html>
+<?php
+session_start();
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'manager') {
+    header('Location: atmicxLOGIN.html');
+    exit;
+}
+?>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -248,7 +255,7 @@
             <li><button class="nav-btn" onclick="switchTab('activity', this)"><i class="fas fa-clipboard-list"></i> Service Reports</button></li>
             <li><button class="nav-btn" onclick="switchTab('sales', this)"><i class="fas fa-chart-line"></i> Sales Analysis</button></li>
             <li><button class="nav-btn" onclick="switchTab('users', this)"><i class="fas fa-users-cog"></i> User Mgmt</button></li>
-            <li><button class="nav-btn logout-btn" onclick="if(confirm('Log out?')) window.location.reload()"><i class="fas fa-sign-out-alt"></i> Logout</button></li>
+            <li><button class="nav-btn logout-btn" onclick="if(confirm('Log out?')) window.location.href='logout.php'"><i class="fas fa-sign-out-alt"></i> Logout</button></li>
         </ul>
     </nav>
 

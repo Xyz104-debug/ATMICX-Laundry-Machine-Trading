@@ -267,9 +267,9 @@
                     <div class="form-container">
                         
                         <div class="form-inner">
-                            <form action="#">
+                            <form id="loginForm">
                                 <div class="field">
-                                    <select required>
+                                    <select id="role" required>
                                         <option value="" disabled selected>Select Role</option>
                                         <option value="manager">Manager</option>
                                         <option value="secretary">Secretary</option>
@@ -279,27 +279,28 @@
                                 </div>
 
                                 <div class="field">
-                                    <input type="text" placeholder="Username" required>
+                                    <input type="text" id="username" placeholder="Username" required>
                                     <i class="fas fa-user"></i>
                                 </div>
                                 
                                 <div class="field">
-                                    <input type="password" placeholder="Password" required>
+                                    <input type="password" id="password" placeholder="Password" required>
                                     <i class="fas fa-lock"></i>
                                 </div>
 
-                                <div class="pass-link"><a href="#">Forgot password?</a></div>
+                                <div class="pass-link"><a href="#" id="forgotLink">Forgot password?</a></div>
                                 
                                 <div class="field btn-layer">
-                                    <input type="submit" value="Sign In" onclick="window.location.href='client-dashboard.html'; return false;">
+                                    <input type="submit" value="Sign In">
                                 </div>
+                                <div id="errorMessage" style="color: red; text-align: center; margin-top: 10px;"></div>
                             </form>
                         </div>
 
                         <div class="form-inner">
-                            <form action="#">
+                            <form id="signupForm">
                                 <div class="field">
-                                    <select required>
+                                    <select id="signupRole" required>
                                         <option value="" disabled selected>Select Role</option>
                                         <option value="manager">Manager</option>
                                         <option value="secretary">Secretary</option>
@@ -309,27 +310,43 @@
                                 </div>
 
                                 <div class="field">
-                                    <input type="email" placeholder="Work Email" required>
+                                    <input type="email" id="signupEmail" placeholder="Work Email" required>
                                     <i class="fas fa-envelope"></i>
                                 </div>
 
                                 <div class="field">
-                                    <input type="text" placeholder="Username" required>
+                                    <input type="text" id="signupUsername" placeholder="Username" required>
                                     <i class="fas fa-user"></i>
                                 </div>
                                 
                                 <div class="field">
-                                    <input type="password" placeholder="Password" required>
+                                    <input type="password" id="signupPassword" placeholder="Password" required>
                                     <i class="fas fa-lock"></i>
                                 </div>
 
                                 <div class="field btn-layer">
                                     <input type="submit" value="Register">
                                 </div>
+                                <div id="signupErrorMessage" style="color: red; text-align: center; margin-top: 10px;"></div>
                             </form>
                         </div>
 
                     </div>
+                </div>
+
+                <!-- Forgot Password Form -->
+                <div id="forgotForm" style="display: none; text-align: center; padding: 40px;">
+                    <h2 style="color: var(--primary-btn); margin-bottom: 20px;">Reset Password</h2>
+                    <p style="color: var(--text-light); margin-bottom: 30px;">Enter your email to receive a reset link.</p>
+                    <div class="field">
+                        <input type="email" id="forgotEmail" placeholder="Work Email" required>
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <div class="field btn-layer">
+                        <input type="button" id="sendReset" value="Send Reset Link">
+                    </div>
+                    <div id="forgotErrorMessage" style="color: red; margin-top: 10px;"></div>
+                    <div style="margin-top: 15px;"><a href="#" id="backToLogin">Back to Login</a></div>
                 </div>
             </div>
         </div>
@@ -362,6 +379,136 @@
 
         signupBtn.onclick = () => { showSignup(); }
         loginBtn.onclick = () => { showLogin(); }
+
+        // Forgot password
+        document.getElementById('forgotLink').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.querySelector('.form-mask').style.display = 'none';
+            document.getElementById('forgotForm').style.display = 'block';
+        });
+
+        document.getElementById('backToLogin').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.querySelector('.form-mask').style.display = 'block';
+            document.getElementById('forgotForm').style.display = 'none';
+            showLogin();
+        });
+
+        // AJAX login
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const role = document.getElementById('role').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('errorMessage');
+
+            if (!role || !username || !password) {
+                errorMessage.textContent = 'Please fill in all fields.';
+                return;
+            }
+
+            try {
+                const response = await fetch('login.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        role: role,
+                        username: username,
+                        password: password
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    // Redirect based on role
+                    if (role === 'manager') {
+                        window.location.href = 'atmicxMANAGER.php';
+                    } else if (role === 'secretary') {
+                        window.location.href = 'armicxSECRETARY.php';
+                    }
+                } else {
+                    errorMessage.textContent = result.message || 'Login failed.';
+                }
+            } catch (error) {
+                console.log('Login error:', error);
+                errorMessage.textContent = 'An error occurred. Please try again.';
+            }
+        });
+
+        // AJAX signup
+        document.getElementById('signupForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const role = document.getElementById('signupRole').value;
+            const email = document.getElementById('signupEmail').value;
+            const username = document.getElementById('signupUsername').value;
+            const password = document.getElementById('signupPassword').value;
+            const errorMessage = document.getElementById('signupErrorMessage');
+
+            if (!role || !email || !username || !password) {
+                errorMessage.textContent = 'Please fill in all fields.';
+                return;
+            }
+
+            try {
+                const response = await fetch('register.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        role: role,
+                        email: email,
+                        username: username,
+                        password: password
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    errorMessage.style.color = 'green';
+                    errorMessage.textContent = result.message;
+                    // Optionally switch to login tab
+                    showLogin();
+                } else {
+                    errorMessage.textContent = result.message || 'Registration failed.';
+                }
+            } catch (error) {
+                errorMessage.textContent = 'An error occurred. Please try again.';
+            }
+        });
+
+        // AJAX forgot password
+        document.getElementById('sendReset').addEventListener('click', async function() {
+            const email = document.getElementById('forgotEmail').value;
+            const errorMessage = document.getElementById('forgotErrorMessage');
+
+            if (!email) {
+                errorMessage.textContent = 'Please enter your email.';
+                return;
+            }
+
+            try {
+                const response = await fetch('forgot.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    errorMessage.style.color = 'green';
+                    errorMessage.textContent = result.message;
+                } else {
+                    errorMessage.textContent = result.message || 'Failed to send reset link.';
+                }
+            } catch (error) {
+                errorMessage.textContent = 'An error occurred. Please try again.';
+            }
+        });
     </script>
 
 </body>

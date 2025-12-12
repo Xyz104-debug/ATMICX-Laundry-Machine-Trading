@@ -1,4 +1,11 @@
 <!DOCTYPE html>
+<?php
+session_start();
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
+    header('Location: atmicxLOGIN.html');
+    exit;
+}
+?>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -130,7 +137,7 @@
             <li><button class="nav-btn" onclick="switchTab('quotes', this)"><i class="fas fa-file-invoice-dollar"></i> Quotations</button></li>
             <li><button class="nav-btn" onclick="switchTab('appointments', this)"><i class="fas fa-calendar-alt"></i> Appointments</button></li>
             <li><button class="nav-btn" onclick="switchTab('payments', this)"><i class="fas fa-wallet"></i> Payments</button></li>
-            <li><button class="nav-btn logout-btn" onclick="if(confirm('Log out?')) window.location.reload()"><i class="fas fa-sign-out-alt"></i> Logout</button></li>
+            <li><button class="nav-btn logout-btn" onclick="if(confirm('Log out?')) window.location.href='logout.php'"><i class="fas fa-sign-out-alt"></i> Logout</button></li>
         </ul>
     </nav>
 

@@ -73,10 +73,12 @@
 
         /* --- LEFT SIDE: INTRO TEXT --- */
         .intro-side {
-            width: 50%;
-            padding-right: 50px;
-            color: white; 
+		width: 50%;
+		padding-right: 50px;
+		color: white;
+		margin-left: 66px;
         }
+		
 
         .intro-title { 
             font-size: 42px; 
@@ -242,9 +244,6 @@
 
 		/* Responsive adjustment for mobile screens */
 		@media (max-width: 900px) {
-			.main-container {
-				margin-left: 0;
-			}
 			.brand-logo {
 				margin: 0 auto; /* Centers the logo on mobile */
 				max-width: 100px; /* Slightly smaller on phones */
@@ -259,22 +258,23 @@
         <li></li><li></li><li></li><li></li><li></li>
     </ul>
 
-    <div class="main-container">
-        
-        <div class="intro-side">
-			<div class="logo-wrapper">
-				<img src="logo.png" alt="ATMICX Logo" class="brand-logo">
-			</div>
-            <h1 class="intro-title">
-                <span><b class="text-white">ATMICX</b> Laundry</span>
-                <span> Machine Trading</span>
-            </h1>
+<div class="intro-side">
+    
+   <div class="logo-wrapper">
+        <img src="atmicx/logo.png" alt="ATMICX Logo" class="brand-logo">
+    </div>
+
+    <h1 class="intro-title">
+        <span><b class="text-white">ATMICX</b> Laundry</span>
+        <span> Machine Trading</span>
+    </h1>
+    
+    <p class="intro-text">
+        Secure portal for Managers and Secretaries. <br>
+        Streamline your operations, manage technician schedules, and oversee machine inventory in one place.
+    </p>
+</div>
             
-            <p class="intro-text">
-                Secure portal for Managers and Secretaries. <br>
-                Streamline your operations, manage technician schedules, and oversee machine inventory in one place.
-            </p>
-        </div>
 
         <div class="form-side">
             <div class="floating-card">
@@ -296,9 +296,9 @@
                     <div class="form-container">
                         
                         <div class="form-inner">
-                            <form id="loginForm">
+                            <form action="#">
                                 <div class="field">
-                                    <select id="role" required>
+                                    <select required>
                                         <option value="" disabled selected>Select Role</option>
                                         <option value="manager">Manager</option>
                                         <option value="secretary">Secretary</option>
@@ -308,28 +308,27 @@
                                 </div>
 
                                 <div class="field">
-                                    <input type="text" id="username" placeholder="Username" required>
+                                    <input type="text" placeholder="Username" required>
                                     <i class="fas fa-user"></i>
                                 </div>
                                 
                                 <div class="field">
-                                    <input type="password" id="password" placeholder="Password" required>
+                                    <input type="password" placeholder="Password" required>
                                     <i class="fas fa-lock"></i>
                                 </div>
 
-                                <div class="pass-link"><a href="#" id="forgotLink">Forgot password?</a></div>
+                                <div class="pass-link"><a href="#">Forgot password?</a></div>
                                 
                                 <div class="field btn-layer">
-                                    <input type="submit" value="Sign In">
+                                    <input type="submit" value="Log in" onclick="window.location.href='client-dashboard.html'; return false;">
                                 </div>
-                                <div id="errorMessage" style="color: red; text-align: center; margin-top: 10px;"></div>
                             </form>
                         </div>
 
                         <div class="form-inner">
-                            <form id="signupForm">
+                            <form action="#">
                                 <div class="field">
-                                    <select id="signupRole" required>
+                                    <select required>
                                         <option value="" disabled selected>Select Role</option>
                                         <option value="manager">Manager</option>
                                         <option value="secretary">Secretary</option>
@@ -339,43 +338,27 @@
                                 </div>
 
                                 <div class="field">
-                                    <input type="email" id="signupEmail" placeholder="Work Email" required>
+                                    <input type="email" placeholder="Work Email" required>
                                     <i class="fas fa-envelope"></i>
                                 </div>
 
                                 <div class="field">
-                                    <input type="text" id="signupUsername" placeholder="Username" required>
+                                    <input type="text" placeholder="Username" required>
                                     <i class="fas fa-user"></i>
                                 </div>
                                 
                                 <div class="field">
-                                    <input type="password" id="signupPassword" placeholder="Password" required>
+                                    <input type="password" placeholder="Password" required>
                                     <i class="fas fa-lock"></i>
                                 </div>
 
                                 <div class="field btn-layer">
                                     <input type="submit" value="Register">
                                 </div>
-                                <div id="signupErrorMessage" style="color: red; text-align: center; margin-top: 10px;"></div>
                             </form>
                         </div>
 
                     </div>
-                </div>
-
-                <!-- Forgot Password Form -->
-                <div id="forgotForm" style="display: none; text-align: center; padding: 40px;">
-                    <h2 style="color: var(--primary-btn); margin-bottom: 20px;">Reset Password</h2>
-                    <p style="color: var(--text-light); margin-bottom: 30px;">Enter your email to receive a reset link.</p>
-                    <div class="field">
-                        <input type="email" id="forgotEmail" placeholder="Work Email" required>
-                        <i class="fas fa-envelope"></i>
-                    </div>
-                    <div class="field btn-layer">
-                        <input type="button" id="sendReset" value="Send Reset Link">
-                    </div>
-                    <div id="forgotErrorMessage" style="color: red; margin-top: 10px;"></div>
-                    <div style="margin-top: 15px;"><a href="#" id="backToLogin">Back to Login</a></div>
                 </div>
             </div>
         </div>
@@ -408,136 +391,6 @@
 
         signupBtn.onclick = () => { showSignup(); }
         loginBtn.onclick = () => { showLogin(); }
-
-        // Forgot password
-        document.getElementById('forgotLink').addEventListener('click', function(e) {
-            e.preventDefault();
-            document.querySelector('.form-mask').style.display = 'none';
-            document.getElementById('forgotForm').style.display = 'block';
-        });
-
-        document.getElementById('backToLogin').addEventListener('click', function(e) {
-            e.preventDefault();
-            document.querySelector('.form-mask').style.display = 'block';
-            document.getElementById('forgotForm').style.display = 'none';
-            showLogin();
-        });
-
-        // AJAX login
-        document.getElementById('loginForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const role = document.getElementById('role').value;
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const errorMessage = document.getElementById('errorMessage');
-
-            if (!role || !username || !password) {
-                errorMessage.textContent = 'Please fill in all fields.';
-                return;
-            }
-
-            try {
-                const response = await fetch('login.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        role: role,
-                        username: username,
-                        password: password
-                    })
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    // Redirect based on role
-                    if (role === 'manager') {
-                        window.location.href = 'atmicxMANAGER.php';
-                    } else if (role === 'secretary') {
-                        window.location.href = 'armicxSECRETARY.php';
-                    }
-                } else {
-                    errorMessage.textContent = result.message || 'Login failed.';
-                }
-            } catch (error) {
-                console.log('Login error:', error);
-                errorMessage.textContent = 'An error occurred. Please try again.';
-            }
-        });
-
-        // AJAX signup
-        document.getElementById('signupForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const role = document.getElementById('signupRole').value;
-            const email = document.getElementById('signupEmail').value;
-            const username = document.getElementById('signupUsername').value;
-            const password = document.getElementById('signupPassword').value;
-            const errorMessage = document.getElementById('signupErrorMessage');
-
-            if (!role || !email || !username || !password) {
-                errorMessage.textContent = 'Please fill in all fields.';
-                return;
-            }
-
-            try {
-                const response = await fetch('register.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        role: role,
-                        email: email,
-                        username: username,
-                        password: password
-                    })
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    errorMessage.style.color = 'green';
-                    errorMessage.textContent = result.message;
-                    // Optionally switch to login tab
-                    showLogin();
-                } else {
-                    errorMessage.textContent = result.message || 'Registration failed.';
-                }
-            } catch (error) {
-                errorMessage.textContent = 'An error occurred. Please try again.';
-            }
-        });
-
-        // AJAX forgot password
-        document.getElementById('sendReset').addEventListener('click', async function() {
-            const email = document.getElementById('forgotEmail').value;
-            const errorMessage = document.getElementById('forgotErrorMessage');
-
-            if (!email) {
-                errorMessage.textContent = 'Please enter your email.';
-                return;
-            }
-
-            try {
-                const response = await fetch('forgot.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ email: email })
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    errorMessage.style.color = 'green';
-                    errorMessage.textContent = result.message;
-                } else {
-                    errorMessage.textContent = result.message || 'Failed to send reset link.';
-                }
-            } catch (error) {
-                errorMessage.textContent = 'An error occurred. Please try again.';
-            }
-        });
     </script>
 
 </body>

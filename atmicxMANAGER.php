@@ -241,10 +241,10 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'manager') {
         </div>
 
         <div class="user-profile">
-            <div class="user-avatar">M</div>
+            <div class="user-avatar"><?php echo strtoupper(substr($_SESSION['username'], 0, 1)); ?></div>
             <div class="user-info">
-                <h4>Admin User</h4>
-                <p>Manager</p>
+                <h4><?php echo $_SESSION['username']; ?></h4>
+                <p><?php echo ucfirst($_SESSION['role']); ?></p>
             </div>
         </div>
 
@@ -255,7 +255,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'manager') {
             <li><button class="nav-btn" onclick="switchTab('activity', this)"><i class="fas fa-clipboard-list"></i> Service Reports</button></li>
             <li><button class="nav-btn" onclick="switchTab('sales', this)"><i class="fas fa-chart-line"></i> Sales Analysis</button></li>
             <li><button class="nav-btn" onclick="switchTab('users', this)"><i class="fas fa-users-cog"></i> User Mgmt</button></li>
-            <li><button class="nav-btn logout-btn" onclick="if(confirm('Log out?')) window.location.href='logout.php'"><i class="fas fa-sign-out-alt"></i> Logout</button></li>
+            <li><button class="nav-btn logout-btn" onclick="if(confirm('Are you sure you want to logout?')) window.location.href='logout.php'"><i class="fas fa-sign-out-alt"></i> Logout</button></li>
         </ul>
     </nav>
 
@@ -393,6 +393,19 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'manager') {
                 </table>
             </div>
         </div>
+
+    <div id="logout-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Are you logging out?</h2>
+                <p>You can always log back in at any time.</p>
+            </div>
+            <div class="modal-body">
+                <button class="btn btn-secondary" onclick="closeLogoutModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="window.location.href='logout.php'">Log out</button>
+            </div>
+        </div>
+    </div>
 
     </main>
 

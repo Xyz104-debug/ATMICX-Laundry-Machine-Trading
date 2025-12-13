@@ -106,6 +106,45 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
         .section-view { display: none; }
         .section-view.active { display: block; animation: fadeIn 0.3s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Logout Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 400px;
+            text-align: center;
+            border-radius: 15px;
+        }
+
+        .modal-header h2 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .modal-header p {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .modal-body .btn {
+            margin: 0 10px;
+        }
     </style>
 </head>
 <body>
@@ -123,10 +162,10 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
         </div>
 
         <div class="user-profile">
-            <div class="user-avatar">J</div>
+            <div class="user-avatar"><?php echo strtoupper(substr($_SESSION['username'], 0, 1)); ?></div>
             <div class="user-info">
-                <h4>Jane Doe</h4>
-                <p>Secretary</p>
+                <h4><?php echo $_SESSION['username']; ?></h4>
+                <p><?php echo ucfirst($_SESSION['role']); ?></p>
             </div>
         </div>
 
@@ -137,7 +176,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
             <li><button class="nav-btn" onclick="switchTab('quotes', this)"><i class="fas fa-file-invoice-dollar"></i> Quotations</button></li>
             <li><button class="nav-btn" onclick="switchTab('appointments', this)"><i class="fas fa-calendar-alt"></i> Appointments</button></li>
             <li><button class="nav-btn" onclick="switchTab('payments', this)"><i class="fas fa-wallet"></i> Payments</button></li>
-            <li><button class="nav-btn logout-btn" onclick="if(confirm('Log out?')) window.location.href='logout.php'"><i class="fas fa-sign-out-alt"></i> Logout</button></li>
+            <li><button class="nav-btn logout-btn" onclick="openLogoutModal()"><i class="fas fa-sign-out-alt"></i> Logout</button></li>
         </ul>
     </nav>
 
@@ -285,6 +324,19 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
                 </table>
             </div>
         </div>
+
+    <div id="logout-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">               
+                <h2>Are you logging out?</h2>
+                <p>You can always log back in at any time.</p>
+            </div>
+            <div class="modal-body">
+                <button class="btn btn-secondary" onclick="closeLogoutModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="window.location.href='logout.php'">Log out</button>
+            </div>
+        </div>
+    </div>
 
     </main>
 
@@ -492,6 +544,14 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
                 'appointments': 'Appointments', 'payments': 'Payment Processing'
             };
             document.getElementById('page-title').innerText = titles[tabId];
+        }
+
+        function openLogoutModal() {
+            document.getElementById('logout-modal').style.display = 'block';
+        }
+
+        function closeLogoutModal() {
+            document.getElementById('logout-modal').style.display = 'none';
         }
 
         // Init

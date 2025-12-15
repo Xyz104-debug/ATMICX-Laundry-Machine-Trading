@@ -1,561 +1,1179 @@
-<!DOCTYPE html>
 <?php
 session_start();
+
+// Prevent browser caching
+header("Cache-Control: no-cache, no-store, must-revalidate"); // HTTP 1.1.
+header("Pragma: no-cache"); // HTTP 1.0.
+header("Expires: 0"); // Proxies.
+
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
     header('Location: atmicxLOGIN.html');
     exit;
 }
 ?>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secretary Dashboard - ATMICX</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Secretary Dashboard | ATMICX Trading</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <style>
-        /* --- THEME VARIABLES --- */
+        /* --- PREMIUM THEME VARIABLES --- */
         :root {
-            --bg-sidebar: #0B1623;
-            --bg-body: #F3F4F6;
-            --card-bg: #FFFFFF;
-            --accent-gold: #FBBF24;
-            --accent-gold-hover: #d97706;
-            --text-navy: #152238;
-            --text-light: #6b7280;
-            --danger: #ef4444;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --info: #3b82f6;
+            --navy-dark: #0f172a;       
+            --navy-light: #1e293b;     
+            --gold: #d4af37;           
+            --bg-body: #f8fafc;        
+            --white: #ffffff;
+            
+            --success-bg: #dcfce7; --success-text: #166534;
+            --warning-bg: #fff7ed; --warning-text: #9a3412;
+            --danger-bg: #fee2e2;  --danger-text: #991b1b;
+            --info-bg: #e0f2fe;    --info-text: #075985;
+
+            --text-main: #334155;
+            --text-muted: #64748b;
+
+            --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
 
-        body { display: flex; background-color: var(--bg-body); height: 100vh; color: var(--text-navy); overflow: hidden; }
+        body {
+            display: flex;
+            background-color: var(--bg-body);
+            height: 100vh;
+            color: var(--text-main);
+            overflow: hidden;
+        }
 
         /* --- SIDEBAR --- */
-        .sidebar { width: 280px; background: var(--bg-sidebar); color: white; display: flex; flex-direction: column; padding: 20px; box-shadow: 4px 0 15px rgba(0,0,0,0.1); flex-shrink: 0; z-index: 10; }
-        .brand { display: flex; align-items: center; gap: 15px; padding-bottom: 25px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 25px; }
-        .brand-icon { width: 45px; height: 45px; border: 2px solid var(--accent-gold); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--accent-gold); font-size: 20px; box-shadow: 0 0 15px rgba(251, 191, 36, 0.2); flex-shrink: 0; }
-        .brand-text h2 { font-size: 15px; font-weight: 700; line-height: 1.2; text-transform: uppercase; letter-spacing: 0.5px; margin: 0; }
-        .text-white { color: #ffffff; }
-        .text-gold { color: var(--accent-gold); }
+        .sidebar {
+            width: 280px;
+            background: var(--navy-dark);
+            color: var(--white);
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            flex-shrink: 0;
+            z-index: 20;
+        }
 
-        .user-profile { display: flex; align-items: center; gap: 12px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 12px; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.05); }
-        .user-avatar { width: 40px; height: 40px; background: var(--accent-gold); color: var(--bg-sidebar); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; }
-        .user-info h4 { font-size: 14px; font-weight: 600; color: white; }
-        .user-info p { font-size: 11px; color: #9ca3af; text-transform: uppercase; }
+        .brand-container { margin-bottom: 30px; }
+        .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+        .brand img { height: 35px; width: auto; object-fit: contain; }
+        .brand h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; margin: 0; }
+        .brand span { color: var(--gold); }
 
-        .nav-links { list-style: none; flex: 1; overflow-y: auto; }
-        .nav-links li { margin-bottom: 8px; }
-        .nav-btn { width: 100%; border: none; background: none; color: #9ca3af; padding: 12px 15px; text-align: left; cursor: pointer; border-radius: 10px; font-size: 14px; display: flex; align-items: center; gap: 12px; transition: all 0.3s ease; font-weight: 500; }
-        .nav-btn:hover { background: rgba(255,255,255,0.05); color: white; }
-        .nav-btn.active { background: var(--accent-gold); color: var(--bg-sidebar); font-weight: 700; box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3); }
-        .logout-btn { margin-top: auto; color: #ef4444; }
-        .logout-btn:hover { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+        .user-profile-box {
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--radius-md); padding: 12px 16px; display: flex; align-items: center; gap: 12px; margin-bottom: -8px; transition: var(--transition); cursor: pointer; position: relative;
+        }
+        .user-profile-box:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.2); transform: translateY(-1px); }
+        .avatar { width: 38px; height: 38px; border-radius: 8px; background: linear-gradient(135deg, var(--gold), #fcd34d); color: var(--navy-dark); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        .user-info { flex: 1; }
+        .user-info .name { font-size: 14px; font-weight: 600; color: white; line-height: 1.2; display: flex; align-items: center; gap: 6px; }
+        .user-info .role { font-size: 11px; color: #94a3b8; font-weight: 500; margin-top: 2px; }
+        .settings-icon { color: #94a3b8; font-size: 14px; transition: 0.2s; }
+        .user-profile-box:hover .settings-icon { color: var(--gold); transform: rotate(90deg); }
+
+        .nav-links { list-style: none; flex: 1; }
+        .nav-item { margin-bottom: 6px; }
+        
+        .nav-btn { width: 100%; display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: transparent; border: none; color: #94a3b8; font-size: 14px; font-weight: 500; cursor: pointer; border-radius: var(--radius-md); transition: var(--transition); }
+        .nav-btn:hover { background: rgba(255, 255, 255, 0.05); color: var(--white); transform: translateX(4px); }
+        .nav-btn.active { 
+            background: linear-gradient(90deg, var(--gold), #b49226); 
+            color: var(--navy-dark); 
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
+        }
+        .nav-btn.active:hover { transform: none; }
+
+        .sidebar-footer { margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1); display: flex; justify-content: center; }
+        .logout-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.2); border-radius: var(--radius-md); cursor: pointer; font-weight: 600; transition: var(--transition); }
+        .logout-btn:hover { background: #ef4444; color: white; border-color: #ef4444; }
 
         /* --- MAIN CONTENT --- */
-        .main-content { flex: 1; padding: 30px; overflow-y: auto; position: relative; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        .header h1 { font-size: 26px; font-weight: 700; color: var(--bg-sidebar); }
-        .date-display { color: var(--text-light); font-size: 14px; font-weight: 500; }
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+        .header { height: 80px; background: var(--bg-body); display: flex; justify-content: space-between; align-items: center; padding: 0 40px; flex-shrink: 0; border-bottom: 1px solid #e2e8f0; }
+        .header h1 { font-size: 24px; font-weight: 800; color: var(--navy-dark); letter-spacing: -0.02em; }
+        .header-actions { display: flex; gap: 16px; align-items: center; position: relative; }
+        .search-box { background: var(--white); padding: 10px 20px; border-radius: 30px; display: flex; align-items: center; gap: 10px; width: 280px; border: 1px solid #e2e8f0; transition: var(--transition); }
+        .search-box:focus-within { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1); }
+        .search-box input { border: none; outline: none; width: 100%; font-size: 13px; color: var(--text-main); }
 
-        /* --- CARDS --- */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .card { background: var(--card-bg); padding: 25px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(0,0,0,0.04); transition: transform 0.2s; position: relative; overflow: hidden; }
-        .card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
-        .card-info { z-index: 2; }
-        .card-info h3 { font-size: 32px; font-weight: 700; margin-bottom: 0px; line-height: 1.2; color: var(--text-navy); }
-        .card-info p { font-size: 13px; font-weight: 600; opacity: 0.8; color: var(--text-light); }
+        .notif-btn { position: relative; width: 40px; height: 40px; border-radius: 50%; background: white; border: 1px solid #e2e8f0; cursor: pointer; display: flex; justify-content: center; align-items: center; color: var(--navy-dark); transition: 0.2s; }
+        .notif-btn:hover { background: #f1f5f9; }
+        .notif-badge { position: absolute; top: -2px; right: -2px; width: 10px; height: 10px; background: #ef4444; border: 2px solid #fff; border-radius: 50%; }
+        .notif-dropdown { position: absolute; top: 50px; right: 0; width: 320px; background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; z-index: 100; display: none; animation: slideDown 0.2s ease; }
+        .notif-dropdown.show { display: block; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         
-        .card-gold { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 1px solid #fde68a; }
-        .card-blue { background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); border: 1px solid #bae6fd; }
-        .card-green { background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); border: 1px solid #bbf7d0; }
-        .card-icon { width: 55px; height: 55px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; backdrop-filter: blur(5px); z-index: 2; color: var(--text-navy); }
+        .notif-header { padding: 15px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
+        .notif-header h4 { font-size: 14px; font-weight: 700; margin: 0; }
+        .notif-header button { font-size: 11px; color: var(--text-muted); background: none; border: none; cursor: pointer; text-decoration: underline; }
+        
+        .notif-body { max-height: 300px; overflow-y: auto; }
+        .notif-item { padding: 15px; border-bottom: 1px solid #f1f5f9; display: flex; gap: 12px; align-items: start; transition: 0.2s; }
+        .notif-item:hover { background: #f8fafc; }
+        .notif-icon { width: 32px; height: 32px; background: #e0f2fe; color: #0369a1; border-radius: 50%; display: flex; justify-content: center; align-items: center; flex-shrink: 0; font-size: 12px; }
+        .notif-content p { font-size: 13px; margin: 0 0 4px 0; color: var(--text-main); font-weight: 500; }
+        .notif-content span { font-size: 11px; color: var(--text-muted); }
 
-        /* --- TABLES --- */
-        .table-container { background: var(--card-bg); padding: 25px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); margin-bottom: 30px; border: 1px solid rgba(0,0,0,0.04); display: flex; flex-direction: column; }
-        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .section-title { font-size: 18px; font-weight: 700; color: var(--bg-sidebar); }
-        table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 700px; }
-        th { text-align: left; padding: 15px; color: var(--text-light); font-size: 12px; font-weight: 600; text-transform: uppercase; border-bottom: 2px solid #f3f4f6; }
-        td { padding: 15px; border-bottom: 1px solid #f9fafb; font-size: 14px; color: var(--text-navy); }
-        tbody tr:nth-child(even) { background-color: #f8fafc; }
-        tbody tr:hover { background-color: #f1f5f9; }
+        .dashboard-view { flex: 1; overflow-y: auto; padding: 32px 40px; scrollbar-width: thin; }
+        .section { display: none; opacity: 0; transform: translateY(10px); transition: all 0.4s ease; }
+        .section.active { display: block; opacity: 1; transform: translateY(0); }
 
-        .badge { padding: 5px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-        .bg-pending { background: #fef3c7; color: #b45309; }
-        .bg-success { background: #d1fae5; color: #065f46; }
-        .bg-danger { background: #fee2e2; color: #b91c1c; }
-        .bg-info { background: #e0f2fe; color: #075985; }
+        /* --- METRICS & PANELS --- */
+        .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 32px; }
+        .metrics-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-bottom: 32px; }
+        /* NEW: 4-Column Grid for Dashboard Metrics */
+        .metrics-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 32px; }
 
-        .btn { padding: 10px 20px; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; }
-        .btn-primary { background: var(--bg-sidebar); color: white; }
-        .btn-accent { background: var(--accent-gold); color: var(--bg-sidebar); }
-        .btn-success { background: var(--success); color: white; }
-        .btn-danger { background: var(--danger); color: white; }
-        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .metric-card {
+            border-radius: 20px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 170px;
+            color: white;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+            /* This is the key for smooth animation */
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        /* This rule creates the 'move' effect (lifting up and changing shadow) */
+        .metric-card:hover { 
+            transform: translateY(-8px); /* Lifts the card up by 8px */
+            box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.25); /* Increases the shadow */
+        }
+        .metric-card i.bg-icon { position: absolute; right: -15px; top: 10px; font-size: 110px; opacity: 0.15; transform: rotate(-15deg); transition: all 0.3s ease; }
+        .metric-card:hover i.bg-icon { transform: rotate(0deg) scale(1.1); opacity: 0.2; }
 
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .metric-header { display: flex; align-items: center; gap: 10px; z-index: 2; margin-bottom: 5px; }
+        .metric-icon-small { width: 32px; height: 32px; background: rgba(255,255,255,0.4); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; backdrop-filter: blur(4px); }
+        .metric-label { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.9; }
+        .metric-value { font-size: 34px; font-weight: 800; z-index: 2; margin: 10px 0; letter-spacing: -1px; }
+        .metric-footer { z-index: 2; display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 500; opacity: 0.9; background: rgba(0,0,0,0.1); width: fit-content; padding: 4px 10px; border-radius: 20px; }
+
+        .card-green { background: linear-gradient(135deg, #059669 0%, #10b981 100%); }
+        .card-orange { background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%); }
+        .card-red { background: linear-gradient(135deg, #b91c1c 0%, #ef4444 100%); }
+        .card-blue { background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%); }
+
+        /* --- Custom: Sales Quote Summary Box (MODIFIED) --- */
+        .quote-summary-box {
+            /* Changed from var(--navy-light) to a lighter shade */
+            background: var(--bg-body); 
+            transition: none; /* Disable transition for quick change */
+            color: var(--text-main); /* Set text to dark for contrast */
+            border: 1px solid #e2e8f0; /* Add a subtle border */
+        }
+        
+        /* Explicitly prevents any change on hover for the quote summary box */
+        .quote-summary-box:hover {
+            background: var(--bg-body); /* Explicitly keep the same background color */
+            box-shadow: none; /* Remove any potential shadow */
+            transform: none; /* Remove any potential lift effect */
+            cursor: default;
+            border-color: #e2e8f0; /* Keep border color */
+        }
+
+        .quote-summary-box h3 {
+             color: var(--navy-dark); /* Ensure header is dark for contrast */
+        }
+
+        .quote-detail-row {
+            display: flex; 
+            justify-content: space-between; 
+            padding: 12px 0;
+            /* Changed border color from light-on-dark to dark-on-light */
+            border-bottom: 1px dashed #e2e8f0; 
+            color: var(--text-muted); /* Make the detail text muted/darker */
+        }
+        
+        .quote-detail-row:last-of-type { border-bottom: none; }
+        /* --- END Custom: Sales Quote Summary Box --- */
+
+        /* --- UTILITY COMPONENTS (FOR BALANCED UI) --- */
+        .panel { background: var(--white); border-radius: var(--radius-lg); padding: 32px; box-shadow: var(--shadow-card); height: 100%; border: 1px solid #e2e8f0; display: flex; flex-direction: column; }
+        /* Adjusted Content Grid for Calendar/Assignment View */
+        .content-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; min-height: 400px; } 
+        .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .panel-title { font-size: 18px; font-weight: 700; color: var(--navy-dark); }
+        .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
+        .status-ok { background: var(--success-bg); color: var(--success-text); }
+        .status-warn { background: var(--warning-bg); color: var(--warning-text); }
+        .status-err { background: var(--danger-bg); color: var(--danger-text); }
+
+        .btn { padding: 10px 18px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-primary { background: var(--navy-dark); color: white; width: 100%; }
+        .btn-primary:hover { background: var(--navy-light); transform: translateY(-2px); }
+        .btn-danger { background: white; border: 1px solid var(--danger-text); color: var(--danger-text); width: 100%; }
+        .btn-danger:hover { background: var(--danger-bg); }
+        .btn-outline { background: white; border: 1px solid #cbd5e1; color: var(--text-main); width: auto; }
+        .btn-outline:hover { background: #f8fafc; }
+        .btn-gold { background: var(--gold); color: var(--navy-dark); font-weight: 700; width: 100%;}
+        .btn-gold:hover { background: #b49226; color: white; transform: translateY(-2px); }
+        .btn-ghost { background: transparent; color: var(--text-muted); font-size: 12px; text-decoration: underline; cursor: pointer; border: none; width: auto; padding: 0; }
+
+        .tabs { display: flex; gap: 10px; margin-bottom: 30px; border-bottom: 2px solid #e2e8f0; }
+        .tab { padding: 12px 24px; cursor: pointer; color: var(--text-muted); font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: 0.2s; }
+        .tab:hover { color: var(--navy-dark); }
+        .tab.active { color: var(--navy-dark); border-bottom-color: var(--gold); }
+        
+        /* Toast */
+        .toast { position: fixed; bottom: 30px; right: 30px; background: var(--navy-dark); color: white; padding: 16px 24px; border-radius: 12px; display: flex; align-items: center; gap: 12px; transform: translateY(100px); transition: 0.3s; opacity: 0; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 1000; }
+        .toast.show { transform: translateY(0); opacity: 1; }
+
+        /* KPI Cards in Reports */
+        .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 24px; }
+
+        /* List Styles */
+        .triage-list { display: flex; flex-direction: column; gap: 25px; } /* Increased gap for better separation */
+        .triage-card { background: var(--white); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-card); border: 1px solid #e2e8f0; transition: var(--transition); }
+        .triage-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); border-color: var(--gold); }
+        .triage-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .triage-type { font-size: 12px; font-weight: 700; text-transform: uppercase; background: #e0f2fe; color: #075985; padding: 4px 8px; border-radius: 4px; }
+        .triage-info h4 { font-size: 16px; font-weight: 800; color: var(--navy-dark); margin: 0; }
+        .triage-info p { font-size: 13px; color: var(--text-muted); margin-top: 5px; display: flex; align-items: center; gap: 8px; }
+        .triage-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #e2e8f0; }
+        .triage-btn { font-size: 12px; padding: 8px 15px; width: auto; justify-content: center; }
+
+        .txn-list { display: flex; flex-direction: column; gap: 25px; } /* Increased gap for better separation */
+        .txn-card { 
+            background: var(--white); 
+            border-radius: var(--radius-lg); 
+            padding: 0; 
+            box-shadow: var(--shadow-card); 
+            border: 1px solid #e2e8f0; 
+            display: grid; 
+            grid-template-columns: 80px 1.8fr 2.2fr 1.2fr; 
+            overflow: hidden; 
+            transition: var(--transition); 
+            align-items: stretch;
+        }
+        .txn-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); border-color: var(--gold); }
+        .txn-icon-col { background: #f8fafc; display: flex; align-items: center; justify-content: center; border-right: 1px solid #e2e8f0; font-size: 24px; color: var(--navy-light); }
+        .txn-client-col { padding: 24px; border-right: 1px dashed #e2e8f0; display: flex; flex-direction: column; justify-content: center; }
+        .txn-client-name { font-size: 14px; font-weight: 700; color: var(--navy-dark); margin-bottom: 4px; }
+        .txn-client-loc { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+        .txn-ref { font-size: 10px; font-weight: 700; color: var(--info-text); margin-bottom: 6px; display: inline-block; background: var(--info-bg); padding: 3px 8px; border-radius: 4px; width: fit-content; }
+        .txn-finance-col { padding: 24px; display: flex; flex-direction: column; justify-content: center; }
+        .finance-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; color: var(--text-muted); }
+        .finance-row.total { font-weight: 700; color: var(--navy-dark); border-top: 1px dashed #e2e8f0; padding-top: 6px; margin-top: 4px; font-size: 13px; }
+        .txn-action-col { padding: 24px; background: #fafbfc; border-left: 1px solid #e2e8f0; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+        .txn-action-col .btn { font-size: 12px; padding: 8px 12px; width: 100%; justify-content: center; }
+
         .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-size: 12px; margin-bottom: 5px; color: var(--text-light); }
-        .form-control { width: 100%; padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px; background: #f9fafb; outline: none; }
-        .search-bar { width: 100%; max-width: 300px; padding: 10px; border-radius: 20px; border: 1px solid #e5e7eb; outline:none; }
+        .form-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--text-main); }
+        .form-control { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: #f8fafc; transition: 0.2s; }
+        .form-control:focus { background: white; border-color: var(--gold); outline: none; }
+        
+        .total-summary-card { background: var(--navy-dark); color: white; padding: 20px; border-radius: var(--radius-md); margin-top: 20px; }
+        .total-summary-card .label { font-size: 14px; color: #94a3b8; margin-bottom: 4px; }
+        .total-summary-card .value { font-size: 32px; font-weight: 800; }
+        
+table { width: 100%; border-collapse: separate; border-spacing: 0 15px; } 
+th { text-align: left; padding: 0 16px 8px; font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; }
+td { padding: 16px; background: var(--white); font-size: 14px; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; }
+td:first-child { border-left: 1px solid #f1f5f9; border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
+td:last-child { border-right: 1px solid #f1f5f9; border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
 
-        .section-view { display: none; }
-        .section-view.active { display: block; animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Logout Modal Styles */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.4);
+        /* New Styles for Scheduling Card */
+        .schedule-card {
+            background: var(--white); 
+            border-radius: var(--radius-lg); 
+            padding: 24px; 
+            box-shadow: var(--shadow-card); 
+            border: 1px solid #e2e8f0; 
+            display: grid; 
+            grid-template-columns: 1fr; /* Single column layout for internal details */
+            gap: 15px; /* Adjusted gap for stacking */
+            margin-bottom: 0px; /* Reset margin */
+            transition: var(--transition);
         }
+        .schedule-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); border-color: var(--gold); }
+        .job-detail { font-size: 14px; }
+        .job-detail strong { display: block; font-size: 16px; color: var(--navy-dark); margin-top: 4px; }
+        .job-detail .status { font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 5px; }
+        
+        /* The .schedule-actions container is now a FORM for actionable cards */
+        /* I will remove the general .schedule-actions styling and apply specific styling to the form elements */
+        .schedule-actions { 
+            display: flex; 
+            flex-direction: row; 
+            gap: 10px;          
+            align-items: center; 
+            padding-top: 10px; 
+            border-top: 1px dashed #e2e8f0; 
+            width: 100%; 
+        }
+        .schedule-actions .form-control {
+            flex-grow: 1; 
+            width: auto;
+        }
+        .schedule-actions .btn {
+            width: auto; 
+            flex-shrink: 0;
+        }
+        
+        /* --- Grid container for side-by-side schedule cards (MODIFIED) --- */
+        .schedule-grid {
+            display: grid;
+            grid-template-columns: 1fr; /* Now stacks cards vertically (1 card per row) */ 
+            gap: 24px; 
+        }
+        /* --- END Schedule Grid CSS --- */
 
-        .modal-content {
-            background-color: #fefefe;
-            margin: 15% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 400px;
+        /* --- NEW: Calendar Styles (For "Scheduling above Calendar" request) --- */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+        }
+        .calendar-header {
+            background: var(--navy-dark);
+            color: white;
             text-align: center;
-            border-radius: 15px;
+            padding: 10px 0;
+            font-weight: 600;
+            font-size: 13px;
         }
+        .calendar-day {
+            background: var(--white);
+            padding: 10px 5px;
+            min-height: 80px;
+            border: 1px solid #f1f5f9;
+            font-size: 14px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+        .calendar-day:hover:not(.inactive) { background: #e0f2fe; }
+        .calendar-day.today { border: 2px solid var(--gold); }
+        .calendar-day.inactive { background: #f8fafc; color: var(--text-muted); opacity: 0.6; cursor: default; }
+        .event-badge { background: var(--danger-bg); color: var(--danger-text); font-size: 10px; padding: 2px 4px; border-radius: 4px; display: block; margin-top: 5px; font-weight: 600; }
+        /* --- END Calendar Styles --- */
 
-        .modal-header h2 {
-            font-size: 1.5rem;
-            margin-bottom: 10px;
+        /* --- MODAL STYLES --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none; /* Default to hidden */
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
         }
-
-        .modal-header p {
-            font-size: 1rem;
-            color: #666;
-            margin-bottom: 20px;
+        .modal-overlay.show {
+            display: flex;
         }
-
-        .modal-body .btn {
-            margin: 0 10px;
+        .modal-content {
+            width: 100%;
+            max-width: 500px;
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            animation: fadeInScale 0.3s ease-out;
+            max-height: 90vh;
+            overflow-y: auto;
         }
+        /* Specific max-width for delete modal */
+        .modal-content.delete-confirm {
+            max-width: 400px;
+            padding: 0;
+            text-align: center;
+        }
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .modal-header {
+            padding: 20px 32px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header .panel-title { margin: 0; }
+        .modal-close-btn {
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .modal-close-btn:hover { color: var(--danger-text); }
+        .modal-body {
+            padding: 32px;
+        }
+        
     </style>
 </head>
 <body>
 
-    <nav class="sidebar">
-        <div class="brand">
-            <div class="brand-icon"><i class="fas fa-layer-group"></i></div>
-            <div class="brand-text">
-                <h2>
-                    <span class="text-white">ATMICX</span> 
-                    <span class="text-gold">LAUNDRY</span>
-                </h2>
-                <h2 class="text-gold">MACHINE TRADING</h2>
+    <aside class="sidebar">
+        <div class="brand-container">
+            <div class="brand">
+                <img src="logo.png" alt="ATMICX Logo" style="height: 32px; width: auto; object-fit: contain;">
+                <div><h2>ATMICX <span>Secretary</span></h2></div>
             </div>
-        </div>
-
-        <div class="user-profile">
-            <div class="user-avatar"><?php echo strtoupper(substr($_SESSION['username'], 0, 1)); ?></div>
-            <div class="user-info">
-                <h4><?php echo $_SESSION['username']; ?></h4>
-                <p><?php echo ucfirst($_SESSION['role']); ?></p>
+            
+            <div class="user-profile-box" onclick="toast('Opening Profile Settings...')">
+                <div class="avatar" style="background: linear-gradient(135deg, #10b981, #059669); color: white;"><?php echo strtoupper(substr($_SESSION['username'], 0, 1)); ?></div>
+                <div class="user-info">
+                    <div class="name" style="color:#f1f5f9;"><?php echo $_SESSION['username']; ?></div>
+                    <div class="role"><?php echo ucfirst($_SESSION['role']); ?></div>
+                </div>
+                <i class="fas fa-cog settings-icon"></i>
             </div>
         </div>
 
         <ul class="nav-links">
-            <li><button class="nav-btn active" onclick="switchTab('dashboard', this)"><i class="fas fa-th-large"></i> Dashboard</button></li>
-            <li><button class="nav-btn" onclick="switchTab('customers', this)"><i class="fas fa-users"></i> Customer Records</button></li>
-            <li><button class="nav-btn" onclick="switchTab('requests', this)"><i class="fas fa-concierge-bell"></i> Service Requests</button></li>
-            <li><button class="nav-btn" onclick="switchTab('quotes', this)"><i class="fas fa-file-invoice-dollar"></i> Quotations</button></li>
-            <li><button class="nav-btn" onclick="switchTab('appointments', this)"><i class="fas fa-calendar-alt"></i> Appointments</button></li>
-            <li><button class="nav-btn" onclick="switchTab('payments', this)"><i class="fas fa-wallet"></i> Payments</button></li>
-            <li><button class="nav-btn logout-btn" onclick="openLogoutModal()"><i class="fas fa-sign-out-alt"></i> Logout</button></li>
+            <li class="nav-item"><button class="nav-btn active" onclick="nav('sec-dashboard', this)"><i class="fas fa-tachometer-alt"></i> Dashboard</button></li>
+            <li class="nav-item"><button class="nav-btn" onclick="nav('service-requests', this)"><i class="fas fa-headset"></i> Service Requests <span style="margin-left:auto; background:#ef4444; color:white; font-size:10px; padding:2px 6px; border-radius:4px;">3</span></button></li>
+            <li class="nav-item"><button class="nav-btn" onclick="nav('sales-quotes', this)"><i class="fas fa-hand-holding-usd"></i> Sales Quotes</button></li>
+            <li class="nav-item"><button class="nav-btn" onclick="nav('job-scheduling', this)"><i class="fas fa-calendar-alt"></i> Job Scheduling</button></li> 
+            <li class="nav-item"><button class="nav-btn" onclick="nav('inventory-check', this)"><i class="fas fa-box-open"></i> Inventory Check</button></li>
+            <li class="nav-item"><button class="nav-btn" onclick="nav('customer-records', this)"><i class="fas fa-address-book"></i> Customer Records</button></li>
         </ul>
-    </nav>
+
+        <div class="sidebar-footer">
+            <button class="logout-btn" onclick="openLogoutModal()">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </aside>
 
     <main class="main-content">
         <header class="header">
-            <h1 id="page-title">Secretary Dashboard</h1>
-            <span class="date-display">Today: <strong id="current-date"></strong></span>
+            <h1 id="page-title">Operations Dashboard</h1>
+            <div class="header-actions">
+                <div class="search-box">
+                    <i class="fas fa-search" style="color: #94a3b8;"></i>
+                    <input type="text" placeholder="Search data..." id="global-search">
+                </div>
+                
+                <button class="notif-btn" onclick="toggleNotif()">
+                    <i class="fas fa-bell"></i>
+                    <span class="notif-badge" id="notif-dot"></span>
+                </button>
+
+                <div class="notif-dropdown" id="notif-dropdown">
+                    <div class="notif-header">
+                        <h4>Notifications</h4>
+                        <button onclick="clearNotif()">Clear All</button>
+                    </div>
+                    <div class="notif-body">
+                        <div class="notif-item">
+                            <div class="notif-icon" style="background:#fee2e2; color:#991b1b;"><i class="fas fa-wrench"></i></div>
+                            <div class="notif-content">
+                                <p>New Maintenance Request (URGENT)</p>
+                                <span>1 min ago</span>
+                            </div>
+                        </div>
+                        <div class="notif-item">
+                            <div class="notif-icon" style="background:#fff7ed; color:#9a3412;"><i class="fas fa-dollar-sign"></i></div>
+                            <div class="notif-content">
+                                <p>Sales Inquiry: New Investor John</p>
+                                <span>5 mins ago</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </header>
 
-        <div id="dashboard" class="section-view active">
-            <div class="stats-grid">
-                <div class="card card-blue">
-                    <div class="card-info"><h3 id="stat-appt">0</h3><p>Today's Appointments</p></div>
-                    <div class="card-icon"><i class="fas fa-calendar-day"></i></div>
-                </div>
-                <div class="card card-gold">
-                    <div class="card-info"><h3 id="stat-quotes">0</h3><p>Pending Quotes</p></div>
-                    <div class="card-icon"><i class="fas fa-file-invoice"></i></div>
-                </div>
-                <div class="card card-green">
-                    <div class="card-info"><h3 id="stat-req">0</h3><p>Pending Requests</p></div>
-                    <div class="card-icon"><i class="fas fa-clipboard-list"></i></div>
-                </div>
-            </div>
+        <div class="dashboard-view">
 
-            <div class="table-container">
-                <div class="section-header">
-                    <div class="section-title">Latest Service Requests</div>
-                </div>
-                <table>
-                    <thead><tr><th>Client</th><th>Service</th><th>Date</th><th>Status</th></tr></thead>
-                    <tbody id="dashboard-requests-body"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div id="customers" class="section-view">
-            <div class="table-container">
-                <div class="section-header">
-                    <div class="section-title">Customer Database (Read-Only)</div>
-                    <input type="text" id="cust-search" class="search-bar" placeholder="Search customer..." onkeyup="filterCustomers()">
-                </div>
-                <table>
-                    <thead><tr><th>ID</th><th>Name</th><th>Contact</th><th>Email</th><th>Action</th></tr></thead>
-                    <tbody id="customers-table-body"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div id="requests" class="section-view">
-            <div class="table-container">
-                <div class="section-header">
-                    <div class="section-title">Incoming Requests</div>
-                </div>
-                <table>
-                    <thead><tr><th>Req ID</th><th>Client</th><th>Service Issue</th><th>Status</th><th>Actions</th></tr></thead>
-                    <tbody id="requests-table-body"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div id="quotes" class="section-view">
-            <div class="table-container">
-                <div class="section-header">
-                    <div class="section-title">Create Quotation</div>
-                </div>
-                <form onsubmit="handleQuoteSubmit(event)">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Client Name</label>
-                            <input type="text" id="quote-client" class="form-control" placeholder="Search Client" required>
+            <div id="sec-dashboard" class="section active">
+                <div class="metrics-grid-4">
+                    <div class="metric-card card-red triage-btn">
+                        <i class="fas fa-exclamation-triangle bg-icon"></i>
+                        <div class="metric-header">
+                            <div class="metric-icon-small" style="background:rgba(255,255,255,0.4);"><i class="fas fa-wrench"></i></div>
+                            <span class="metric-label">Urgent Maintenance</span>
                         </div>
-                        <div class="form-group">
-                            <label>Service Type</label>
-                            <select id="quote-service" class="form-control">
-                                <option>AC Repair</option>
-                                <option>Installation</option>
-                                <option>Cleaning</option>
-                            </select>
+                        <h3 class="metric-value">1 Request</h3>
+                        <div class="metric-footer" style="background:rgba(255,255,255,0.15);">Triage Now <i class="fas fa-arrow-right"></i></div>
+                    </div>
+                    <div class="metric-card card-orange triage-btn">
+                        <i class="fas fa-users bg-icon"></i>
+                        <div class="metric-header">
+                            <div class="metric-icon-small" style="background:rgba(255,255,255,0.4);"><i class="fas fa-dollar-sign"></i></div>
+                            <span class="metric-label">New Sales Inquiries</span>
+                        </div>
+                        <h3 class="metric-value">2 Leads</h3>
+                        <div class="metric-footer" style="background:rgba(255,255,255,0.15);">Triage Now <i class="fas fa-arrow-right"></i></div>
+                    </div>
+                    <div class="metric-card card-blue" style="min-height: 140px;" onclick="nav('job-scheduling', getNavButtonBySectionId('job-scheduling'))">
+                        <i class="fas fa-check-circle bg-icon"></i>
+                        <div class="metric-header">
+                            <div class="metric-icon-small" style="background:rgba(255,255,255,0.4);"><i class="fas fa-file-invoice"></i></div>
+                            <span class="metric-label">Jobs Awaiting Schedule</span>
+                        </div>
+                        <h3 class="metric-value">1 Job</h3>
+                    </div>
+                    <div class="metric-card card-green" style="min-height: 140px;">
+                        <i class="fas fa-boxes bg-icon"></i>
+                        <div class="metric-header">
+                            <div class="metric-icon-small" style="background:rgba(255,255,255,0.4);"><i class="fas fa-box-open"></i></div>
+                            <span class="metric-label">Low Stock Alerts</span>
+                        </div>
+                        <h3 class="metric-value">1 Alert</h3>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header"><span class="panel-title">Active Service & Sales Triage List</span></div>
+                    <div class="triage-list">
+                        <div class="triage-card">
+                            <div class="triage-header">
+                                <span class="triage-type" style="background:var(--danger-bg); color:var(--danger-text);">Maintenance Request</span>
+                                <span style="font-size:12px; color:var(--text-muted);">Client: Maria Cruz</span>
+                            </div>
+                            <div class="triage-info">
+                                <h4>Water Pipe Burst (URGENT)</h4>
+                                <p><i class="fas fa-map-marker-alt" style="color:var(--text-muted);"></i> Cebu City Branch | <i class="fas fa-calendar-alt" style="color:var(--text-muted);"></i> Requested: Today 9:30 AM</p>
+                            </div>
+                            <div class="triage-footer">
+                                <span style="font-size:14px; font-weight:700; color:var(--navy-dark);">Status: Awaiting Dispatch</span>
+                                <button class="btn btn-danger triage-btn"><i class="fas fa-plus-circle"></i> View & Triage</button>
+                            </div>
+                        </div>
+                        <div class="triage-card">
+                            <div class="triage-header">
+                                <span class="triage-type" style="background:var(--warning-bg); color:var(--warning-text);">Sales Inquiry</span>
+                                <span style="font-size:12px; color:var(--text-muted);">Client: New Investor John</span>
+                            </div>
+                            <div class="triage-info">
+                                <h4>Inquiry on a 2-Set Package</h4>
+                                <p><i class="fas fa-map-marker-alt" style="color:var(--text-muted);"></i> Manila City | <i class="fas fa-calendar-alt" style="color:var(--text-muted);"></i> Requested: Yesterday 4:00 PM</p>
+                            </div>
+                            <div class="triage-footer">
+                                <span style="font-size:14px; font-weight:700; color:var(--navy-dark);">Status: Unassigned</span>
+                                <button class="btn btn-primary triage-btn"><i class="fas fa-plus-circle"></i> View & Triage</button>
+                            </div>
                         </div>
                     </div>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Estimated Amount (₱)</label>
-                            <input type="number" id="quote-amount" class="form-control" placeholder="0.00" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Notes</label>
-                            <input type="text" class="form-control" placeholder="Additional details">
+                </div>
+            </div>
+
+            <div id="service-requests" class="section">
+                <div class="panel">
+                    <div class="tabs">
+                        <div class="tab active" onclick="switchReportTab(this, 'sales-inquiries')">Sales Inquiries</div>
+                        <div class="tab" onclick="switchReportTab(this, 'maintenance-requests')">Maintenance Requests</div>
+                    </div>
+                    <div id="sales-inquiries" class="tab-content active">
+                        <div class="txn-list">
+                            <div class="txn-card" style="grid-template-columns: 80px 1.8fr 2.2fr 1.2fr;">
+                                <div class="txn-icon-col" style="color:var(--orange);"><i class="fas fa-user-tag"></i></div>
+                                <div class="txn-client-col">
+                                    <span class="txn-ref">NEW LEAD #SI001</span>
+                                    <div class="txn-client-name">New Investor John</div>
+                                    <div class="txn-client-loc"><i class="fas fa-map-marker-alt"></i> Manila City</div>
+                                </div>
+
+                                <div class="txn-finance-col" style="border-right: 1px dashed #e2e8f0;">
+                                    <div class="finance-row"><span>Request:</span> <strong>2-Set Package</strong></div>
+                                    <div class="finance-row"><span>Action:</span> Generate Package Quote</div>
+                                </div>
+                                <div class="txn-action-col">
+                                    <button class="btn btn-primary" onclick="prefillSalesQuote()"><i class="fas fa-calculator"></i> Generate Sales Quote</button>
+                                    <button class="btn btn-outline">Call Client</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-accent">Generate & Send Quote</button>
-                </form>
+<br>
+                    <div id="maintenance-requests" class="tab-content">
+                        <div class="txn-list">
+                            <div class="txn-card" style="grid-template-columns: 80px 1.8fr 2.2fr 1.2fr;">
+                                <div class="txn-icon-col" style="color:var(--danger-text);"><i class="fas fa-wrench"></i></div>
+                                <div class="txn-client-col">
+                                    <span class="txn-ref" style="background:var(--danger-bg); color:var(--danger-text);">URGENT #MR055</span>
+                                    <div class="txn-client-name">Maria Cruz</div>
+                                    <div class="txn-client-loc"><i class="fas fa-map-marker-alt"></i> Cebu City Branch</div>
+                                </div>
+                                <div class="txn-finance-col" style="border-right: 1px dashed #e2e8f0;">
+                                    <div class="finance-row"><span>Problem:</span> <strong>Water Pipe Burst</strong></div>
+                                    <div class="finance-row"><span>Priority:</span> High</div>
+                                </div>
+                                <div class="txn-action-col">
+                                    <button class="btn btn-gold" onclick="toast('Opening Repair Quote Builder...')"><i class="fas fa-hammer"></i> Create Repair Quote</button>
+                                    <button class="btn btn-primary" onclick="toast('Scheduling Team Alpha...')"><i class="fas fa-calendar-plus"></i> Schedule Team</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            
-            <div class="table-container">
-                <div class="section-title">Recent Quotations</div>
+
+            <div id="sales-quotes" class="section">
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">Create New Sales Quote</span>
+                    </div>
+                    <div class="content-grid-2">
+                        <div>
+                            <div class="form-group">
+                                <label for="clientName" class="form-label">Client Name</label>
+                                <input type="text" id="clientName" class="form-control" placeholder="E.g., New Investor John">
+                            </div>
+                            <div class="form-group">
+                                <label for="clientContact" class="form-label">Client Contact</label>
+                                <input type="text" id="clientContact" class="form-control" placeholder="E.g., +63 917 123 4567">
+                            </div>
+                            <div class="form-group">
+                                <label for="clientEmail" class="form-label">Client Email</label>
+                                <input type="email" id="clientEmail" class="form-control" placeholder="E.g., john.doe@email.com">
+                            </div>
+                            <div class="form-group">
+                                <label for="packageType" class="form-label">Package / Product</label>
+                                <select id="packageType" class="form-control" onchange="calculateSalesQuote()">
+                                    <option>Select Package</option>
+                                    <option value="250000">1-Set Home Package (₱250,000)</option>
+                                    <option value="450000" selected>2-Set Investor Package (₱450,000)</option>
+                                    <option value="50000">Haier Pro XL Unit (₱50,000)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="installation" class="form-label">Installation / Service Fee</label>
+                                <input type="number" id="installation" class="form-control" value="15000" oninput="calculateSalesQuote()">
+                            </div>
+                            <div class="form-group">
+                                <label for="notes" class="form-label">Quote Notes</label>
+                                <textarea id="notes" class="form-control" rows="3" placeholder="Special requirements, warranty info, etc."></textarea>
+                            </div>
+                            <div class="form-group" style="margin-top: 30px;">
+                               
+                            </div>
+                        </div>
+                        <div class="quote-summary-box" style="padding:20px; border-radius:var(--radius-lg); height:fit-content;">
+                            <h3 style="font-size:16px; margin-bottom:15px; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">Quote Summary</h3>
+                            <div class="quote-detail-row">
+                                <span style="font-size:13px;">Package Value:</span> <strong id="val-package" style="color:var(--gold);">₱450,000.00</strong>
+                            </div>
+                            <div class="quote-detail-row">
+                                <span style="font-size:13px;">Installation Fee:</span> <strong id="val-installation" style="color:var(--gold);">₱15,000.00</strong>
+                            </div>
+                            <div class="total-summary-card">
+                                <div class="label">Total Amount Due</div>
+                                <div class="value" id="val-total">₱465,000.00</div>
+                            </div>
+                            <div style="margin-top: 30px; border-top: 1px dashed #e2e8f0; padding-top: 20px;">
+                                <button class="btn btn-gold" onclick="toast('Quote Saved and Sent to Client!')"><i class="fas fa-envelope"></i> Save & Send Quote</button>
+                                <button class="btn btn-danger" style="margin-top: 8px;" onclick="document.getElementById('clientName').value=''; document.getElementById('packageType').value=''; calculateSalesQuote()"><i class="fas fa-times-circle"></i> Clear Form</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="job-scheduling" class="section">
+                
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">Technician Team Calendar (May 2025)</span>
+                        <div class="status-badge status-ok">3 Teams Available</div>
+                    </div>
+                    
+                    <div class="calendar-grid">
+                        <div class="calendar-header">SUN</div>
+                        <div class="calendar-header">MON</div>
+                        <div class="calendar-header">TUE</div>
+                        <div class="calendar-header">WED</div>
+                        <div class="calendar-header">THU</div>
+                        <div class="calendar-header">FRI</div>
+                        <div class="calendar-header">SAT</div>
+
+                        <div class="calendar-day inactive">28</div>
+                        <div class="calendar-day inactive">29</div>
+                        <div class="calendar-day inactive">30</div>
+                        <div class="calendar-day">1</div>
+                        <div class="calendar-day">2</div>
+                        <div class="calendar-day">3</div>
+                        <div class="calendar-day">4</div>
+
+                        <div class="calendar-day">5</div>
+                        <div class="calendar-day">6</div>
+                        <div class="calendar-day">7</div>
+                        <div class="calendar-day">8</div>
+                        <div class="calendar-day">9</div>
+                        <div class="calendar-day">10</div>
+                        <div class="calendar-day">11</div>
+
+                        <div class="calendar-day">12</div>
+                        <div class="calendar-day">13</div>
+                        <div class="calendar-day today">
+                            14 (Today)
+                            <span class="event-badge" style="background: var(--success-bg); color: var(--success-text);" onclick="toast('Job SQ113: Team Alpha - Makati')">Team Alpha: SQ113</span>
+                            <span class="event-badge" onclick="toast('Maintenance MR055: Team Beta - Cebu (URGENT)')">Team Beta: MR055</span>
+                        </div>
+                        <div class="calendar-day">15</div>
+                        <div class="calendar-day">16</div>
+                        <div class="calendar-day">17</div>
+                        <div class="calendar-day">18</div>
+
+                        <div class="calendar-day">19</div>
+                        <div class="calendar-day">20</div>
+                        <div class="calendar-day">21</div>
+                        <div class="calendar-day">22</div>
+                        <div class="calendar-day">23</div>
+                        <div class="calendar-day">24</div>
+                        <div class="calendar-day">25</div>
+
+                        <div class="calendar-day">26</div>
+                        <div class="calendar-day">27</div>
+                        <div class="calendar-day">28</div>
+                        <div class="calendar-day">29</div>
+                        <div class="calendar-day">30</div>
+                        <div class="calendar-day">31</div>
+                        <div class="calendar-day inactive">1</div>
+                    </div>
+                </div>
+
                 <br>
-                <table>
-                    <thead><tr><th>Quote ID</th><th>Client</th><th>Amount</th><th>Status</th></tr></thead>
-                    <tbody id="quotes-table-body"></tbody>
-                </table>
-            </div>
-        </div>
 
-        <div id="appointments" class="section-view">
-            <div class="table-container">
-                <div class="section-header">
-                    <div class="section-title">Schedule Management</div>
-                </div>
-                <table>
-                    <thead><tr><th>Date & Time</th><th>Client</th><th>Service</th><th>Technician</th><th>Status</th><th>Action</th></tr></thead>
-                    <tbody id="appointments-table-body"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div id="payments" class="section-view">
-            <div class="table-container">
-                <div class="section-header">
-                    <div class="section-title">Record Payment</div>
-                </div>
-                <form onsubmit="handlePaymentSubmit(event)">
-                    <div class="form-grid">
-                        <div class="form-group"><label>Reference #</label><input type="text" id="pay-ref" class="form-control" required placeholder="PAY-00X"></div>
-                        <div class="form-group"><label>Client Name</label><input type="text" id="pay-client" class="form-control" required placeholder="Full Name"></div>
+                <div class="panel" style="margin-bottom: 30px;">
+                    <div class="panel-header">
+                        <span class="panel-title">Jobs Awaiting Technician Assignment</span>
+                        <div class="status-badge status-ok">1 Job Ready</div>
                     </div>
-                    <div class="form-grid">
-                        <div class="form-group"><label>Amount Received (₱)</label><input type="number" id="pay-amount" class="form-control" required placeholder="0.00"></div>
-                        <div class="form-group"><label>Method</label>
-                            <select id="pay-method" class="form-control"><option>Cash</option><option>GCash</option><option>Bank Transfer</option></select>
+
+                    <div class="schedule-grid"> 
+                        
+                        <div class="schedule-card" id="job-sq113"> 
+                            <div class="job-detail">
+                                <span style="font-size:12px; color:var(--text-muted); display:block;">JOB #SQ113 (Installation)</span>
+                                <strong>Client: Ms. Alexia Perez</strong>
+                                <div class="status" style="background:var(--success-bg); color:var(--success-text);">Payment Verified</div>
+                            </div>
+                            <div class="job-detail">
+                                <span style="font-size:12px; color:var(--text-muted); display:block;">Job Location / Type</span>
+                                <strong>Makati City Branch</strong>
+                                <span style="font-size:13px; color:var(--text-muted);"><i class="fas fa-box-open"></i> 2-Set Investor Package</span>
+                            </div>
+                            <form class="assignment-form" onsubmit="return handleAssignment(event, 'SQ113')" style="padding-top: 10px; border-top: 1px dashed #e2e8f0;"> 
+                                <div class="form-group">
+                                    <label for="techName-sq113" class="form-label">Assigned Technician Name</label>
+                                    <input type="text" id="techName-sq113" name="tech_name" class="form-control" placeholder="E.g., Rico Diaz" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="techContact-sq113" class="form-label">Technician Contact (Email/Phone)</label>
+                                    <input type="text" id="techContact-sq113" name="tech_contact" class="form-control" placeholder="E.g., (0917) 123-4567" required>
+                                </div>
+                                
+                                <div style="display: flex; gap: 10px;">
+                                     <div class="form-group" style="flex: 1;">
+                                        <label for="scheduleDate-sq113" class="form-label">Schedule Date</label>
+                                        <input type="date" id="scheduleDate-sq113" name="schedule_date" class="form-control" required>
+                                    </div>
+                                     <div class="form-group" style="flex: 1;">
+                                        <label for="scheduleTime-sq113" class="form-label">Schedule Time</label>
+                                        <input type="time" id="scheduleTime-sq113" name="schedule_time" class="form-control" required>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="technicianTeam-sq113" class="form-label">Assign Technician Team</label>
+                                    <select id="technicianTeam-sq113" name="technician_team" class="form-control" style="font-size:14px; padding: 12px;" required>
+                                        <option value="">Select Technician Team</option>
+                                        <option value="Team Alpha">Team Alpha (Manila)</option>
+                                        <option value="Team Beta">Team Beta (Manila)</option>
+                                        <option value="Team Charlie">Team Charlie (Cebu)</option>
+                                    </select>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-gold" style="margin-top: 10px; padding: 12px; font-size: 14px; width: 100%;">
+                                    <i class="fas fa-calendar-check"></i> Assign & Schedule Job
+                                </button>
+                            </form>
+                            </div>
+
+                        <div class="schedule-card" id="job-sq114" style="opacity: 0.7; border: 1px solid #e2e8f0;"> 
+                            <div class="job-detail">
+                                <span style="font-size:12px; color:var(--text-muted); display:block;">JOB #SQ114 (Installation)</span>
+                                <strong>Client: Mr. Robert Lee</strong>
+                                <div class="status" style="background:var(--warning-bg); color:var(--warning-text);">Awaiting Verification</div>
+                            </div>
+                            <div class="job-detail">
+                                <span style="font-size:12px; color:var(--text-muted); display:block;">Job Location / Type</span>
+                                <strong>Iloilo City Home</strong>
+                                <span style="font-size:13px; color:var(--text-muted);"><i class="fas fa-box-open"></i> 1-Set Home Package</span>
+                            </div>
+                            <div class="schedule-actions"> 
+                                <button class="btn btn-primary" style="opacity: 0.5; width: 50%;" disabled>
+                                    Awaiting Manager Verification
+                                </button>
+                                <button class="btn btn-outline" style="width: 50%;" onclick="nav('service-requests', getNavButtonBySectionId('service-requests'))">
+                                    Check Request Status
+                                </button>
+                            </div>
+                    </div>
+                </div>
+</div>
+            </div>
+            <div id="inventory-check" class="section">
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">Real-Time Inventory Stock Check</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="inventorySearch" class="form-label">Search Product / Part Number</label>
+                        <input type="text" id="inventorySearch" class="form-control" placeholder="Start typing to search inventory...">
+                    </div>
+                    <table style="margin-top: 20px;">
+                        <thead>
+                            <tr>
+                                <th>Item Code</th>
+                                <th>Product Name</th>
+                                <th>Manila (Stock)</th>
+                                <th>Cebu (Stock)</th>
+                                <th>Bacolod (Stock)</th>
+                                <th>Total Stock</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>#HXL001</td>
+                                <td>Haier Pro XL</td>
+                                <td>30 Units</td>
+                                <td>0 Units <span class="status-badge status-err" style="margin-left:8px;">CRIT</span></td>
+                                <td>15 Units</td>
+                                <td>45 Units</td>
+                            </tr>
+                            <tr>
+                                <td>#PCB005</td>
+                                <td>PCB Boards</td>
+                                <td>50 Units</td>
+                                <td>45 Units</td>
+                                <td>2 Units <span class="status-badge status-warn" style="margin-left:8px;">LOW</span></td>
+                                <td>97 Units</td>
+                            </tr>
+                            <tr>
+                                <td>#DH045</td>
+                                <td>Drain Hoses</td>
+                                <td>10 Units</td>
+                                <td>45 Units</td>
+                                <td>50 Units</td>
+                                <td>105 Units</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                   
+                </div>
+            </div>
+
+            <div id="customer-records" class="section">
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">Client Profile: Maria Cruz</span>
+                        <button class="btn btn-outline"><i class="fas fa-edit"></i> Edit Profile</button>
+                    </div>
+                    <div class="metrics-grid-4 kpi-row">
+                        <div class="metric-card card-blue" style="min-height: 120px; padding: 18px;">
+                            <i class="fas fa-list-alt bg-icon" style="font-size: 80px;"></i>
+                            <div class="metric-header"><span class="metric-label">Total Jobs</span></div>
+                            <h3 class="metric-value" style="font-size: 28px;">15</h3>
+                        </div>
+                        <div class="metric-card card-green" style="min-height: 120px; padding: 18px;">
+                            <i class="fas fa-hand-holding-usd bg-icon" style="font-size: 80px;"></i>
+                            <div class="metric-header"><span class="metric-label">Total Revenue</span></div>
+                            <h3 class="metric-value" style="font-size: 28px;">₱1.2M</h3>
+                        </div>
+                        <div class="metric-card card-orange" style="min-height: 120px; padding: 18px;">
+                            <i class="fas fa-hourglass-half bg-icon" style="font-size: 80px;"></i>
+                            <div class="metric-header"><span class="metric-label">Pending Payments</span></div>
+                            <h3 class="metric-value" style="font-size: 28px;">₱0.00</h3>
+                        </div>
+                        <div class="metric-card card-red" style="min-height: 120px; padding: 18px;">
+                            <i class="fas fa-exclamation-triangle bg-icon" style="font-size: 80px;"></i>
+                            <div class="metric-header"><span class="metric-label">Critical Alerts</span></div>
+                            <h3 class="metric-value" style="font-size: 28px;">1</div>
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-success">Record Transaction</button>
-                </form>
-            </div>
-
-            <div class="table-container">
-                <div class="section-header">
-                    <div class="section-title">Payment History / Confirmation</div>
+                    <h3 style="font-size:16px; font-weight:700; color:var(--navy-dark); margin-top: 10px; margin-bottom: 20px;">Recent Service History</h3>
+                    <div class="txn-list">
+                        <div class="txn-card" style="grid-template-columns: 80px 1.8fr 2.2fr 1.2fr;">
+                            <div class="txn-icon-col" style="color:var(--danger-text);"><i class="fas fa-wrench"></i></div>
+                            <div class="txn-client-col">
+                                <span class="txn-ref" style="background:var(--danger-bg); color:var(--danger-text);">URGENT #MR055</span>
+                                <div class="txn-client-name">Water Pipe Burst</div>
+                                <div class="txn-client-loc"><i class="fas fa-map-marker-alt"></i> Cebu City Branch</div>
+                            </div>
+                            <div class="txn-finance-col" style="border-right: 1px dashed #e2e8f0;">
+                                <div class="finance-row"><span>Date:</span> <strong>Today, 9:30 AM</strong></div>
+                                <div class="finance-row"><span>Status:</span> Awaiting Dispatch</div>
+                            </div>
+                            <div class="txn-action-col" style="background:var(--danger-bg); border-left: 1px solid var(--danger-text);">
+                                <button class="btn btn-danger" style="color:white; background:var(--danger-text);"><i class="fas fa-clock"></i> URGENT</button>
+                                <button class="btn btn-outline" style="border-color:var(--danger-text); color:var(--danger-text); background:var(--danger-bg);">View Details</button>
+                            </div>
+                        </div>
+                        <div class="txn-card" style="grid-template-columns: 80px 1.8fr 2.2fr 1.2fr;">
+                            <div class="txn-icon-col" style="color:var(--success-text);"><i class="fas fa-check-circle"></i></div>
+                            <div class="txn-client-col">
+                                <span class="txn-ref" style="background:var(--success-bg); color:var(--success-text);">PAID #SQ112</span>
+                                <div class="txn-client-name">2-Set Package Installation</div>
+                                <div class="txn-client-loc"><i class="fas fa-map-marker-alt"></i> Manila City</div>
+                            </div>
+                            <div class="txn-finance-col" style="border-right: 1px dashed #e2e8f0;">
+                                <div class="finance-row"><span>Date:</span> <strong>2023-11-05</strong></div>
+                                <div class="finance-row"><span>Total:</span> ₱465,000.00</div>
+                            </div>
+                            <div class="txn-action-col">
+                                <button class="btn btn-primary"><i class="fas fa-receipt"></i> View Invoice</button>
+                                <button class="btn btn-outline">Call Client</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <table>
-                    <thead><tr><th>Ref #</th><th>Client</th><th>Amount</th><th>Method</th><th>Date</th><th>Status</th></tr></thead>
-                    <tbody id="payments-table-body"></tbody>
-                </table>
             </div>
-        </div>
 
-    <div id="logout-modal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">               
-                <h2>Are you logging out?</h2>
-                <p>You can always log back in at any time.</p>
-            </div>
-            <div class="modal-body">
-                <button class="btn btn-secondary" onclick="closeLogoutModal()">Cancel</button>
-                <button class="btn btn-danger" onclick="window.location.href='logout.php'">Log out</button>
+        </div>
+    </main>
+
+    <div class="toast" id="toast">
+        <i class="fas fa-info-circle" style="color: var(--gold);"></i>
+        <span id="toast-msg"></span>
+    </div>
+
+    <div id="logout-modal-overlay" class="modal-overlay">
+        <div class="modal-content delete-confirm">
+            <div style="padding: 32px; display: flex; flex-direction: column; align-items: center; text-align: center;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: var(--danger-text); margin-bottom: 20px;"></i>
+                <h4 style="font-size: 18px; font-weight: 700; color: var(--navy-dark); margin-bottom: 10px;">Confirm Logout</h4>
+                <p style="font-size: 14px; color: var(--text-main); margin-bottom: 30px;">Are you sure you want to end your current session?</p>
+                <div style="display: flex; gap: 10px; width: 100%;">
+                    <button type="button" class="btn btn-danger" style="flex: 1;" onclick="window.location.href='logout.php'"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                    <button type="button" class="btn btn-outline" style="flex: 1;" onclick="closeLogoutModal()">Cancel</button>
+                </div>
             </div>
         </div>
     </div>
 
-    </main>
-
     <script>
-        // --- 1. DATA SIMULATION (Persistent in LocalStorage) ---
-        const defaultData = {
-            customers: [
-                {id: 'CL-001', name: 'Maria Cruz', contact: '0912 345 6789', email: 'maria@email.com'},
-                {id: 'CL-002', name: 'Juan Dela Cruz', contact: '0998 765 4321', email: 'juan@email.com'},
-                {id: 'CL-003', name: 'Ben Santos', contact: '0917 111 2222', email: 'ben@email.com'}
-            ],
-            requests: [
-                {id: 'REQ-101', client: 'Maria Cruz', service: 'AC Leaking', status: 'Pending', date: 'Dec 12'},
-                {id: 'REQ-102', client: 'Ben Santos', service: 'Installation', status: 'Approved', date: 'Dec 13'},
-                {id: 'REQ-103', client: 'John Doe', service: 'Cleaning', status: 'Pending', date: 'Dec 14'}
-            ],
-            quotes: [
-                {id: 'QT-501', client: 'Maria Cruz', amount: 2500, status: 'Pending'},
-                {id: 'QT-502', client: 'Juan Dela Cruz', amount: 5000, status: 'Accepted'}
-            ],
-            appointments: [
-                {id: 1, date: 'Dec 12 - 9:00 AM', client: 'Maria Cruz', service: 'AC Repair', tech: 'Unassigned', status: 'Pending'},
-                {id: 2, date: 'Dec 12 - 1:00 PM', client: 'Juan Dela Cruz', service: 'Installation', tech: 'Tech Mike', status: 'Scheduled'}
-            ],
-            payments: [
-                {ref: 'PAY-001', client: 'Juan Dela Cruz', amount: 5000, method: 'Cash', date: 'Dec 10', status: 'Completed'},
-                {ref: 'PAY-002', client: 'Ben Santos', amount: 1500, method: 'GCash', date: 'Dec 11', status: 'Verifying'}
-            ]
-        };
+        // --- JAVASCRIPT FUNCTIONS ---
 
-        let db = JSON.parse(localStorage.getItem('sec_db')) || defaultData;
-
-        function saveDb() {
-            localStorage.setItem('sec_db', JSON.stringify(db));
-            renderAll();
+        // Toast Notification
+        function toast(msg) {
+            const toastElement = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            toastElement.classList.add('show');
+            setTimeout(() => {
+                toastElement.classList.remove('show');
+            }, 3000);
         }
 
-        // --- 2. RENDER FUNCTIONS ---
-        function renderAll() {
-            renderStats();
-            renderCustomers();
-            renderRequests();
-            renderQuotes();
-            renderAppointments();
-            renderPayments(); // New Render function
+
+        // Header Notification Dropdown Toggle
+        function toggleNotif() {
+            const dropdown = document.getElementById('notif-dropdown');
+            dropdown.classList.toggle('show');
         }
 
-        function renderStats() {
-            document.getElementById('stat-appt').innerText = db.appointments.length;
-            document.getElementById('stat-quotes').innerText = db.quotes.filter(q => q.status === 'Pending').length;
-            document.getElementById('stat-req').innerText = db.requests.filter(r => r.status === 'Pending').length;
-            
-            const tbody = document.getElementById('dashboard-requests-body');
-            tbody.innerHTML = '';
-            db.requests.slice(0, 3).forEach(r => {
-                let badge = r.status === 'Pending' ? 'bg-pending' : 'bg-success';
-                tbody.innerHTML += `<tr><td>${r.client}</td><td>${r.service}</td><td>${r.date}</td><td><span class="badge ${badge}">${r.status}</span></td></tr>`;
+        // Clear Notifications
+        function clearNotif() {
+            toast('Notifications cleared.');
+            document.getElementById('notif-dot').style.display = 'none';
+            document.getElementById('notif-dropdown').classList.remove('show');
+        }
+
+        // Sidebar Navigation
+        function getNavButtonBySectionId(sectionId) {
+            return document.querySelector(`.nav-btn[onclick*="'${sectionId}'"]`);
+        }
+
+        function nav(sectionId, element) {
+            // 1. Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
             });
-        }
 
-        function renderCustomers() {
-            const tbody = document.getElementById('customers-table-body');
-            tbody.innerHTML = '';
-            db.customers.forEach(c => {
-                tbody.innerHTML += `<tr><td>${c.id}</td><td>${c.name}</td><td>${c.contact}</td><td>${c.email}</td><td><button class="btn btn-sm btn-primary" onclick="alert('Viewing Profile: ${c.name}')">View</button></td></tr>`;
+            // 2. Show the target section
+            document.getElementById(sectionId).classList.add('active');
+
+            // 3. Update active state for nav buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
             });
-        }
+            element.classList.add('active');
 
-        function renderRequests() {
-            const tbody = document.getElementById('requests-table-body');
-            tbody.innerHTML = '';
-            db.requests.forEach((r, index) => {
-                let badge = r.status === 'Pending' ? 'bg-pending' : (r.status === 'Approved' ? 'bg-success' : 'bg-danger');
-                let actions = r.status === 'Pending' 
-                    ? `<button class="btn btn-sm btn-success" onclick="updateReqStatus(${index}, 'Approved')">Approve</button> 
-                       <button class="btn btn-sm btn-danger" onclick="updateReqStatus(${index}, 'Declined')">Decline</button>`
-                    : `<span style="color:#aaa; font-size:12px;">Processed</span>`;
-                
-                tbody.innerHTML += `<tr><td>${r.id}</td><td>${r.client}</td><td>${r.service}</td><td><span class="badge ${badge}">${r.status}</span></td><td>${actions}</td></tr>`;
-            });
-        }
-
-        function renderQuotes() {
-            const tbody = document.getElementById('quotes-table-body');
-            tbody.innerHTML = '';
-            db.quotes.forEach(q => {
-                let badge = q.status === 'Pending' ? 'bg-pending' : 'bg-success';
-                tbody.innerHTML += `<tr><td>${q.id}</td><td>${q.client}</td><td>₱ ${q.amount.toLocaleString()}</td><td><span class="badge ${badge}">${q.status}</span></td></tr>`;
-            });
-        }
-
-        function renderAppointments() {
-            const tbody = document.getElementById('appointments-table-body');
-            tbody.innerHTML = '';
-            db.appointments.forEach((a, index) => {
-                let techDisplay = a.tech === 'Unassigned' ? `<span style="color:red">Unassigned</span>` : `<span>${a.tech}</span>`;
-                let action = a.tech === 'Unassigned' 
-                    ? `<button class="btn btn-sm btn-accent" onclick="assignTech(${index})">Assign Tech</button>` 
-                    : `<span class="badge bg-info">Scheduled</span>`;
-                
-                tbody.innerHTML += `<tr><td>${a.date}</td><td>${a.client}</td><td>${a.service}</td><td>${techDisplay}</td><td><span class="badge bg-pending">${a.status}</span></td><td>${action}</td></tr>`;
-            });
-        }
-
-        function renderPayments() {
-            const tbody = document.getElementById('payments-table-body');
-            tbody.innerHTML = '';
-            db.payments.forEach(p => {
-                let badge = p.status === 'Completed' ? 'bg-success' : 'bg-pending';
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${p.ref}</td>
-                        <td>${p.client}</td>
-                        <td>₱ ${p.amount.toLocaleString()}</td>
-                        <td>${p.method}</td>
-                        <td>${p.date}</td>
-                        <td><span class="badge ${badge}">${p.status}</span></td>
-                    </tr>`;
-            });
-        }
-
-        // --- 3. INTERACTION HANDLERS ---
-        function updateReqStatus(index, status) {
-            db.requests[index].status = status;
-            if(status === 'Approved') {
-                db.appointments.push({
-                    id: Date.now(),
-                    date: 'TBD',
-                    client: db.requests[index].client,
-                    service: db.requests[index].service,
-                    tech: 'Unassigned',
-                    status: 'Pending'
-                });
-                alert(`Request Approved! Moved to Appointments.`);
-            }
-            saveDb();
-        }
-
-        function handleQuoteSubmit(e) {
-            e.preventDefault();
-            const client = document.getElementById('quote-client').value;
-            const amount = document.getElementById('quote-amount').value;
-            
-            db.quotes.unshift({
-                id: '#QT-'+Math.floor(Math.random()*1000),
-                client: client,
-                amount: parseFloat(amount),
-                status: 'Pending'
-            });
-            alert('Quote Generated and Sent Successfully!');
-            saveDb();
-            e.target.reset();
-        }
-
-        function assignTech(index) {
-            const techName = prompt("Enter Technician Name (e.g., Tech Mike):");
-            if(techName) {
-                db.appointments[index].tech = techName;
-                db.appointments[index].status = 'Scheduled';
-                saveDb();
-            }
-        }
-
-        function handlePaymentSubmit(e) {
-            e.preventDefault();
-            
-            const newPayment = {
-                ref: document.getElementById('pay-ref').value,
-                client: document.getElementById('pay-client').value,
-                amount: parseFloat(document.getElementById('pay-amount').value),
-                method: document.getElementById('pay-method').value,
-                date: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'}),
-                status: 'Completed'
-            };
-
-            db.payments.unshift(newPayment); // Add to top of list
-            alert("Payment Recorded Successfully!");
-            saveDb(); // Saves and re-renders table
-            e.target.reset();
-        }
-
-        function filterCustomers() {
-            const input = document.getElementById('cust-search').value.toLowerCase();
-            const rows = document.getElementById('customers-table-body').getElementsByTagName('tr');
-            for (let i = 0; i < rows.length; i++) {
-                const name = rows[i].getElementsByTagName('td')[1].textContent.toLowerCase();
-                rows[i].style.display = name.indexOf(input) > -1 ? "" : "none";
-            }
-        }
-
-        // --- 4. UI LOGIC ---
-        const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        document.getElementById('current-date').innerText = new Date().toLocaleDateString('en-US', dateOptions);
-
-        function switchTab(tabId, btn) {
-            document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            
-            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
-            btn.classList.add('active');
-
+            // 4. Update Header Title
             const titles = {
-                'dashboard': 'Secretary Dashboard', 'customers': 'Customer Records',
-                'requests': 'Service Requests', 'quotes': 'Quotation System',
-                'appointments': 'Appointments', 'payments': 'Payment Processing'
+                'sec-dashboard': 'Operations Dashboard',
+                'service-requests': 'Service & Sales Triage',
+                'sales-quotes': 'Sales Quotation Builder',
+                'job-scheduling': 'Job Assignment & Scheduling', // NEW TITLE
+                'inventory-check': 'Stock Check & Logistics',
+                'customer-records': 'Client Management'
             };
-            document.getElementById('page-title').innerText = titles[tabId];
+            document.getElementById('page-title').innerText = titles[sectionId] || 'Dashboard';
         }
 
+        // Tab Switching for Service Requests/Reports
+        function switchReportTab(element, tabId) {
+            // 1. Deactivate all tabs in the group
+            element.parentElement.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // 2. Activate the clicked tab
+            element.classList.add('active');
+
+            // 3. Hide all tab contents
+            document.querySelectorAll('#service-requests .tab-content').forEach(content => {
+                content.style.display = 'none';
+                content.classList.remove('active'); // Keep opacity animation
+            });
+            
+            // 4. Show the corresponding tab content
+            const targetContent = document.getElementById(tabId);
+            if (targetContent) {
+                targetContent.style.display = 'block';
+                // Trigger animation by adding the class after a tiny delay
+                setTimeout(() => { targetContent.classList.add('active'); }, 50); 
+            }
+        }
+        
+        // Sales Quote Logic
+        function calculateSalesQuote() {
+            const packageSelect = document.getElementById('packageType');
+            const packageValue = parseFloat(packageSelect.value) || 0;
+            const installationFee = parseFloat(document.getElementById('installation').value) || 0;
+            
+            // Calculate total without discount
+            const total = packageValue + installationFee;
+
+            document.getElementById('val-package').innerText = `₱${packageValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('val-installation').innerText = `₱${installationFee.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('val-total').innerText = `₱${total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        }
+        
+        // Prefill Sales Quote from a Triage (UPDATED)
+        function prefillSalesQuote() {
+            // This is a simple mock function to pre-fill the form based on a triage card
+            nav('sales-quotes', getNavButtonBySectionId('sales-quotes'));
+            document.getElementById('clientName').value = 'New Investor John';
+            document.getElementById('clientContact').value = '+63 917 999 0000'; // Mock data for prefill
+            document.getElementById('clientEmail').value = 'john@example.com'; // Mock data for prefill
+            document.getElementById('installation').value = '15000';
+            calculateSalesQuote();
+            toast('Sales Quote form pre-filled for New Investor John.');
+        }
+
+        // NEW: Function to handle the team assignment form submission
+        function handleAssignment(event, jobId) {
+            event.preventDefault(); // Stop the form from submitting normally
+            
+            const form = event.target;
+            const selectedTeam = form.querySelector('select[name="technician_team"]').value;
+            // Get the technician/schedule fields
+            const techName = form.querySelector('input[name="tech_name"]').value;
+            const techContact = form.querySelector('input[name="tech_contact"]').value;
+            const scheduleDate = form.querySelector('input[name="schedule_date"]').value;
+            const scheduleTime = form.querySelector('input[name="schedule_time"]').value;
+            
+            if (selectedTeam === "") {
+                toast(`ERROR: Please select a technician team for Job #${jobId}.`);
+                return false;
+            }
+            
+            // Simulate API call/database update using the new data
+            toast(`SUCCESS: Job #${jobId} assigned to ${techName} (${selectedTeam}) on ${scheduleDate} at ${scheduleTime}.`);
+
+            // Optional: Visually update the assigned card
+            const card = document.getElementById(`job-${jobId.toLowerCase()}`);
+            if (card) {
+                // Change status badge
+                const statusBadge = card.querySelector('.status');
+                statusBadge.innerText = 'Scheduled';
+                statusBadge.style.background = 'var(--info-bg)';
+                statusBadge.style.color = 'var(--info-text)';
+
+                // Disable the form/card actions
+                card.style.opacity = '0.7';
+                form.querySelector('select[name="technician_team"]').disabled = true; // Disable new fields
+                form.querySelector('input[name="tech_name"]').disabled = true; // Disable new fields
+                form.querySelector('input[name="tech_contact"]').disabled = true; // Disable new fields
+                form.querySelector('input[name="schedule_date"]').disabled = true; // Disable new fields
+                form.querySelector('input[name="schedule_time"]').disabled = true; // Disable new fields
+                
+                const submitButton = form.querySelector('button[type="submit"]');
+                submitButton.disabled = true;
+                submitButton.innerText = 'Scheduled!';
+                
+                // If the job was urgent, update the calendar visually (mock)
+                if (jobId === 'MR055') {
+                    const calendarDay = document.querySelector('.calendar-day.today');
+                    if (calendarDay) {
+                         const eventBadge = calendarDay.querySelector(`[onclick*="MR055"]`);
+                         if (eventBadge) {
+                            eventBadge.style.background = 'var(--info-bg)';
+                            eventBadge.style.color = 'var(--info-text)';
+                            eventBadge.innerText = `${selectedTeam}: MR055 (Dispatched)`;
+                         }
+                    }
+                }
+            }
+            
+            return false; // Prevent default form submission
+        }
+
+        // INITIALIZATION
+        document.addEventListener('DOMContentLoaded', (event) => {
+            // 1. Set initial view to dashboard and activate the nav button
+            nav('sec-dashboard', document.querySelector('.nav-btn.active'));
+            
+            // 2. Calculate initial sales quote summary
+            calculateSalesQuote();
+
+            // 3. Wire up Triage Now buttons in Dashboard to navigate to Service Requests
+            const triageButtons = document.querySelectorAll('.triage-btn');
+            const serviceRequestButton = getNavButtonBySectionId('service-requests');
+            if (serviceRequestButton) {
+                triageButtons.forEach(btn => {
+                    btn.onclick = (e) => {
+                        e.preventDefault(); // Prevent default button action if any
+                        nav('service-requests', serviceRequestButton);
+                        
+                        // Optional: Switch to the correct tab in Service Requests upon triage click
+                        const targetTab = btn.parentElement.querySelector('h4').innerText.toLowerCase().includes('repair') || btn.parentElement.querySelector('span.metric-label').innerText.toLowerCase().includes('maintenance') ? 'maintenance-requests' : 'sales-inquiries';
+                        
+                        // Find the corresponding tab element and click it
+                        const tabElement = document.querySelector(`#service-requests .tab[onclick*="'${targetTab}'"]`);
+                        if (tabElement) {
+                             switchReportTab(tabElement, targetTab);
+                        }
+                    };
+                });
+            }
+        });
         function openLogoutModal() {
-            document.getElementById('logout-modal').style.display = 'block';
+            document.getElementById('logout-modal-overlay').classList.add('show');
         }
 
         function closeLogoutModal() {
-            document.getElementById('logout-modal').style.display = 'none';
+            document.getElementById('logout-modal-overlay').classList.remove('show');
         }
-
-        // Init
-        renderAll();
     </script>
+
 </body>
 </html>

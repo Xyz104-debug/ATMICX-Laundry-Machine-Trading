@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Portal | ATMICX Trading</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* --- PREMIUM THEME VARIABLES (Secretary/Admin Theme) --- */
+        :root {
+            --navy-dark: #0f172a;       /* Deep Navy */
+            --navy-light: #1e293b;
+            --gold: #d4af37;            /* Metallic Gold */
+            --bg-body: #f8fafc;         /* Light Gray Body */
+            --white: #ffffff;
+            
+            --success-bg: #dcfce7; --success-text: #166534;
+            --warning-bg: #fff7ed; --warning-text: #9a3412;
+            --danger-bg: #fee2e2;  --danger-text: #991b1b;
+            --info-bg: #e0f2fe;    --info-text: #075985;
+
+            --text-main: #334155;
+            --text-muted: #64748b;
+
+            --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* Increased transition for smoother effect */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+        body {
+            display: flex;
+            background-color: var(--bg-body);
+            height: 100vh;
+            color: var(--text-main);
+            overflow: hidden;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: 280px;
+            background: var(--navy-dark);
+            color: var(--white);
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            flex-shrink: 0;
+            z-index: 20;
+        }
+
+        .brand-container { margin-bottom: 30px; }
+        .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+        .brand i { color: var(--gold); font-size: 24px; }
+        .brand h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; margin: 0; }
+        .brand span { color: var(--gold); }
+
+        .user-profile-box {
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: var(--radius-md); padding: 12px 16px; display: flex; align-items: center; gap: 12px; margin-bottom: -8px; transition: var(--transition); cursor: pointer; position: relative;
+        }
+        .user-profile-box:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.2); transform: translateY(-1px); }
+        .avatar { width: 38px; height: 38px; border-radius: 8px; background: linear-gradient(135deg, var(--gold), #fcd34d); color: var(--navy-dark); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        .user-info { flex: 1; }
+        .user-info .name { font-size: 14px; font-weight: 600; color: white; line-height: 1.2; display: flex; align-items: center; gap: 6px; }
+        .user-info .role { font-size: 11px; color: #94a3b8; font-weight: 500; margin-top: 2px; }
+        .settings-icon { color: #94a3b8; font-size: 14px; transition: 0.2s; }
+        .user-profile-box:hover .settings-icon { color: var(--gold); transform: rotate(90deg); }
+
+        .nav-links { list-style: none; flex: 1; overflow-y: auto; padding-top: 10px;}
+        .nav-item { margin-bottom: 6px; }
+        
+        .nav-btn { width: 100%; display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: transparent; border: none; color: #94a3b8; font-size: 14px; font-weight: 500; cursor: pointer; border-radius: var(--radius-md); transition: var(--transition); }
+        .nav-btn:hover { background: rgba(255, 255, 255, 0.05); color: var(--white); transform: translateX(4px); }
+        .nav-btn.active { 
+            background: linear-gradient(90deg, var(--gold), #b49226); 
+            color: var(--navy-dark); 
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
+        }
+        .nav-btn.active:hover { transform: none; }
+
+        .sidebar-footer { margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1); display: flex; justify-content: center; }
+        .logout-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.2); border-radius: var(--radius-md); cursor: pointer; font-weight: 600; transition: var(--transition); }
+        .logout-btn:hover { background: #ef4444; color: white; border-color: #ef4444; }
+
+        /* --- MAIN CONTENT --- */
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+        .header { height: 80px; background: var(--white); display: flex; justify-content: space-between; align-items: center; padding: 0 40px; flex-shrink: 0; border-bottom: 1px solid #e2e8f0; }
+        .header h1 { font-size: 24px; font-weight: 800; color: var(--navy-dark); letter-spacing: -0.02em; }
+        .header-actions { display: flex; gap: 16px; align-items: center; position: relative; }
+        
+        .notif-btn { position: relative; width: 40px; height: 40px; border-radius: 50%; background: var(--bg-body); border: 1px solid #e2e8f0; cursor: pointer; display: flex; justify-content: center; align-items: center; color: var(--navy-dark); transition: 0.2s; }
+        .notif-btn:hover { background: #f1f5f9; }
+        .notif-badge { position: absolute; top: -2px; right: -2px; width: 10px; height: 10px; background: #ef4444; border: 2px solid #fff; border-radius: 50%; }
+
+        /* MODIFIED: Reduced padding for less whitespace */
+        .dashboard-view { flex: 1; overflow-y: auto; padding: 24px 30px; scrollbar-width: thin; }
+        .section { display: none; opacity: 0; transform: translateY(10px); transition: all 0.4s ease; }
+        .section.active { display: block; opacity: 1; transform: translateY(0); }
+
+        /* --- UTILITY COMPONENTS (FOR BALANCED UI) --- */
+        .panel { background: var(--white); border-radius: var(--radius-lg); padding: 32px; box-shadow: var(--shadow-card); height: 100%; border: 1px solid #e2e8f0; display: flex; flex-direction: column; }
+        .panel-title { font-size: 18px; font-weight: 700; color: var(--navy-dark); }
+        .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
+        .status-ok { background: var(--success-bg); color: var(--success-text); }
+        .status-warn { background: var(--warning-bg); color: var(--warning-text); }
+        .status-err { background: var(--danger-bg); color: var(--danger-text); }
+        .status-info { background: var(--info-bg); color: var(--info-text); }
+
+        .btn { padding: 10px 18px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-primary { background: var(--navy-dark); color: white; width: 100%; }
+        .btn-primary:hover { background: var(--navy-light); transform: translateY(-2px); }
+        .btn-danger { background: white; border: 1px solid var(--danger-text); color: var(--danger-text); width: 100%; }
+        .btn-danger:hover { background: var(--danger-bg); }
+        .btn-outline { background: white; border: 1px solid #cbd5e1; color: var(--text-main); width: auto; }
+        .btn-outline:hover { background: #f8fafc; }
+        .btn-gold { background: var(--gold); color: var(--navy-dark); font-weight: 700; }
+        .btn-gold:hover { background: #b49226; color: white; transform: translateY(-2px); }
+        .btn-success { background: #10b981; color: white; }
+        .btn-success:hover { background: #059669; transform: translateY(-2px); }
+        
+        .tabs { display: flex; gap: 10px; margin-bottom: 30px; border-bottom: 2px solid #e2e8f0; }
+        .tab { padding: 12px 24px; cursor: pointer; color: var(--text-muted); font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: 0.2s; }
+        .tab:hover { color: var(--navy-dark); }
+        .tab.active { color: var(--navy-dark); border-bottom-color: var(--gold); }
+        
+        /* Form styles */
+        .form-group { margin-bottom: 15px; }
+        .form-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--text-main); }
+        .form-control { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: #f8fafc; transition: 0.2s; }
+        .form-control:focus { background: white; border-color: var(--gold); outline: none; }
+        .radio-group { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+        .radio-item { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+
+        /* Special Cards */
+        .welcome-panel { 
+            background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy-light) 100%); 
+            color: white; 
+            padding: 30px; 
+            border-radius: var(--radius-lg); 
+            margin-bottom: 16px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+        }
+        .welcome-panel h1 { font-size: 24px; margin-bottom: 5px; }
+        .welcome-panel p { opacity: 0.8; }
+        
+        /* Two-Column Grid for main action cards */
+        .action-grid-2 { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 16px; 
+            margin-top: 16px; 
+            margin-bottom: 24px; 
+        }
+
+        /* Style for the relocated Asset Summary card */
+        .assets-summary-card { 
+            background: var(--white); 
+            border: 1px solid #e2e8f0; 
+            padding: 20px; 
+            border-radius: var(--radius-lg); 
+            box-shadow: var(--shadow-card);
+            display: flex; 
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        /* MODIFIED: Increased Size and Engagement */
+        .action-card {
+            background: var(--white); 
+            padding: 30px; 
+            border-radius: var(--radius-lg); 
+            border: 1px solid #e2e8f0; 
+            transition: var(--transition);
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between;
+            box-shadow: var(--shadow-card);
+            min-height: 300px; 
+        }
+        
+        .action-card:hover { 
+            transform: translateY(-5px); 
+            box-shadow: 0 30px 40px -10px rgba(0, 0, 0, 0.15); 
+            border-color: var(--gold); 
+        }
+        .action-card:nth-child(2):hover {
+            border-color: var(--navy-dark);
+        }
+
+        /* Card 1: Shop - Gold Theme */
+        .action-card:nth-child(1) {
+            border: 1px solid var(--gold);
+            border-left: 8px solid var(--gold); 
+            padding-left: 25px; 
+        }
+        .action-card:nth-child(1) .btn-primary {
+            background: var(--gold);
+            color: var(--navy-dark);
+            font-weight: 700;
+        }
+        .action-card:nth-child(1) .btn-primary:hover {
+            background: #b49226;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* Card 2: Maintenance - Navy Theme */
+        .action-card:nth-child(2) {
+            border: 1px solid var(--navy-dark);
+            border-left: 8px solid var(--navy-dark); 
+            padding-left: 25px; 
+        }
+        .action-card:nth-child(2) .card-icon {
+             color: var(--navy-dark);
+        }
+        .action-card:nth-child(2) .btn-outline {
+            border-color: var(--navy-dark);
+            color: var(--navy-dark);
+        }
+        .action-card:nth-child(2) .btn-outline:hover {
+            background: var(--navy-dark);
+            color: white;
+            transform: translateY(-2px);
+        }
+        /* End Enhanced Engagement Styles */
+
+        .card-icon { 
+            font-size: 48px; 
+            color: var(--gold); 
+            margin-bottom: 20px; 
+        }
+
+        .action-card h3 { 
+            font-size: 24px; 
+            margin-bottom: 8px; 
+            color: var(--navy-dark); 
+        }
+
+        .action-card p { 
+            font-size: 14px; 
+            color: var(--text-muted); 
+            margin-bottom: 25px; 
+        }
+        
+        /* MODIFIED: Dashboard Quotes Styling to be row-based */
+        .recent-quotes-panel {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: var(--shadow-card);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 24px;
+        }
+        .recent-quotes-list {
+            display: block; /* Change from grid to block list */
+            margin-top: 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--radius-md);
+            overflow: hidden; /* Contains alternating colors */
+        }
+        
+        /* New row styling */
+        .dash-quote-item {
+            padding: 15px;
+            border: none;
+            transition: background-color 0.2s;
+            cursor: pointer;
+            display: flex; 
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        /* Alternating row colors (Dark/Light) */
+        .dash-quote-item:nth-child(odd) {
+            background-color: var(--white); /* Light row */
+        }
+        .dash-quote-item:nth-child(even) {
+            background-color: #f8fafc; /* "Darker" row (very light gray accent) */
+        }
+
+        .dash-quote-item:hover {
+            background: #f1f5f9; /* Consistent hover state */
+        }
+        .dash-quote-item:hover .dash-quote-amount {
+            color: var(--navy-dark);
+        }
+
+        /* Internal layout for rows */
+        .dash-quote-details {
+            flex: 1; 
+        }
+        .dash-quote-item h5 {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--navy-dark);
+            margin-bottom: 4px;
+        }
+        .dash-quote-item .dash-quote-amount {
+            font-size: 16px; 
+            font-weight: 800;
+            color: var(--gold); 
+            margin: 0;
+            flex-shrink: 0; 
+            text-align: right;
+        }
+        .dash-quote-item .dash-quote-status {
+            font-size: 11px;
+            font-weight: 600;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+
+        /* Shop Styles */
+        .logistics-box { background: #f8fafc; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 20px; }
+        
+        /* Package selector for horizontal scrolling */
+        .package-selector { 
+            display: flex; 
+            gap: 15px; 
+            margin-bottom: 25px; 
+            overflow-x: auto; 
+            padding-bottom: 15px; 
+            min-width: 100%;
+        }
+        /* pkg-option is now a label */
+        .pkg-option {
+            min-width: 200px; 
+            flex-shrink: 0;
+            border: 2px solid #e2e8f0; padding: 20px; border-radius: var(--radius-md); cursor: pointer; text-align: center; transition: 0.2s;
+            position: relative; /* Needed for absolute positioning of checkbox */
+        }
+        /* Custom styling for the hidden checkbox control */
+        .pkg-checkbox, .pkg-checkbox-machine { 
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            cursor: pointer;
+        }
+
+        .pkg-option:hover { border-color: var(--gold); }
+        .pkg-option.selected { border-color: var(--gold); background: rgba(212, 175, 55, 0.05); }
+        .pkg-option h4 { font-size: 16px; margin-bottom: 5px; color: var(--navy-dark); }
+        .pkg-option span { font-size: 15px; font-weight: 700; color: var(--gold); }
+        
+        /* Overriding span size for machine-only display */
+        .machine-selector .pkg-option span {
+            font-size: 22px; 
+        }
+
+        .total-summary-card { background: var(--navy-dark); color: white; padding: 25px; border-radius: var(--radius-lg); text-align: center; margin-top: 20px; }
+        .total-summary-card .label { font-size: 14px; color: #94a3b8; margin-bottom: 4px; }
+        .total-summary-card .value { font-size: 38px; font-weight: 800; color: var(--gold); margin: 5px 0; }
+        .total-summary-card .note { font-size: 12px; opacity: 0.8; }
+        
+        /* Maintenance Styles */
+        .machine-list { border: 1px solid #e2e8f0; border-radius: var(--radius-md); overflow: hidden; }
+        .machine-item { padding: 15px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: flex-start; gap: 15px; background: var(--white); }
+        .machine-item:last-child { border-bottom: none; }
+        .machine-item input[type="checkbox"] { margin-top: 8px; transform: scale(1.0); } 
+        .m-details { flex: 1; }
+        .m-details h5 { font-size: 15px; margin-bottom: 2px; color: var(--navy-dark); }
+        .m-details p { font-size: 12px; color: var(--text-muted); }
+        .labor-est { font-weight: 700; color: #10b981; font-size: 13px; margin-top: 5px; }
+        .alert-note { background: var(--warning-bg); padding: 10px; font-size: 12px; color: var(--warning-text); margin-top: 5px; border-radius: 6px; border: 1px solid #fcd34d;}
+
+        /* Quotations Styles */
+        .quotations-panel {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 30px; /* Panel padding */
+            box-shadow: var(--shadow-card);
+            border: 1px solid #e2e8f0;
+        }
+
+        .quotations-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* Two equal columns */
+            gap: 20px; /* Space between the cards */
+        }
+        /* Unequal grid for payments (1/3rd and 2/3rds split) */
+        .payment-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+        }
+
+        /* NOTE: quote-card margin-bottom is set to 0 to prevent double spacing with the grid gap */
+        .quote-card { background: var(--bg-body); border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 25px; margin-bottom: 0px; box-shadow: var(--shadow-card); display: flex; flex-direction: column; justify-content: space-between; }
+        .quote-header { display: flex; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 15px; }
+        .quote-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; color: var(--text-main); }
+        .quote-total { border-top: 2px dashed #e2e8f0; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between; font-weight: 800; font-size: 20px; color: var(--navy-dark); }
+        .payment-terms { background: var(--info-bg); border: 1px solid #0ea5e9; padding: 15px; border-radius: 8px; margin: 20px 0; font-size: 13px; color: var(--info-text); }
+        
+        /* Payments Styles */
+        .bank-details { background: linear-gradient(135deg, var(--navy-dark), #475569); color: white; padding: 25px; border-radius: var(--radius-md); margin-bottom: 25px; text-align: center; border: 2px solid var(--gold); }
+        .bank-details h3 { color: var(--gold); margin-bottom: 15px; }
+        .bank-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; }
+
+        /* --- SCHEDULE STYLES --- */
+        .schedule-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .schedule-item {
+            background: var(--white);
+            border: 1px solid #e2e8f0;
+            border-radius: var(--radius-md);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: var(--transition);
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            cursor: pointer;
+        }
+
+        .schedule-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-color: var(--gold);
+        }
+
+        .schedule-date {
+            flex-shrink: 0;
+            width: 120px;
+            text-align: center;
+            border-right: 1px solid #e2e8f0;
+            padding-right: 20px;
+            margin-right: 20px;
+        }
+        .schedule-date .day {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--navy-dark);
+            line-height: 1;
+        }
+        .schedule-date .month {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .schedule-details {
+            flex: 1;
+        }
+        .schedule-details h4 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--navy-dark);
+            margin-bottom: 5px;
+        }
+        .schedule-details p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        .schedule-time {
+            font-weight: 700;
+            color: #10b981;
+        }
+        .schedule-actions {
+            flex-shrink: 0;
+        }
+        
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="brand-container">
+            <div class="brand">
+               <img src="logo.png" alt="ATMICX Logo" style="height: 32px; width: auto; object-fit: contain;">
+                <div><h2>ATMICX <span>Client</span></h2></div>
+            </div>
+            
+            <div class="user-profile-box">
+                <div class="avatar">MC</div>
+                <div class="user-info">
+                    <div class="name">Maria Cruz</div>
+                    <div class="role">Client ID: 10024</div>
+                </div>
+                <i class="fas fa-cog settings-icon"></i>
+            </div>
+        </div>
+
+        <ul class="nav-links">
+            <li class="nav-item"><button class="nav-btn active" onclick="showSection('dashboard', this)"><i class="fas fa-th-large"></i> Dashboard</button></li>
+            <li class="nav-item"><button class="nav-btn" onclick="showSection('shop', this)"><i class="fas fa-store"></i> Shop Packages</button></li>
+            <li class="nav-item"><button class="nav-btn" onclick="showSection('maintenance', this)"><i class="fas fa-tools"></i> Request Repair</button></li>
+            <li class="nav-item"><button class="nav-btn" onclick="showSection('quotes', this)"><i class="fas fa-file-invoice-dollar"></i> My Quotations</button></li>
+            <li class="nav-item"><button class="nav-btn" onclick="showSection('payments', this)"><i class="fas fa-wallet"></i> Payments</button></li>
+            <li class="nav-item"><button class="nav-btn" onclick="showSection('schedule', this)"><i class="fas fa-calendar-alt"></i> My Schedule</button></li>
+            <li class="nav-item"><button class="nav-btn" onclick="showSection('assets', this)"><i class="fas fa-cubes"></i> My Machines</button></li>
+        </ul>
+
+        <div class="sidebar-footer">
+            <button class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="header">
+            <h1 id="pageTitle">Dashboard</h1>
+            <div class="header-actions">
+                <button class="notif-btn">
+                    <i class="fas fa-bell"></i>
+                    <span class="notif-badge"></span>
+                </button>
+            </div>
+        </header>
+
+        <div class="dashboard-view">
+            
+            <div id="dashboard" class="section active">
+                
+                <div class="welcome-panel">
+                    <div class="welcome-text">
+                        <h1>Welcome back, Maria!</h1>
+                        <p>Manage your laundry business, track repairs, and shop for new equipment.</p>
+                    </div>
+                    <button class="btn btn-gold" onclick="showSection('shop', document.querySelectorAll('.nav-btn')[1])">Browse Catalog</button>
+                </div>
+
+                <div class="assets-summary-card">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <i class="fas fa-cubes" style="font-size: 28px; color: var(--gold);"></i>
+                        <div>
+                            <h4 style="margin-bottom: 2px; font-size: 16px;">My Active Assets Overview</h4>
+                            <p style="font-size: 13px; color: var(--text-muted); margin-top: 0;">2x Haier Pro XL Stack (Set 1) installed.</p>
+                        </div>
+                    </div>
+                    <span class="status-badge status-ok" style="flex-shrink: 0;">
+                        <i class="fas fa-check-circle"></i> Operational Status: Good
+                    </span>
+                </div>
+
+                <div class="action-grid-2">
+                    <div class="action-card">
+                        <div>
+                            <i class="fas fa-industry card-icon"></i>
+                            <h3>Start a Laundry Business</h3>
+                            <p>Browse All-in Packages (1-Set to 10-Sets) & Standalone Machines. Includes full operational setup.</p>
+                        </div>
+                        <button class="btn btn-primary" onclick="showSection('shop', document.querySelectorAll('.nav-btn')[1])">View Catalog</button>
+                    </div>
+                    <div class="action-card">
+                        <div>
+                            <i class="fas fa-wrench card-icon"></i>
+                            <h3>Request Maintenance</h3>
+                            <p>Fix issues with your existing machines. Schedule a technician for diagnosis or repair.</p>
+                        </div>
+                        <button class="btn btn-outline" onclick="showSection('maintenance', document.querySelectorAll('.nav-btn')[2])">Request Service</button>
+                    </div>
+                </div>
+
+                <div class="recent-quotes-panel">
+                    <h3 class="panel-title">Recent Quotations</h3>
+                    <div class="recent-quotes-list">
+                        <div class="dash-quote-item" onclick="showSection('quotes', document.querySelectorAll('.nav-btn')[3])">
+                            <div class="dash-quote-details">
+                                <h5>Quote Ref: #QT-2025-88 (New Installation)</h5>
+                                <span class="dash-quote-status">2-Set Package <span class="status-badge status-warn">Awaiting Approval</span></span>
+                            </div>
+                            <span class="dash-quote-amount">₱480,000.00</span>
+                        </div>
+                        <div class="dash-quote-item" onclick="showSection('quotes', document.querySelectorAll('.nav-btn')[3])">
+                            <div class="dash-quote-details">
+                                <h5>Quote Ref: #SVC-2025-99 (Repair Service)</h5>
+                                <span class="dash-quote-status">Washer & Dryer Repair <span class="status-badge status-info">Awaiting Payment</span></span>
+                            </div>
+                            <span class="dash-quote-amount">₱4,000.00</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            
+            <div id="shop" class="section">
+                <div class="panel" style="min-height: 500px;">
+                    <h2 class="panel-title" style="margin-bottom: 20px;">Shop Packages & Standalone Machines</h2>
+                    <div class="tabs">
+                        <div class="tab active" onclick="switchShopTab('packages', this)">Installation Packages</div>
+                        <div class="tab" onclick="switchShopTab('machine', this)">Standalone Machines Only</div>
+                    </div>
+                    
+                    <div id="tab-packages">
+                        <div class="logistics-box" style="background: var(--info-bg); border-color: #0ea5e9; color: var(--info-text); padding: 15px;">
+                            <p style="font-size: 13px; margin-bottom: 10px;">
+                                <strong>ALL PACKAGE INCLUDES:</strong> Waterline, Electrical Line, Exhaust System, Casing, LGP Gas Line, Drainage System, 1000L Tank, Motor Pump, Automatic Pump Control, PPR Water Line. **FREE SHIPPING FEE**
+                            </p>
+                            <p style="font-size: 13px;">
+                                <strong>FREEBIES:</strong> CCTV Wireless Camera, Scotch Tape with Dispenser, Now Open Tarp, Spray Bottles, Measuring Cups, 1 Gal Liquid Detergent, 1 Gal Fabric Softener, 1 Liter Fabric Cologne, Laundry Basket, Plastic Marker Pens.
+                            </p>
+                            <p style="font-size: 13px; margin-top: 10px; color: var(--navy-dark); font-weight: 700;"> (Price includes Labor and Materials, Installation) </p>
+                        </div>
+
+                        <label class="form-label">Step 1: Select Package Size (Scroll to see all options)</label>
+                        <div class="package-selector">
+                            <label class="pkg-option">
+                                <input type="checkbox" class="pkg-checkbox" name="package_set" value="1" data-price="270000" data-handling="5000" onchange="handlePackageSelection(this)">
+                                <h4>1-Set Package</h4>
+                                <span>₱270,000</span>
+                                <p style="font-size: 11px; margin-top: 5px;">1 Washer 13KG + 1 Dryer 15KG</p>
+                            </label>
+                            <label class="pkg-option selected">
+                                <input type="checkbox" class="pkg-checkbox" name="package_set" value="2" data-price="470000" data-handling="10000" checked onchange="handlePackageSelection(this)">
+                                <h4>2-Set Package</h4>
+                                <span>₱470,000</span>
+                                <p style="font-size: 11px; margin-top: 5px;">2 Washer 13KG + 2 Dryer 15KG</p>
+                            </label>
+                            <label class="pkg-option">
+                                <input type="checkbox" class="pkg-checkbox" name="package_set" value="3" data-price="670000" data-handling="15000" onchange="handlePackageSelection(this)">
+                                <h4>3-Set Package</h4>
+                                <span>₱670,000</span>
+                                <p style="font-size: 11px; margin-top: 5px;">3 Washer 13KG + 3 Dryer 15KG</p>
+                            </label>
+                            <label class="pkg-option">
+                                <input type="checkbox" class="pkg-checkbox" name="package_set" value="4" data-price="850000" data-handling="20000" onchange="handlePackageSelection(this)">
+                                <h4>4-Set Package</h4>
+                                <span>₱850,000</span>
+                                <p style="font-size: 11px; margin-top: 5px;">4 Washer 13KG + 4 Dryer 15KG</p>
+                            </label>
+                            <label class="pkg-option">
+                                <input type="checkbox" class="pkg-checkbox" name="package_set" value="5" data-price="1050000" data-handling="25000" onchange="handlePackageSelection(this)">
+                                <h4>5-Set Package + TV</h4>
+                                <span>₱1.05M PHP</span>
+                                <p style="font-size: 11px; margin-top: 5px;">5 Washer 13KG + 5 Dryer 15KG + 32" TV</p>
+                            </label>
+                            <label class="pkg-option">
+                                <input type="checkbox" class="pkg-checkbox" name="package_set" value="10" data-price="2100000" data-handling="50000" onchange="handlePackageSelection(this)">
+                                <h4>10-Set Package + TV</h4>
+                                <span>₱2.10M PHP</span>
+                                <p style="font-size: 11px; margin-top: 5px;">10 Washer 13KG + 10 Dryer 15KG + 32" TV</p>
+                            </label>
+                        </div>
+
+                        <label class="form-label">Step 2: Logistics Mode (Crucial for Quote)</label>
+                        <div class="logistics-box">
+                            <h4 style="font-size: 15px; margin-bottom: 10px; color: var(--navy-dark);">Logistics Mode (Crucial for Quote)</h4>
+                            <div class="radio-group">
+                                <label class="radio-item">
+                                    <input type="radio" name="delivery" value="site" checked onchange="updatePriceFromCheckboxes()">
+                                    <span><strong>Deliver to Site & Install</strong> (System Alert: Adds Handling Fee based on set count)</span>
+                                </label>
+                                <label class="radio-item">
+                                    <input type="radio" name="delivery" value="pickup" onchange="updatePriceFromCheckboxes()">
+                                    <span><strong>Pick up at Warehouse</strong> (System Alert: Handling Fee Waived)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="total-summary-card">
+                            <div class="label">Total Estimated Price</div>
+                            <h2 class="value" id="total-price">₱480,000</h2>
+                            <span class="note" id="handling-text">Includes ₱10,000 Handling Fee</span>
+                        </div>
+
+                        <button class="btn btn-gold" style="width: 100%; margin-top: 15px; padding: 15px;">Request Quotation</button>
+                    </div>
+
+                    <div id="tab-machine" style="display:none;">
+                        <label class="form-label">Select Machines (You can select multiple)</label>
+                        <div class="package-selector machine-selector" style="padding-bottom: 0; overflow-x: auto; margin-bottom: 25px; gap: 20px;">
+                            <label class="pkg-option machine-option" style="min-width: 250px;">
+                                <input type="checkbox" class="pkg-checkbox-machine" name="machine_only" value="haier_stack" data-price="185000" onchange="handleMachineSelection(this)">
+                                <i class="fas fa-washer card-icon" style="color: var(--navy-dark); font-size: 40px; margin-bottom: 10px;"></i>
+                                <h4>Haier Pro XL Washer & Dryer (Stack)</h4>
+                                <span style="font-size: 22px;">₱185,000.00</span>
+                                <p style="font-size: 11px; margin-top: 5px; color: var(--text-muted);">A robust, commercial-grade stacked unit. Handling fee included.</p>
+                            </label>
+                            <label class="pkg-option machine-option" style="min-width: 250px;">
+                                <input type="checkbox" class="pkg-checkbox-machine" name="machine_only" value="speed_queen_washer" data-price="250000" onchange="handleMachineSelection(this)">
+                                <i class="fas fa-spinner card-icon" style="color: var(--navy-dark); font-size: 40px; margin-bottom: 10px;"></i>
+                                <h4>Speed Queen Washer (Standalone)</h4>
+                                <span style="font-size: 22px;">₱250,000.00</span>
+                                <p style="font-size: 11px; margin-top: 5px; color: var(--text-muted);">High-efficiency standalone washer. Handling fee included.</p>
+                            </label>
+                            <label class="pkg-option machine-option" style="min-width: 250px;">
+                                <input type="checkbox" class="pkg-checkbox-machine" name="machine_only" value="speed_queen_dryer" data-price="200000" onchange="handleMachineSelection(this)">
+                                <i class="fas fa-fire card-icon" style="color: var(--navy-dark); font-size: 40px; margin-bottom: 10px;"></i>
+                                <h4>Speed Queen Dryer (Standalone)</h4>
+                                <span style="font-size: 22px;">₱200,000.00</span>
+                                <p style="font-size: 11px; margin-top: 5px; color: var(--text-muted);">Industrial-grade gas dryer. Handling fee included.</p>
+                            </label>
+                        </div>
+                        
+                        <div class="total-summary-card">
+                            <div class="label">Total Price for Selected Machines</div>
+                            <h2 class="value" id="machine-total-price">₱0</h2>
+                            <span class="note">Prices include standard logistics/handling fees.</span>
+                        </div>
+                        <button class="btn btn-gold" style="width: 100%; margin-top: 15px; padding: 15px;">Request Quotation for Machines</button>
+                    </div>
+
+                </div>
+            </div>
+
+            <div id="maintenance" class="section">
+                <div class="panel">
+                    <form onsubmit="alert('Repair Request Submitted. Awaiting Quotation.'); return false;">
+                        <h2 class="panel-title" style="margin-bottom: 20px;">Request Repair or Service</h2>
+                        <div class="form-group">
+                            <label class="form-label">1. Select Service Type</label>
+                            <select class="form-control" name="service_type" onchange="updateRepairEst()">
+                                <option value="repair">Full Repair / Parts Replacement (Est. Labor Fee applies)</option>
+                                <option value="diagnosis">Diagnosis Only (₱800 check-up fee/machine)</option>
+                                <option value="pms">Preventive Maintenance Service (PMS)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label class="form-label">Service Scheduling</label>
+                            <div class="alert-note" style="background: var(--info-bg); color: var(--info-text); border-color: #0ea5e9;">
+                                <i class="fas fa-calendar-alt"></i> Your service date will be scheduled by the Secretary after quote approval.
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #e2e8f0;">
+                            <h4 class="panel-title" style="font-size: 16px; margin-bottom: 15px; color: var(--gold);">2. Machines to be Serviced</h4>
+                            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px;">Select the machine(s) needing attention and describe the issue for a fast quotation.</p>
+                            
+                            <div class="machine-list">
+                                <div class="machine-item">
+                                    <input type="checkbox" id="m1" name="machine_1_select" onchange="updateRepairEst()">
+                                    <div class="m-details">
+                                        <h5>Machine #1 (Washer): Haier Pro XL</h5>
+                                        <p>Serial: SN-123456789</p>
+                                        <textarea class="form-control" name="machine_1_issue" rows="2" style="margin-top: 5px; font-size: 12px; padding: 8px 12px;" placeholder="Describe the issue with the Washer (e.g., Not Draining, Motor noise)"></textarea>
+                                        <div class="labor-est">Est. Labor: ₱1,000.00 (Repair) / ₱800 (Diagnosis)</div>
+                                    </div>
+                                </div>
+                                <div class="machine-item">
+                                    <input type="checkbox" id="m2" name="machine_2_select" onchange="updateRepairEst()">
+                                    <div class="m-details">
+                                        <h5>Machine #2 (Dryer): Haier Pro XL</h5>
+                                        <p>Serial: SN-987654321</p>
+                                        <textarea class="form-control" name="machine_2_issue" rows="2" style="margin-top: 5px; font-size: 12px; padding: 8px 12px;" placeholder="Describe the issue with the Dryer (e.g., Not Heating, Drum not spinning)"></textarea>
+                                        <div class="labor-est">Est. Labor: ₱1,500.00 (Repair) / ₱800 (Diagnosis)</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 30px;">
+                            <h4 class="panel-title" style="font-size: 16px; margin-bottom: 15px; color: var(--gold);">3. Location and Summary</h4>
+                            <div class="form-group">
+                                <label class="form-label">Service Location</label>
+                                <input type="text" class="form-control" value="Bacolod City (Far North)" name="service_location" readonly>
+                                <div class="alert-note" style="margin-top: 10px;">
+                                    <i class="fas fa-exclamation-triangle"></i> System Note: Location may be subject to <strong>₱1,500 Trip Charge</strong> for remote areas. This is included in the estimated total.
+                                </div>
+                            </div>
+                            
+                            <div class="total-summary-card" style="padding: 15px 20px; background: #991b1b; color: white;">
+                                <div class="label" style="color: #fca5a5;">ESTIMATED TOTAL FEE</div>
+                                <h2 class="value" id="repair-total" style="font-size: 30px;">₱1,500</h2>
+                                <span class="note">This is an estimate. Final quotation will be provided by a Sales Secretary.</span>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary" type="submit" style="width: 100%; padding: 15px;">Submit Repair Request for Quote</button>
+                    </form>
+                </div>
+            </div>
+
+            <div id="quotes" class="section">
+                <div class="quotations-panel">
+                    <h2 class="panel-title" style="margin-bottom: 20px;">My Quotations</h2>
+                    <div class="quotations-grid">
+                        
+                        <div class="quote-card">
+                            <div>
+                                <div class="quote-header">
+                                    <div>
+                                        <h4 style="color: var(--navy-dark); font-weight: 700;">Quote Ref: #QT-2025-88</h4>
+                                        <span style="font-size: 12px; color: var(--text-muted);">Date: Dec 10, 2025</span>
+                                    </div>
+                                    <span class="status-badge status-warn">Awaiting Approval</span>
+                                </div>
+                                <div class="quote-body">
+                                    <div class="quote-row"> 
+                                        <span>2-Set Package (Equipment)</span> <span>₱470,000.00</span> 
+                                    </div>
+                                    <div class="quote-row"> 
+                                        <span>Logistics / Handling Fee</span> <span>₱10,000.00</span> 
+                                    </div>
+                                    <div class="quote-row"> 
+                                        <span>Installation / Labor & Materials</span> <span>Included</span> 
+                                    </div>
+                                    <div class="quote-row" style="margin-bottom: 0;"> 
+                                        <span>**Downpayment Required (70%)**</span> <span style="font-weight: 700;">₱336,000.00</span> 
+                                    </div>
+                                    <div class="payment-terms">
+                                        <p style="margin-bottom: 5px;"><strong>Payment Terms:</strong> 70% Downpayment is required to confirm the order and schedule the installation.</p>
+                                        <p>Remaining 30% due upon completion of the installation.</p>
+                                    </div>
+                                    <div class="quote-total">
+                                        <span>Total Contract Price</span> <span>₱480,000.00</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                                <button class="btn btn-gold" style="flex: 1;" onclick="showSection('payments', document.querySelectorAll('.nav-btn')[4])">Approve & Pay Downpayment</button>
+                                <button class="btn btn-danger" style="flex: 1;">Decline</button>
+                            </div>
+                        </div>
+
+                        <div class="quote-card">
+                            <div>
+                                <div class="quote-header">
+                                    <div>
+                                        <h4 style="color: var(--navy-dark); font-weight: 700;">Quote Ref: #SVC-2025-99</h4>
+                                        <span style="font-size: 12px; color: var(--text-muted);">Date: Dec 10, 2025</span>
+                                    </div>
+                                    <span class="status-badge status-info">Awaiting Payment</span>
+                                </div>
+                                <div class="quote-body">
+                                    <div class="quote-row"> 
+                                        <span>Labor: Washer Repair (Machine 1)</span> <span>₱1,000.00</span> 
+                                    </div>
+                                    <div class="quote-row"> 
+                                        <span>Labor: Dryer Repair (Machine 2)</span> <span>₱1,500.00</span> 
+                                    </div>
+                                    <div class="quote-row"> 
+                                        <span>Logistics: Trip Charge / Far Location</span> <span>₱1,500.00</span> 
+                                    </div>
+                                    <div class="quote-total">
+                                        <span>Total Due</span> <span>₱4,000.00</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="btn btn-success" style="width: 100%; margin-top: 15px;">Pay Now</button>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <div id="payments" class="section">
+                <div class="quotations-panel">
+                    <h2 class="panel-title" style="margin-bottom: 20px;">Payment Processing</h2>
+                    <div class="payment-grid">
+                        <div class="quote-card">
+                            <h4 style="color: var(--navy-dark); font-weight: 700; margin-bottom: 20px;">1. Select Payment Details</h4>
+                            <div class="form-group">
+                                <label class="form-label">Paying For:</label>
+                                <select class="form-control">
+                                    <option>Quote #QT-2025-88 (2-Set Package)</option>
+                                    <option>Quote #SVC-2025-99 (Repair)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Payment Stage:</label>
+                                <div class="radio-group">
+                                    <label class="radio-item"><input type="radio" name="paystage" checked> Downpayment (70%) - ₱336,000.00</label>
+                                    <label class="radio-item"><input type="radio" name="paystage"> Full Balance - ₱144,000.00</label>
+                                </div>
+                            </div>
+                            <div style="flex-grow: 1;"></div>
+                            <button class="btn btn-gold" style="width: 100%; padding: 15px;">Review & Proceed</button>
+                        </div>
+
+                        <div class="quote-card">
+                            <h4 style="color: var(--navy-dark); font-weight: 700; margin-bottom: 20px;">2. Transfer & Upload Proof</h4>
+                            
+                            <div class="bank-details">
+                                <h3>Official Bank Details (BDO)</h3>
+                                <div class="bank-row">
+                                    <span>Account Name:</span> <span>ATMICX TRADING</span>
+                                </div>
+                                <div class="bank-row">
+                                    <span>Account Number:</span> <span>007960010972</span>
+                                </div>
+                                <div class="bank-row" style="border-bottom: none;">
+                                    <span>Branch:</span> <span>Bacolod - Lacson St.</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Amount Transferred:</label>
+                                <input type="number" class="form-control" placeholder="e.g., 336000.00" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Upload Deposit Slip / Screenshot:</label>
+                                <input type="file" class="form-control" accept="image/*, .pdf" required>
+                            </div>
+
+                            <button class="btn btn-success" style="width: 100%; padding: 15px; margin-top: 10px;" 
+                                onclick="document.querySelector('#payments .status-badge').style.display = 'block'; this.innerText='Payment Submitted. Secretary will confirm & schedule.'; this.style.backgroundColor= 'var(--navy-dark)'; this.style.pointerEvents='none'; alert('Payment submitted for verification. The Secretary will schedule the installation and notify you via email.');">
+                                Submit for Verification
+                            </button>
+                            <span class="status-badge status-ok" style="margin-top: 15px; display: none;">
+                                <i class="fas fa-check-circle"></i> Verification in Progress (1-2 Hours)
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="schedule" class="section">
+                <h2 class="panel-title" style="margin-bottom: 20px;">My Upcoming Schedules</h2>
+                
+                <div style="background: var(--info-bg); border: 1px solid #0ea5e9; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; color: var(--info-text);">
+                    <i class="fas fa-info-circle"></i> **Scheduling Update:** All confirmed jobs are now scheduled directly by the Secretary. You will receive an email notification when your installation or repair date is finalized and confirmed below.
+                </div>
+                
+                <h3 class="panel-title" style="font-size: 18px; margin-bottom: 15px;">Confirmed Appointments</h3>
+                <div class="schedule-list">
+                    <div class="schedule-item">
+                        <div class="schedule-date">
+                            <div class="day">10</div>
+                            <div class="month">JAN</div>
+                        </div>
+                        <div class="schedule-details">
+                            <h4>Waterline System Check-Up</h4>
+                            <p>Service: Preventive Maintenance Service (PMS)</p>
+                            <span class="schedule-time"><i class="fas fa-clock"></i> 10:00 AM - 11:30 AM</span>
+                        </div>
+                        <div class="schedule-actions">
+                            <span class="status-badge status-info">Completed</span>
+                        </div>
+                    </div>
+                    
+                    <div id="scheduled-inst-2025-88" class="schedule-item" style="display: none;">
+                        <div class="schedule-date">
+                            <div class="day" id="schedule-day">01</div>
+                            <div class="month" id="schedule-month">MAR</div>
+                        </div>
+                        <div class="schedule-details">
+                            <h4 id="scheduled-job-title">2-Set Package Installation</h4>
+                            <p id="scheduled-job-service">Service: Full Equipment Installation (Job ID: INST-2025-88)</p>
+                            <span class="schedule-time"><i class="fas fa-clock"></i> <span id="schedule-time-display">8:00 AM - 12:00 PM</span></span>
+                        </div>
+                        <div class="schedule-actions">
+                            <span class="status-badge status-success">Confirmed</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 30px;">
+                    <button class="btn btn-outline">View Full History</button>
+                </div>
+            </div>
+
+            <div id="assets" class="section">
+                <div class="machine-list" style="border: none; box-shadow: var(--shadow-card);">
+                    <div class="machine-item">
+                        <div style="font-size: 28px; color: var(--navy-dark); padding: 0 15px; flex-shrink: 0;"><i class="fas fa-cube"></i></div>
+                        <div class="m-details">
+                            <h5 style="font-size: 16px;">Haier Pro XL Stack (Set 1)</h5>
+                            <p>Installed: Jan 10, 2025</p>
+                            <div style="margin-top: 5px;">
+                                <span class="status-badge status-ok">Status: Active</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="machine-item">
+                        <div style="font-size: 28px; color: var(--navy-dark); padding: 0 15px; flex-shrink: 0;"><i class="fas fa-cube"></i></div>
+                        <div class="m-details">
+                            <h5 style="font-size: 16px;">Haier Pro XL Stack (Set 2)</h5>
+                            <p>Installed: Jan 10, 2025</p>
+                            <div style="margin-top: 5px;">
+                                <span class="status-badge status-ok">Status: Active</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+    
+    <script>
+        // --- NAVIGATION LOGIC ---
+        function showSection(sectionId, btnElement) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            // Show target section
+            document.getElementById(sectionId).classList.add('active');
+            // Update Title
+            const titles = {
+                'dashboard': 'Dashboard',
+                'shop': 'Shop Packages',
+                'maintenance': 'Request Repair',
+                'quotes': 'My Quotations',
+                'payments': 'Payments',
+                'schedule': 'My Schedule',
+                'assets': 'My Machines'
+            };
+            document.getElementById('pageTitle').innerText = titles[sectionId];
+            // Update Sidebar Active State (Refactored for new .nav-btn class)
+            if(btnElement) {
+                document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+                btnElement.classList.add('active');
+            }
+        }
+
+        // Initialize dashboard view on load
+        document.addEventListener('DOMContentLoaded', () => {
+            showSection('dashboard', document.querySelectorAll('.nav-btn')[0]);
+            updatePriceFromCheckboxes(); // Initialize shop total on load
+            updateRepairEst(); // Initialize repair estimate on load
+        });
+        
+        // Helper function to get nav button
+        function getNavButtonBySectionId(sectionId) {
+            return document.querySelector(`.nav-btn[onclick*="'${sectionId}'"]`);
+        }
+
+
+        // --- SHOP LOGIC ---
+        function handlePackageSelection(checkbox) {
+            // Uncheck all other packages and update their visual state
+            document.querySelectorAll('.pkg-checkbox').forEach(cb => {
+                if (cb !== checkbox) {
+                    cb.checked = false;
+                    cb.parentElement.classList.remove('selected');
+                }
+            });
+
+            // Update visual state of the clicked checkbox's parent
+            checkbox.parentElement.classList.toggle('selected', checkbox.checked);
+
+            updatePriceFromCheckboxes();
+        }
+
+        function updatePriceFromCheckboxes() {
+            let finalPrice = 0;
+            let currentHandlingFee = 0;
+            let handlingText = "No Package Selected";
+
+            const checkedPackage = document.querySelector('.pkg-checkbox:checked');
+
+            if (checkedPackage) {
+                const currentPackagePrice = parseInt(checkedPackage.getAttribute('data-price'));
+                currentHandlingFee = parseInt(checkedPackage.getAttribute('data-handling'));
+                finalPrice = currentPackagePrice;
+                handlingText = "Handling Fee Waived"; // Default
+                
+                const deliveryMode = document.querySelector('input[name="delivery"]:checked').value;
+                
+                if (deliveryMode === 'site') {
+                    finalPrice += currentHandlingFee;
+                    handlingText = `Includes ₱${currentHandlingFee.toLocaleString()} Handling Fee`;
+                }
+
+                // Update the total summary card in the 'tab-packages' section
+                document.getElementById('total-price').innerText = "₱" + finalPrice.toLocaleString();
+                document.getElementById('handling-text').innerText = handlingText;
+            } else {
+                document.getElementById('total-price').innerText = "₱0";
+                document.getElementById('handling-text').innerText = handlingText;
+            }
+        }
+
+        function handleMachineSelection(checkbox) {
+            // Update visual state of the clicked checkbox's parent
+            checkbox.parentElement.classList.toggle('selected', checkbox.checked);
+            updateMachinePrice();
+        }
+
+        function updateMachinePrice() {
+            let totalMachinePrice = 0;
+            const checkedMachines = document.querySelectorAll('.pkg-checkbox-machine:checked');
+            
+            checkedMachines.forEach(cb => {
+                totalMachinePrice += parseInt(cb.getAttribute('data-price'));
+            });
+
+            document.getElementById('machine-total-price').innerText = "₱" + totalMachinePrice.toLocaleString();
+        }
+
+        function switchShopTab(tabName, btnElement) {
+            // Update active tab visual
+            document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
+            if (btnElement) {
+                btnElement.classList.add('active');
+            }
+            
+            if(tabName === 'packages') {
+                document.getElementById('tab-packages').style.display = 'block';
+                document.getElementById('tab-machine').style.display = 'none';
+                updatePriceFromCheckboxes(); // Ensure package price is correct on switch
+            } else {
+                document.getElementById('tab-packages').style.display = 'none';
+                document.getElementById('tab-machine').style.display = 'block';
+                updateMachinePrice(); // Ensure machine price is correct on switch
+            }
+        }
+
+
+        // --- MAINTENANCE LOGIC ---
+        function updateRepairEst() {
+            let total = 0;
+            const tripCharge = 1500; // Fixed trip charge
+            const diagnosisFee = 800; // Per machine diagnosis fee
+
+            // Get the value from the Service Type dropdown
+            const serviceSelect = document.querySelector('#maintenance select[name="service_type"]');
+            const serviceType = serviceSelect ? serviceSelect.value : 'repair';
+
+            let machineSelected = false;
+
+            // --- Machine 1 (Washer) Calculation ---
+            if (document.getElementById('m1').checked) {
+                machineSelected = true;
+                if (serviceType === 'diagnosis') {
+                    total += diagnosisFee; 
+                } else if (serviceType === 'repair') {
+                    total += 1000; // Washer labor estimate
+                }
+            }
+
+            // --- Machine 2 (Dryer) Calculation ---
+            if (document.getElementById('m2').checked) {
+                machineSelected = true;
+                if (serviceType === 'diagnosis') {
+                    total += diagnosisFee; 
+                } else if (serviceType === 'repair') {
+                    total += 1500; // Dryer labor estimate
+                }
+            }
+            
+            // Add trip charge only if *any* machine is selected for service (and not PMS which is assumed prepaid/contractual)
+            if (machineSelected && serviceType !== 'pms') {
+                total += tripCharge; 
+            }
+
+            // Update the total price display
+            document.getElementById('repair-total').innerText = "₱" + total.toLocaleString();
+        }
+        
+        // --- REMOVED NEW SCHEDULING LOGIC to give control to Secretary ---
+
+    </script>
+</body>
+</html>

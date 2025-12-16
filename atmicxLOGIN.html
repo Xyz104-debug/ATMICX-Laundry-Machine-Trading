@@ -298,17 +298,7 @@
                         <div class="form-inner">
                             <form id="loginForm">
                                 <div class="field">
-                                    <select id="role" required>
-                                        <option value="" disabled selected>Select Role</option>
-                                        <option value="manager">Manager</option>
-                                        <option value="secretary">Secretary</option>
-                                    </select>
-                                    <i class="fas fa-user-tie"></i>
-                                    <i class="fas fa-chevron-down select-arrow"></i>
-                                </div>
-
-                                <div class="field">
-                                    <input type="text" id="username" placeholder="Username" required>
+                                    <input type="text" id="email" placeholder="Email" required>
                                     <i class="fas fa-user"></i>
                                 </div>
                                 
@@ -339,13 +329,13 @@
                                 </div>
 
                                 <div class="field">
-                                    <input type="email" id="signupEmail" placeholder="Work Email" required>
-                                    <i class="fas fa-envelope"></i>
+                                    <input type="text" id="signupName" placeholder="Name" required>
+                                    <i class="fas fa-user"></i>
                                 </div>
 
                                 <div class="field">
-                                    <input type="text" id="signupUsername" placeholder="Username" required>
-                                    <i class="fas fa-user"></i>
+                                    <input type="email" id="signupEmail" placeholder="Work Email" required>
+                                    <i class="fas fa-envelope"></i>
                                 </div>
                                 
                                 <div class="field">
@@ -378,7 +368,7 @@
                     <div style="margin-top: 15px;"><a href="#" id="backToLogin">Back to Login</a></div>
                 </div>
             </div>
-        </div>
+        </div>  
 
     </div>
 
@@ -426,12 +416,11 @@
         // AJAX login
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const role = document.getElementById('role').value;
-            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const errorMessage = document.getElementById('errorMessage');
 
-            if (!role || !username || !password) {
+            if (!email || !password) {
                 errorMessage.textContent = 'Please fill in all fields.';
                 return;
             }
@@ -443,8 +432,7 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        role: role,
-                        username: username,
+                        email: email,
                         password: password
                     })
                 });
@@ -452,9 +440,9 @@
                 const result = await response.json();
                 if (result.success) {
                     // Redirect based on role
-                    if (role === 'manager') {
+                    if (result.role === 'manager') {
                         window.location.href = 'atmicxMANAGER.php';
-                    } else if (role === 'secretary') {
+                    } else if (result.role === 'secretary') {
                         window.location.href = 'armicxSECRETARY.php';
                     }
                 } else {
@@ -470,12 +458,12 @@
         document.getElementById('signupForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const role = document.getElementById('signupRole').value;
+            const name = document.getElementById('signupName').value;
             const email = document.getElementById('signupEmail').value;
-            const username = document.getElementById('signupUsername').value;
             const password = document.getElementById('signupPassword').value;
             const errorMessage = document.getElementById('signupErrorMessage');
 
-            if (!role || !email || !username || !password) {
+            if (!role || !name || !email || !password) {
                 errorMessage.textContent = 'Please fill in all fields.';
                 return;
             }
@@ -488,8 +476,8 @@
                     },
                     body: JSON.stringify({
                         role: role,
+                        name: name,
                         email: email,
-                        username: username,
                         password: password
                     })
                 });

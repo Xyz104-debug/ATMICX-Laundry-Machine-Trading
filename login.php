@@ -21,11 +21,10 @@ if (!$input) {
     exit;
 }
 
-$role = $input['role'] ?? '';
-$username = $input['username'] ?? '';
+$email = $input['email'] ?? '';
 $password = $input['password'] ?? '';
 
-if (!$role || !$username || !$password) {
+if (!$email || !$password) {
     http_response_code(400);
     echo json_encode(['success' => false, 'message' => 'Missing fields']);
     exit;
@@ -42,23 +41,23 @@ $username_db = 'root'; // Replace with your DB username
 $password_db = ''; // Replace with your DB password
 
 try {
-    // Temporarily disable DB
-    // $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username_db, $password_db);
-    // $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username_db, $password_db);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // $stmt = $pdo->prepare("SELECT PasswordHash FROM user WHERE Name = ? AND Role = ?");
-    // $stmt->execute([$username, $role]);
-    // $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    $stmt = $pdo->prepare("SELECT User_ID, Name, Role, PasswordHash FROM user WHERE Email = ?");
+    $stmt->execute([$email]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    // if ($user && password_verify($password, $user['PasswordHash'])) {
+    if ($user && password_verify($password, $user['PasswordHash'])) {
         session_start();
-        $_SESSION['user_id'] = 1;
-        $_SESSION['username'] = $username;
-        $_SESSION['role'] = $role;
-        echo json_encode(['success' => true, 'message' => 'Login successful', 'role' => $role]);
-    // } else {
-    //     echo json_encode(['success' => false, 'message' => 'Invalid credentials']);
-    // }
+        $_SESSION['user_id'] = $user['User_ID'];
+        $_SESSION['username'] = $user['Name'];
+        $_SESSION['email'] = $email;
+        $_SESSION['role'] = $user['Role'];
+        echo json_encode(['success' => true, 'message' => 'Login successful', 'role' => $user['Role']]);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Invalid credentials']);
+    }
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
 }

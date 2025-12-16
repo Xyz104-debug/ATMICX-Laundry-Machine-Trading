@@ -298,7 +298,7 @@
                         <div class="form-inner">
                             <form id="loginForm">
                                 <div class="field">
-                                    <input type="text" id="username" placeholder="Username" required>
+                                    <input type="text" id="email" placeholder="Email" required>
                                     <i class="fas fa-user"></i>
                                 </div>
                                 
@@ -318,11 +318,11 @@
 
                         <div class="form-inner">
                             <form id="signupForm">
-								<div class="field">
-                                    <input type="text" id="signupUsername" placeholder="Username" required>
+                                <div class="field">
+                                    <input type="text" id="signupName" placeholder="Full Name" required>
                                     <i class="fas fa-user"></i>
                                 </div>
-       
+
                                 <div class="field">
                                     <input type="email" id="signupEmail" placeholder="Email" required>
                                     <i class="fas fa-envelope"></i>
@@ -420,11 +420,11 @@
         // AJAX login
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const errorMessage = document.getElementById('errorMessage');
 
-            if (!username || !password) {
+            if (!email || !password) {
                 errorMessage.textContent = 'Please fill in all fields.';
                 return;
             }
@@ -433,7 +433,7 @@
                 const response = await fetch('client_login.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: username, password: password })
+                    body: JSON.stringify({ email: email, password: password })
                 });
 
                 const result = await response.json();
@@ -450,15 +450,15 @@
         // AJAX signup
         document.getElementById('signupForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const username = document.getElementById('signupUsername').value;
+            const name = document.getElementById('signupName').value;
             const email = document.getElementById('signupEmail').value;
             const password = document.getElementById('signupPassword').value;
             const contact = document.getElementById('signupContact').value;
             const address = document.getElementById('signupAddress').value;
             const errorMessage = document.getElementById('signupErrorMessage');
 
-            if (!username || !email || !password) {
-                errorMessage.textContent = 'Username, Email, and Password are required.';
+            if (!name || !email || !password) {
+                errorMessage.textContent = 'Name, Email and Password are required.';
                 return;
             }
 
@@ -467,7 +467,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        username: username,
+                        name: name,
                         email: email,
                         password: password,
                         contact: contact,

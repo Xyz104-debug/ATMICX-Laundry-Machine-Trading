@@ -1,16 +1,3 @@
-<?php
-session_start();
-
-// Prevent browser caching
-header("Cache-Control: no-cache, no-store, must-revalidate"); // HTTP 1.1.
-header("Pragma: no-cache"); // HTTP 1.0.
-header("Expires: 0"); // Proxies.
-
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
-    header('Location: atmicxLOGIN.html');
-    exit;
-}
-?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -287,6 +274,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
             text-overflow: ellipsis;
         }
 
+
         .tabs { display: flex; gap: 10px; margin-bottom: 30px; border-bottom: 2px solid #e2e8f0; }
         .tab { padding: 12px 24px; cursor: pointer; color: var(--text-muted); font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: 0.2s; }
         .tab:hover { color: var(--navy-dark); }
@@ -430,61 +418,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
         .calendar-day.inactive { background: #f8fafc; color: var(--text-muted); opacity: 0.6; cursor: default; }
         .event-badge { background: var(--danger-bg); color: var(--danger-text); font-size: 10px; padding: 2px 4px; border-radius: 4px; display: block; margin-top: 5px; font-weight: 600; }
         /* --- END Calendar Styles --- */
-
-        /* --- MODAL STYLES --- */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: none; /* Default to hidden */
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            padding: 20px;
-        }
-        .modal-overlay.show {
-            display: flex;
-        }
-        .modal-content {
-            width: 100%;
-            max-width: 500px;
-            background: var(--white);
-            border-radius: var(--radius-lg);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-            animation: fadeInScale 0.3s ease-out;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        /* Specific max-width for delete modal */
-        .modal-content.delete-confirm {
-            max-width: 400px;
-            padding: 0;
-            text-align: center;
-        }
-        @keyframes fadeInScale {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        .modal-header {
-            padding: 20px 32px;
-            border-bottom: 1px solid #e2e8f0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .modal-header .panel-title { margin: 0; }
-        .modal-close-btn {
-            background: none;
-            border: none;
-            font-size: 18px;
-            color: var(--text-muted);
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-        .modal-close-btn:hover { color: var(--danger-text); }
-        .modal-body {
-            padding: 32px;
-        }
         
     </style>
 </head>
@@ -493,15 +426,15 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
     <aside class="sidebar">
         <div class="brand-container">
             <div class="brand">
-                <img src="logo.png" alt="ATMICX Logo" style="height: 32px; width: auto; object-fit: contain;">
+                <img src="atmicx/logo.png" alt="ATMICX Logo" style="height: 32px; width: auto; object-fit: contain;">
                 <div><h2>ATMICX <span>Secretary</span></h2></div>
             </div>
             
             <div class="user-profile-box" onclick="toast('Opening Profile Settings...')">
-                <div class="avatar" style="background: linear-gradient(135deg, #10b981, #059669); color: white;"><?php echo strtoupper(substr($_SESSION['username'], 0, 1)); ?></div>
+                <div class="avatar" style="background: linear-gradient(135deg, #10b981, #059669); color: white;">JJ</div>
                 <div class="user-info">
-                    <div class="name" style="color:#f1f5f9;"><?php echo $_SESSION['username']; ?></div>
-                    <div class="role"><?php echo ucfirst($_SESSION['role']); ?></div>
+                    <div class="name" style="color:#f1f5f9;">Jane Jacob</div>
+                    <div class="role">Secretary</div>
                 </div>
                 <i class="fas fa-cog settings-icon"></i>
             </div>
@@ -517,7 +450,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
         </ul>
 
         <div class="sidebar-footer">
-            <button class="logout-btn" onclick="openLogoutModal()">
+            <button class="logout-btn" onclick="toast('Secure logout initiated...')">
                 <i class="fas fa-sign-out-alt"></i> Logout
             </button>
         </div>
@@ -753,7 +686,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
                                 <button class="btn btn-primary" onclick="toast('Printing Quote...')"><i class="fas fa-print"></i> Print Quote</button>
                                 <button class="btn btn-danger" style="background: white; border: 1px solid var(--danger-text); color: var(--danger-text); margin-top: 8px;" onclick="document.getElementById('clientName').value=''; document.getElementById('packageType').value=''; calculateSalesQuote()"><i class="fas fa-times-circle"></i> Clear Form</button>
                             </div>
-                        </div>
+                            </div>
                     </div>
                 </div>
             </div>
@@ -922,8 +855,31 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
                                 <th>Total Stock</th>
                             </tr>
                         </thead>
-                        <tbody id="sec-inventory-table-body">
-                            <!-- Filled from database via AJAX -->
+                        <tbody>
+                            <tr>
+                                <td>#HXL001</td>
+                                <td>Haier Pro XL</td>
+                                <td>30 Units</td>
+                                <td>0 Units <span class="status-badge status-err" style="margin-left:8px;">CRIT</span></td>
+                                <td>15 Units</td>
+                                <td>45 Units</td>
+                            </tr>
+                            <tr>
+                                <td>#PCB005</td>
+                                <td>PCB Boards</td>
+                                <td>50 Units</td>
+                                <td>45 Units</td>
+                                <td>2 Units <span class="status-badge status-warn" style="margin-left:8px;">LOW</span></td>
+                                <td>97 Units</td>
+                            </tr>
+                            <tr>
+                                <td>#DH045</td>
+                                <td>Drain Hoses</td>
+                                <td>10 Units</td>
+                                <td>45 Units</td>
+                                <td>50 Units</td>
+                                <td>105 Units</td>
+                            </tr>
                         </tbody>
                     </table>
                    
@@ -931,7 +887,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
             </div>
 
             <div id="customer-records" class="section">
-                <div class="panel">
+               
                     <div class="panel-header">
                         <span class="panel-title">Client Profile: Maria Cruz</span>
                         <button class="btn btn-outline"><i class="fas fa-edit"></i> Edit Profile</button>
@@ -956,7 +912,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
                             <i class="fas fa-exclamation-triangle bg-icon" style="font-size: 80px;"></i>
                             <div class="metric-header"><span class="metric-label">Critical Alerts</span></div>
                             <h3 class="metric-value" style="font-size: 28px;">1</div>
-                        </div>
+                       
                     </div>
                     <h3 style="font-size:16px; font-weight:700; color:var(--navy-dark); margin-top: 10px; margin-bottom: 20px;">Recent Service History</h3>
                     <div class="txn-list">
@@ -1004,22 +960,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
         <span id="toast-msg"></span>
     </div>
 
-    <div id="logout-modal-overlay" class="modal-overlay">
-        <div class="modal-content delete-confirm">
-            <div style="padding: 32px; display: flex; flex-direction: column; align-items: center; text-align: center;">
-                <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: var(--danger-text); margin-bottom: 20px;"></i>
-                <h4 style="font-size: 18px; font-weight: 700; color: var(--navy-dark); margin-bottom: 10px;">Confirm Logout</h4>
-                <p style="font-size: 14px; color: var(--text-main); margin-bottom: 30px;">Are you sure you want to end your current session?</p>
-                <div style="display: flex; gap: 10px; width: 100%;">
-                    <button type="button" class="btn btn-danger" style="flex: 1;" onclick="window.location.href='logout.php'"><i class="fas fa-sign-out-alt"></i> Logout</button>
-                    <button type="button" class="btn btn-outline" style="flex: 1;" onclick="closeLogoutModal()">Cancel</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script>
-        const INVENTORY_API_URL = 'inventory_api.php';
         // --- JAVASCRIPT FUNCTIONS ---
 
         // Toast Notification
@@ -1031,7 +972,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
                 toastElement.classList.remove('show');
             }, 3000);
         }
-
 
         // Header Notification Dropdown Toggle
         function toggleNotif() {
@@ -1076,11 +1016,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
                 'customer-records': 'Client Management'
             };
             document.getElementById('page-title').innerText = titles[sectionId] || 'Dashboard';
-
-            // Load live inventory when opening Inventory Check
-            if (sectionId === 'inventory-check') {
-                loadSecretaryInventory();
-            }
         }
 
         // Tab Switching for Service Requests/Reports
@@ -1133,7 +1068,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
             calculateSalesQuote();
             toast('Sales Quote form pre-filled for New Investor John.');
         }
-
+        
         // NEW: Function to handle file name update
         function updateFileName(input) {
             const fileNameDisplay = document.getElementById('file-name');
@@ -1145,6 +1080,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
                 fileNameDisplay.style.color = 'var(--text-muted)';
             }
         }
+
 
         // NEW: Function to handle the team assignment form submission
         function handleAssignment(event, jobId) {
@@ -1177,7 +1113,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
 
                 // Disable the form/card actions
                 card.style.opacity = '0.7';
-                form.querySelector('select[name="technician_team"]').disabled = true; // Disable new fields
+                form.querySelector('select[name="technician_team"]').disabled = true;
                 form.querySelector('input[name="tech_name"]').disabled = true; // Disable new fields
                 form.querySelector('input[name="tech_contact"]').disabled = true; // Disable new fields
                 form.querySelector('input[name="schedule_date"]').disabled = true; // Disable new fields
@@ -1204,99 +1140,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
             return false; // Prevent default form submission
         }
 
-        // Inventory loading for Secretary (read-only)
-        async function loadSecretaryInventory() {
-            const tbody = document.getElementById('sec-inventory-table-body');
-            if (!tbody) return;
-
-            try {
-                const res = await fetch(INVENTORY_API_URL);
-                const data = await res.json();
-
-                if (!data.success) {
-                    console.error('Failed to load inventory:', data.message);
-                    toast('Failed to load inventory');
-                    return;
-                }
-
-                // Group by Item_Name and branch
-                const grouped = {};
-                (data.items || []).forEach(item => {
-                    const name = item.Item_Name || 'Unknown';
-                    const branch = item.Branch || 'Manila HQ';
-                    const qty = parseInt(item.Quantity ?? 0, 10);
-                    const id = item.Item_ID ?? null;
-
-                    if (!grouped[name]) {
-                        grouped[name] = {
-                            // Use Item_ID as the visible item code
-                            code: id !== null ? String(id) : '',
-                            name,
-                            Manila: 0,
-                            Cebu: 0,
-                            Bacolod: 0
-                        };
-                    }
-
-                    if (branch.toLowerCase().includes('manila')) grouped[name].Manila += qty;
-                    else if (branch.toLowerCase().includes('cebu')) grouped[name].Cebu += qty;
-                    else if (branch.toLowerCase().includes('bacolod')) grouped[name].Bacolod += qty;
-                });
-
-                tbody.innerHTML = '';
-
-                Object.values(grouped).forEach(row => {
-                    const total = row.Manila + row.Cebu + row.Bacolod;
-
-                    const manilaText = `${row.Manila} Units`;
-                    const cebuBadge = row.Cebu <= 0
-                        ? `<span class="status-badge status-err" style="margin-left:8px;">CRIT</span>`
-                        : '';
-                    const bacolodBadge = row.Bacolod > 0 && row.Bacolod <= 5
-                        ? `<span class="status-badge status-warn" style="margin-left:8px;">LOW</span>`
-                        : '';
-
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${row.code || '-'}</td>
-                        <td>${row.name}</td>
-                        <td>${manilaText}</td>
-                        <td>${row.Cebu} Units ${cebuBadge}</td>
-                        <td>${row.Bacolod} Units ${bacolodBadge}</td>
-                        <td>${total} Units</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-
-                if (!Object.keys(grouped).length) {
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="6" style="font-size:13px; color:var(--text-muted); text-align:center;">
-                                No inventory records found.
-                            </td>
-                        </tr>
-                    `;
-                }
-            } catch (err) {
-                console.error('Error loading inventory:', err);
-                toast('Error loading inventory');
-            }
-        }
-
-        function setupInventorySearch() {
-            const input = document.getElementById('inventorySearch');
-            const tbody = document.getElementById('sec-inventory-table-body');
-            if (!input || !tbody) return;
-
-            input.addEventListener('keyup', () => {
-                const term = input.value.toLowerCase();
-                Array.from(tbody.querySelectorAll('tr')).forEach(row => {
-                    const text = row.innerText.toLowerCase();
-                    row.style.display = text.includes(term) ? '' : 'none';
-                });
-            });
-        }
-
         // INITIALIZATION
         document.addEventListener('DOMContentLoaded', (event) => {
             // 1. Set initial view to dashboard and activate the nav button
@@ -1318,24 +1161,14 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
                         const targetTab = btn.parentElement.querySelector('h4').innerText.toLowerCase().includes('repair') || btn.parentElement.querySelector('span.metric-label').innerText.toLowerCase().includes('maintenance') ? 'maintenance-requests' : 'sales-inquiries';
                         
                         // Find the corresponding tab element and click it
-                        const tabElement = document.querySelector(`#service-requests .tab[onclick*="'${targetTab}'"]`);
+                        const tabElement = document.querySelector(`#service-requests .tab[onclick*=\"'${targetTab}'\"]`);
                         if (tabElement) {
                              switchReportTab(tabElement, targetTab);
                         }
                     };
                 });
             }
-
-            // 4. Prepare inventory search and initial data (optional initial load)
-            setupInventorySearch();
         });
-        function openLogoutModal() {
-            document.getElementById('logout-modal-overlay').classList.add('show');
-        }
-
-        function closeLogoutModal() {
-            document.getElementById('logout-modal-overlay').classList.remove('show');
-        }
     </script>
 
 </body>

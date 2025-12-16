@@ -1,4 +1,7 @@
 <?php
+error_reporting(0);
+ini_set('display_errors', 0);
+
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
@@ -22,12 +25,12 @@ if (json_last_error() !== JSON_ERROR_NONE) {
     exit;
 }
 
-$username = $input['username'] ?? '';
+$email = $input['email'] ?? '';
 $password = $input['password'] ?? '';
 
-if (empty($username) || empty($password)) {
+if (empty($email) || empty($password)) {
     http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'Username and password are required.']);
+    echo json_encode(['success' => false, 'message' => 'Email and password are required.']);
     exit;
 }
 
@@ -41,22 +44,23 @@ try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username_db, $password_db);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // Find the client by username
-    $stmt = $pdo->prepare("SELECT Client_ID, Name, Password_Hash FROM client WHERE Name = ?");
-    $stmt->execute([$username]);
+    // Find the client by email
+    $stmt = $pdo->prepare("SELECT Client_ID, Name, Password_Hash FROM client WHERE Email = ?");
+    $stmt->execute([$email]);
     $client = $stmt->fetch(PDO::FETCH_ASSOC);
 
     // Verify password
     if ($client && password_verify($password, $client['Password_Hash'])) {
         // Password is correct, start the session
         $_SESSION['client_id'] = $client['Client_ID'];
-        $_SESSION['username'] = $client['Name'];
+        $_SESSION['email'] = $client['Email'];
+        $_SESSION['name'] = $client['Name'];
         $_SESSION['role'] = 'client'; 
 
         echo json_encode(['success' => true, 'message' => 'Login successful.']);
     } else {
         // Invalid credentials
-        echo json_encode(['success' => false, 'message' => 'Invalid username or password.']);
+        echo json_encode(['success' => false, 'message' => 'Invalid email or password.']);
     }
 
 } catch (PDOException $e) {

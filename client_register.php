@@ -21,16 +21,16 @@ if (!$input) {
     exit;
 }
 
-$username = $input['username'] ?? '';
+$name = $input['name'] ?? '';
 $email = $input['email'] ?? '';
 $password = $input['password'] ?? '';
 $contact = $input['contact'] ?? '';
 $address = $input['address'] ?? '';
 
 
-if (!$email || !$username || !$password) {
+if (!$name || !$email || !$password) {
     http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'Username, Email, and Password are required.']);
+    echo json_encode(['success' => false, 'message' => 'Name, Email and Password are required.']);
     exit;
 }
 
@@ -55,11 +55,11 @@ try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username_db, $password_db);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // Check if username or email already exists in the client table
-    $stmt = $pdo->prepare("SELECT Client_ID FROM client WHERE Name = ? OR Email = ?");
-    $stmt->execute([$username, $email]);
+    // Check if email already exists in the client table
+    $stmt = $pdo->prepare("SELECT Client_ID FROM client WHERE Email = ?");
+    $stmt->execute([$email]);
     if ($stmt->fetch()) {
-        echo json_encode(['success' => false, 'message' => 'Username or email already taken.']);
+        echo json_encode(['success' => false, 'message' => 'Email already taken.']);
         exit;
     }
 
@@ -68,7 +68,7 @@ try {
 
     // Insert new client
     $stmt = $pdo->prepare("INSERT INTO client (Name, Email, Password_Hash, Contact_Num, Address) VALUES (?, ?, ?, ?, ?)");
-    $stmt->execute([$username, $email, $password_hash, $contact, $address]);
+    $stmt->execute([$name, $email, $password_hash, $contact, $address]);
 
     echo json_encode(['success' => true, 'message' => 'Registration successful! You can now log in.']);
 } catch (PDOException $e) {

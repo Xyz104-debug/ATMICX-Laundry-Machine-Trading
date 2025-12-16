@@ -22,11 +22,11 @@ if (!$input) {
 }
 
 $role = $input['role'] ?? '';
+$name = $input['name'] ?? '';
 $email = $input['email'] ?? '';
-$username = $input['username'] ?? '';
 $password = $input['password'] ?? '';
 
-if (!$role || !$email || !$username || !$password) {
+if (!$role || !$name || !$email || !$password) {
     http_response_code(400);
     echo json_encode(['success' => false, 'message' => 'Missing fields']);
     exit;
@@ -57,11 +57,11 @@ try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username_db, $password_db);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // Check if username or email already exists
-    $stmt = $pdo->prepare("SELECT User_ID FROM user WHERE Name = ? OR email = ?");
-    $stmt->execute([$username, $email]);
+    // Check if email already exists
+    $stmt = $pdo->prepare("SELECT User_ID FROM user WHERE email = ?");
+    $stmt->execute([$email]);
     if ($stmt->fetch()) {
-        echo json_encode(['success' => false, 'message' => 'Username or email already exists']);
+        echo json_encode(['success' => false, 'message' => 'Email already exists']);
         exit;
     }
 
@@ -75,7 +75,7 @@ try {
 
     // Insert new user
     $stmt = $pdo->prepare("INSERT INTO user (Name, email, PasswordHash, Role) VALUES (?, ?, ?, ?)");
-    $stmt->execute([$username, $email, $password_hash, $role]);
+    $stmt->execute([$name, $email, $password_hash, $role]);
 
     echo json_encode(['success' => true, 'message' => 'Registration successful']);
 } catch (Exception $e) {

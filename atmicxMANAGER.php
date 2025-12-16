@@ -810,7 +810,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'manager') {
                                 <h4 style="margin-bottom:20px; color:var(--navy-dark);">Receive Shipment</h4>
                                 <div class="form-group"><label class="form-label">Item Name</label><input type="text" class="form-control" value="Haier Pro XL" id="inv-item"></div>
                                 <div class="form-group"><label class="form-label">Quantity Received</label><input type="number" class="form-control" value="50" id="inv-qty"></div>
-                                <div class="form-group"><label class="form-label">Destination Warehouse</label><input type="text" class="form-control" value="Manila HQ" readonly style="background:#e2e8f0;"></div>
+                                <div class="form-group"><label class="form-label">Destination Warehouse</label><input type="text" class="form-control" value="Manila HQ" id="inv-branch" style="background:#e2e8f0;"></div>
                                 <button class="btn btn-primary" onclick="receiveStock()"><i class="fas fa-plus"></i> Add to Inventory</button>
                             </div>
                             <div>
@@ -832,13 +832,19 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'manager') {
                             <div style="background:#f8fafc; padding:24px; border-radius:12px;">
                                 <h4 style="margin-bottom:20px; color:var(--navy-dark);">Initiate Transfer</h4>
                                 <div class="form-group"><label class="form-label">Destination Branch</label>
-                                    <select class="form-control"><option>Bacolod Branch</option><option>Cebu Branch</option></select>
+                                    <select class="form-control" id="transfer-branch">
+                                        <option value="Bacolod Branch">Bacolod Branch</option>
+                                        <option value="Cebu Branch">Cebu Branch</option>
+                                    </select>
                                 </div>
                                 <div class="form-group"><label class="form-label">Select Item</label>
-                                    <select class="form-control"><option>Haier Pro XL</option><option>PCB Boards</option></select>
+                                    <select class="form-control" id="transfer-item">
+                                        <option value="Haier Pro XL">Haier Pro XL</option>
+                                        <option value="PCB Boards">PCB Boards</option>
+                                    </select>
                                 </div>
-                                <div class="form-group"><label class="form-label">Quantity to Transfer</label><input type="number" class="form-control" placeholder="0"></div>
-                                <button class="btn btn-primary" onclick="toast('Transfer Request Created')">Create Transfer Order</button>
+                                <div class="form-group"><label class="form-label">Quantity to Transfer</label><input type="number" class="form-control" placeholder="0" id="transfer-qty"></div>
+                                <button class="btn btn-primary" onclick="transferStock()">Create Transfer Order</button>
                             </div>
                             <div style="background:#f8fafc; padding:24px; border-radius:12px; height:100%; display: flex; flex-direction: column;">
                                 <h4 style="margin-bottom:20px; color:var(--navy-dark);">Recent Transfers</h4>
@@ -1006,28 +1012,23 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'manager') {
 
             <div id="users" class="section">
                 <div class="panel">
-                    <div class="panel-header"><span class="panel-title">Staff Accounts</span><button class="btn btn-primary" style="width:auto;" onclick="addUser()"><i class="fas fa-plus"></i> Add User</button></div>
+                    <div class="panel-header">
+                        <span class="panel-title">Staff Accounts</span>
+                        <button class="btn btn-primary" style="width:auto;" onclick="addUser()">
+                            <i class="fas fa-plus"></i> Add User
+                        </button>
+                    </div>
                     <table>
-                        <thead><tr><th>Name</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
-                        <tbody>
-                            <tr id="user-row-jane">
-                                <td><strong>Jane Doe</strong><br><span id="email-jane" style="font-size:12px; color:var(--text-muted);">jane@atmicx.com</span></td>
-                                <td id="role-jane">Secretary</td>
-                                <td id="status-jane"><span class="status-badge status-ok">Active</span></td>
-                                <td>
-                                    <button class="btn btn-outline" style="padding:6px 12px;" onclick="editUser('Jane Doe', 'jane', 'jane@atmicx.com')">Edit</button>
-                                    <button class="btn btn-danger" style="padding:6px 12px; margin-left: 8px;" onclick="deleteUser('jane')">Delete</button>
-                                </td>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Actions</th>
                             </tr>
-                            <tr id="user-row-alpha">
-                                <td><strong>Team Alpha</strong><br><span id="email-alpha" style="font-size:12px; color:var(--text-muted);">tech.alpha@atmicx.com</span></td>
-                                <td id="role-alpha">Technician</td>
-                                <td id="status-alpha"><span class="status-badge status-ok">Active</span></td>
-                                <td>
-                                    <button class="btn btn-outline" style="padding:6px 12px;" onclick="editUser('Team Alpha', 'alpha', 'tech.alpha@atmicx.com')">Edit</button>
-                                    <button class="btn btn-danger" style="padding:6px 12px; margin-left: 8px;" onclick="deleteUser('alpha')">Delete</button>
-                                </td>
-                            </tr>
+                        </thead>
+                        <tbody id="users-table-body">
+                            <!-- Filled dynamically via AJAX -->
                         </tbody>
                     </table>
                 </div>
@@ -1162,6 +1163,9 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'manager') {
     </div>
 
     <script>
+        const USERS_API_URL = 'users_api.php';
+        const INVENTORY_API_URL = 'inventory_api.php';
+
         function nav(id, btn) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
@@ -1169,6 +1173,13 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'manager') {
             btn.classList.add('active');
             const titles = {'dashboard':'Executive Dashboard', 'payment':'Payment Verification', 'inventory':'Inventory Distribution', 'reports':'Sales Reports', 'users':'User Management'};
             document.getElementById('page-title').innerText = titles[id];
+
+            if (id === 'users') {
+                loadUsers();
+            }
+            if (id === 'inventory') {
+                loadInventory();
+            }
         }
 
         function switchTab(id, btn) {
@@ -1200,7 +1211,61 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'manager') {
             document.getElementById(id).classList.remove('show');
         }
 
-        // --- USER ADD/EDIT/DELETE FUNCTIONALITY ---
+        // --- USER LIST/CRUD (AJAX + JSON) ---
+
+        function getStatusClass(status) {
+            if (status === 'On Leave') return 'status-warn';
+            if (status === 'Terminated') return 'status-err';
+            return 'status-ok';
+        }
+
+        async function loadUsers() {
+            try {
+                const res = await fetch(`${USERS_API_URL}`);
+                const data = await res.json();
+
+                if (!data.success) {
+                    console.error('Failed to load users:', data.message);
+                    toast('Failed to load users');
+                    return;
+                }
+
+                const tbody = document.getElementById('users-table-body');
+                tbody.innerHTML = '';
+
+                (data.users || []).forEach(user => {
+                    const idPrefix = user.User_ID;
+                    const name = user.Name || '';
+                    const email = user.email || '';
+                    const role = user.Role || '';
+                    const status = user.Status || 'Active';
+                    const statusClass = getStatusClass(status);
+
+                    const rowHtml = `
+                        <tr id="user-row-${idPrefix}">
+                            <td>
+                                <strong>${name}</strong><br>
+                                <span id="email-${idPrefix}" style="font-size:12px; color:var(--text-muted);">${email}</span>
+                            </td>
+                            <td id="role-${idPrefix}">${role}</td>
+                            <td id="status-${idPrefix}">
+                                <span class="status-badge ${statusClass}">${status}</span>
+                            </td>
+                            <td>
+                                <button class="btn btn-outline" style="padding:6px 12px;" onclick="editUser('${name.replace(/'/g, "\\'")}', '${idPrefix}', '${email.replace(/'/g, "\\'")}')">Edit</button>
+                                <button class="btn btn-danger" style="padding:6px 12px; margin-left: 8px;" onclick="deleteUser('${idPrefix}')">Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.insertAdjacentHTML('beforeend', rowHtml);
+                });
+            } catch (err) {
+                console.error('Error loading users:', err);
+                toast('Error loading users');
+            }
+        }
+
+        // --- USER ADD/EDIT/DELETE FUNCTIONALITY (NOW USING API) ---
 
         function addUser() {
             // Open the new Add User modal
@@ -1208,8 +1273,8 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'manager') {
             document.getElementById('add-user-modal-overlay').classList.add('show');
         }
         
-        // NEW FUNCTION: Handles saving the new user
-        function saveNewUser() {
+        // Handles saving the new user (AJAX -> users_api.php)
+        async function saveNewUser() {
             const name = document.getElementById('add-user-name').value;
             const email = document.getElementById('add-user-email').value;
             const role = document.getElementById('add-user-role').value;
@@ -1221,32 +1286,32 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'manager') {
                 return;
             }
 
-            // Simple ID generation for demo purposes
-            const idPrefix = email.split('@')[0].replace(/[^a-z0-9]/gi, '').toLowerCase().substring(0, 10) + Math.floor(Math.random() * 100);
-            
-            let statusClass = 'status-ok';
-            if (status === 'On Leave') {
-                statusClass = 'status-warn';
-            } else if (status === 'Terminated') {
-                statusClass = 'status-err';
+            try {
+                const res = await fetch(USERS_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'create',
+                        name,
+                        email,
+                        role,
+                        status
+                    })
+                });
+                const data = await res.json();
+
+                if (!data.success) {
+                    alert(data.message || 'Failed to create user');
+                    return;
+                }
+
+                closeModal('add-user-modal-overlay');
+                toast(`New user ${name} (${role}) created successfully.`);
+                loadUsers();
+            } catch (err) {
+                console.error('Error creating user:', err);
+                alert('Error creating user');
             }
-
-            const newRow = `
-                <tr id="user-row-${idPrefix}">
-                    <td><strong>${name}</strong><br><span id="email-${idPrefix}" style="font-size:12px; color:var(--text-muted);">${email}</span></td>
-                    <td id="role-${idPrefix}">${role}</td>
-                    <td id="status-${idPrefix}"><span class="status-badge ${statusClass}">${status}</span></td>
-                    <td>
-                        <button class="btn btn-outline" style="padding:6px 12px;" onclick="editUser('${name}', '${idPrefix}', '${email}')">Edit</button>
-                        <button class="btn btn-danger" style="padding:6px 12px; margin-left: 8px;" onclick="deleteUser('${idPrefix}')">Delete</button>
-                    </td>
-                </tr>
-            `;
-
-            document.querySelector('#users table tbody').insertAdjacentHTML('beforeend', newRow);
-            
-            closeModal('add-user-modal-overlay');
-            toast(`New user ${name} (${role}) created successfully.`);
         }
 
         function editUser(name, idPrefix, email) {
@@ -1266,32 +1331,48 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'manager') {
             document.getElementById('edit-user-modal-overlay').classList.add('show');
         }
 
-        function saveUserChanges() {
+        async function saveUserChanges() {
             const idPrefix = document.getElementById('modal-user-id-prefix').value;
             const userName = document.getElementById('modal-user-name').innerText;
             const newRole = document.getElementById('modal-user-role').value;
             const newStatus = document.getElementById('modal-user-status').value;
 
-            // 1. Update the Role
-            document.getElementById(`role-${idPrefix}`).innerText = newRole;
+            try {
+                const res = await fetch(USERS_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'update',
+                        user_id: idPrefix,
+                        role: newRole,
+                        status: newStatus
+                    })
+                });
+                const data = await res.json();
 
-            // 2. Update the Status Badge
-            let statusClass = 'status-ok';
-            if (newStatus === 'On Leave') {
-                statusClass = 'status-warn';
-            } else if (newStatus === 'Terminated') {
-                statusClass = 'status-err';
+                if (!data.success) {
+                    alert(data.message || 'Failed to update user');
+                    return;
+                }
+
+                // 1. Update the Role in DOM
+                document.getElementById(`role-${idPrefix}`).innerText = newRole;
+
+                // 2. Update the Status Badge in DOM
+                let statusClass = getStatusClass(newStatus);
+                const statusCell = document.getElementById(`status-${idPrefix}`);
+                statusCell.innerHTML = `<span class="status-badge ${statusClass}">${newStatus}</span>`;
+
+                // 3. Close modal and show toast
+                closeModal('edit-user-modal-overlay');
+                toast(`User ${userName} updated to Role: ${newRole} & Status: ${newStatus}`);
+            } catch (err) {
+                console.error('Error updating user:', err);
+                alert('Error updating user');
             }
-
-            const statusCell = document.getElementById(`status-${idPrefix}`);
-            statusCell.innerHTML = `<span class="status-badge ${statusClass}">${newStatus}</span>`;
-
-            // 3. Close modal and show toast
-            closeModal('edit-user-modal-overlay');
-            toast(`User ${userName} updated to Role: ${newRole} & Status: ${newStatus}`);
         }
 
-        // MODIFIED FUNCTION: Opens the custom delete confirmation modal
+        // Opens the custom delete confirmation modal
         function deleteUser(idPrefix) {
             const row = document.getElementById(`user-row-${idPrefix}`);
             if (!row) return;
@@ -1308,32 +1389,164 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'manager') {
             document.getElementById('delete-confirm-modal-overlay').classList.add('show');
         }
 
-        // NEW FUNCTION: Handles the actual deletion after confirmation
-        function confirmDeleteUser(idPrefix) {
-            const row = document.getElementById(`user-row-${idPrefix}`);
+        // Handles the actual deletion after confirmation (AJAX)
+        async function confirmDeleteUser(idPrefix) {
             const userName = document.getElementById('delete-user-name').innerText; // Get the name from the modal
 
-            if (row) {
-                row.remove();
+            try {
+                const res = await fetch(USERS_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'delete',
+                        user_id: idPrefix
+                    })
+                });
+                const data = await res.json();
+
+                if (!data.success) {
+                    alert(data.message || 'Failed to delete user');
+                    return;
+                }
+
+                const row = document.getElementById(`user-row-${idPrefix}`);
+                if (row) {
+                    row.remove();
+                }
+
                 closeModal('delete-confirm-modal-overlay');
                 toast(`User ${userName} has been permanently deleted.`);
+            } catch (err) {
+                console.error('Error deleting user:', err);
+                alert('Error deleting user');
             }
         }
         // --- END USER ADD/EDIT/DELETE FUNCTIONALITY ---
 
 
-        // INVENTORY LOGIC
-        function receiveStock() {
-            let item = document.getElementById('inv-item').value;
-            let qty = parseInt(document.getElementById('inv-qty').value);
-            
-            if(item && qty) {
-                // Visualize update
-                let current = parseInt(document.getElementById('stock-xl').innerText);
-                document.getElementById('stock-xl').innerText = current + qty;
-                toast(`Successfully received ${qty} units of ${item}.`);
-            } else {
-                alert("Please enter valid item and quantity.");
+        // INVENTORY LOGIC (AJAX + JSON)
+
+        async function loadInventory(branch = 'Manila HQ') {
+            try {
+                const res = await fetch(`${INVENTORY_API_URL}?branch=${encodeURIComponent(branch)}`);
+                const data = await res.json();
+
+                if (!data.success) {
+                    console.error('Failed to load inventory:', data.message);
+                    toast('Failed to load inventory');
+                    return;
+                }
+
+                const tbody = document.getElementById('stock-table');
+                if (!tbody) return;
+                tbody.innerHTML = '';
+
+                (data.items || []).forEach(item => {
+                    const name = item.Item_Name || '';
+                    const qty = parseInt(item.Quantity ?? 0, 10);
+
+                    let badgeClass = 'status-ok';
+                    if (qty <= 5) {
+                        badgeClass = 'status-warn';
+                    }
+                    if (qty <= 0) {
+                        badgeClass = 'status-err';
+                    }
+
+                    const rowHtml = `
+                        <tr>
+                            <td>${name}</td>
+                            <td><span class="status-badge ${badgeClass}">${qty}</span></td>
+                        </tr>
+                    `;
+                    tbody.insertAdjacentHTML('beforeend', rowHtml);
+                });
+
+                if (!data.items || data.items.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="2" style="font-size:13px; color:var(--text-muted);">No items found for this branch.</td>
+                        </tr>
+                    `;
+                }
+            } catch (err) {
+                console.error('Error loading inventory:', err);
+                toast('Error loading inventory');
+            }
+        }
+
+        async function receiveStock() {
+            const item = document.getElementById('inv-item').value.trim();
+            const qty = parseInt(document.getElementById('inv-qty').value, 10);
+            const branchInput = document.getElementById('inv-branch');
+            const branch = branchInput ? branchInput.value.trim() : 'Manila HQ';
+
+            if (!item || !qty || qty <= 0) {
+                alert("Please enter a valid item name and positive quantity.");
+                return;
+            }
+
+            try {
+                const res = await fetch(INVENTORY_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'receive',
+                        item_name: item,
+                        quantity: qty,
+                        branch
+                    })
+                });
+                const data = await res.json();
+
+                if (!data.success) {
+                    alert(data.message || 'Failed to receive stock');
+                    return;
+                }
+
+                toast(`Successfully received ${qty} units of ${item} to ${branch}.`);
+                loadInventory(branch);
+            } catch (err) {
+                console.error('Error receiving stock:', err);
+                alert('Error receiving stock');
+            }
+        }
+
+        async function transferStock() {
+            const item = document.getElementById('transfer-item').value;
+            const qty = parseInt(document.getElementById('transfer-qty').value, 10);
+            const toBranch = document.getElementById('transfer-branch').value;
+            const fromBranch = 'Manila HQ'; // Master stock
+
+            if (!item || !qty || qty <= 0) {
+                alert("Please enter a valid transfer quantity.");
+                return;
+            }
+
+            try {
+                const res = await fetch(INVENTORY_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'transfer',
+                        item_name: item,
+                        quantity: qty,
+                        from_branch: fromBranch,
+                        to_branch: toBranch
+                    })
+                });
+                const data = await res.json();
+
+                if (!data.success) {
+                    alert(data.message || 'Transfer failed');
+                    return;
+                }
+
+                toast(`Transferred ${qty}x ${item} to ${toBranch}.`);
+                loadInventory(fromBranch);
+            } catch (err) {
+                console.error('Error transferring stock:', err);
+                alert('Error transferring stock');
             }
         }
 

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Transaction Details Test</title>
+    <style>
+        body {
+            font-family: system-ui;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        
+        .test-modal {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #666;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .close-btn:hover {
+            background: #fee;
+            color: #e53e3e;
+            transform: scale(1.1) rotate(90deg);
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 0 5px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59,130,246,0.4);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #e5e7eb;
+            color: #6b7280;
+        }
+        
+        .btn-outline:hover {
+            border-color: #3b82f6;
+            color: #3b82f6;
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+    <div class="test-modal">
+        <div class="modal-header">
+            <h2>🧾 Transaction Details - QT-0069</h2>
+            <button class="close-btn" onclick="closeModal()">×</button>
+        </div>
+        
+        <div style="background: linear-gradient(135deg, #1e293b, #475569); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <h3 style="color: #fbbf24; margin: 0 0 5px 0;">QT-0069</h3>
+            <p style="margin: 0 0 15px 0;">2-Set Investor Package</p>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 24px; font-weight: bold;">₱480,000.00</span>
+                <span style="background: #10b981; padding: 4px 12px; border-radius: 15px; font-size: 12px;">Approved</span>
+            </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+            <div>
+                <h4>👤 Client Information</h4>
+                <p><strong>blazeking123</strong></p>
+                <p>09604215897</p>
+                <p style="font-size: 12px; color: #666;">Zone 2, Brgy. Handumnan, Bacolod City</p>
+            </div>
+            <div>
+                <h4>📅 Transaction Info</h4>
+                <p><strong>Date:</strong> January 11, 2026</p>
+                <p><strong>Method:</strong> Standard Delivery</p>
+                <p><strong>Created by:</strong> blazeking123</p>
+            </div>
+        </div>
+        
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
+            <h4>💰 Amount Breakdown</h4>
+            <div style="display: flex; justify-content: space-between; margin: 5px 0;">
+                <span>Package Amount:</span>
+                <span>₱465,000.00</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin: 5px 0;">
+                <span>Handling Fee:</span>
+                <span>₱15,000.00</span>
+            </div>
+            <hr style="margin: 10px 0;">
+            <div style="display: flex; justify-content: space-between; font-weight: bold;">
+                <span>Total Amount:</span>
+                <span style="color: #10b981;">₱480,000.00</span>
+            </div>
+        </div>
+        
+        <div style="text-align: center;">
+            <button class="btn btn-outline" onclick="closeModal()">
+                ✕ Close
+            </button>
+            <button class="btn btn-primary" onclick="printReceipt()">
+                🖨️ Print Receipt
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        function closeModal() {
+            alert('Modal closed! ✨ Enhanced close button working!');
+        }
+        
+        function printReceipt() {
+            const receiptData = {
+                quotation_id: 69,
+                client_name: 'blazeking123',
+                client_contact: '09604215897',
+                client_address: 'Zone 2, Brgy. Handumnan, Bacolod City, Negros Occidental',
+                package: '2-Set Investor Package (₱450,000)',
+                amount: 465000,
+                handling_fee: 15000,
+                date_issued: '2026-01-11',
+                status: 'Approved',
+                delivery_method: 'Standard Delivery',
+                created_by: 'blazeking123'
+            };
+            
+            const totalAmount = parseFloat(receiptData.amount) + parseFloat(receiptData.handling_fee || 0);
+            const currentDate = new Date().toLocaleString('en-US', {
+                year: 'numeric',
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            const receiptContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Receipt - QT-${String(receiptData.quotation_id).padStart(4, '0')}</title>
+                    <style>
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: white; color: #333; }
+                        .receipt { max-width: 400px; margin: 20px auto; padding: 20px; border: 2px solid #2c3e50; }
+                        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #2c3e50; padding-bottom: 15px; }
+                        .company-name { font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 5px; }
+                        .company-info { font-size: 12px; color: #666; }
+                        .receipt-title { font-size: 16px; font-weight: bold; margin: 15px 0 10px 0; text-align: center; }
+                        .receipt-id { font-size: 14px; text-align: center; color: #666; margin-bottom: 15px; }
+                        .section { margin: 15px 0; }
+                        .section-title { font-size: 12px; font-weight: bold; color: #2c3e50; margin-bottom: 8px; text-transform: uppercase; border-bottom: 1px solid #ddd; padding-bottom: 3px; }
+                        .info-row { display: flex; justify-content: space-between; margin: 5px 0; font-size: 12px; }
+                        .info-label { color: #666; }
+                        .info-value { font-weight: 600; }
+                        .amount-section { border: 1px solid #ddd; padding: 10px; background: #f8f9fa; }
+                        .amount-row { display: flex; justify-content: space-between; margin: 3px 0; font-size: 12px; }
+                        .total-row { border-top: 1px solid #333; margin-top: 8px; padding-top: 5px; font-weight: bold; font-size: 14px; }
+                        .footer { text-align: center; margin-top: 20px; padding-top: 15px; border-top: 2px solid #2c3e50; }
+                        .footer-text { font-size: 10px; color: #666; line-height: 1.4; }
+                        .signature { margin-top: 15px; text-align: right; }
+                        .signature-line { border-top: 1px solid #333; width: 150px; margin-left: auto; padding-top: 5px; font-size: 10px; text-align: center; }
+                        @media print {
+                            body { margin: 0; }
+                            .receipt { margin: 0; border: none; max-width: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="receipt">
+                        <div class="header">
+                            <div class="company-name">ATMICX Laundry Machine Trading</div>
+                            <div class="company-info">Professional Laundry Solutions<br>Email: info@atmicx.com | Phone: (034) 123-4567</div>
+                        </div>
+                        
+                        <div class="receipt-title">TRANSACTION RECEIPT</div>
+                        <div class="receipt-id">QT-${String(receiptData.quotation_id).padStart(4, '0')}</div>
+                        
+                        <div class="section">
+                            <div class="section-title">Client Information</div>
+                            <div class="info-row">
+                                <span class="info-label">Name:</span>
+                                <span class="info-value">${receiptData.client_name}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Contact:</span>
+                                <span class="info-value">${receiptData.client_contact || 'N/A'}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Address:</span>
+                                <span class="info-value" style="font-size: 10px;">${receiptData.client_address || 'N/A'}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <div class="section-title">Transaction Details</div>
+                            <div class="info-row">
+                                <span class="info-label">Date:</span>
+                                <span class="info-value">${new Date(receiptData.date_issued).toLocaleDateString('en-US')}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Method:</span>
+                                <span class="info-value">${receiptData.delivery_method || 'Pick-up'}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Status:</span>
+                                <span class="info-value">${receiptData.status}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <div class="section-title">Package Details</div>
+                            <div class="info-row">
+                                <span class="info-label">Package:</span>
+                                <span class="info-value" style="font-size: 11px;">${receiptData.package}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <div class="section-title">Amount Breakdown</div>
+                            <div class="amount-section">
+                                <div class="amount-row">
+                                    <span>Package Amount:</span>
+                                    <span>₱${parseFloat(receiptData.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                                </div>
+                                ${receiptData.handling_fee > 0 ? `
+                                <div class="amount-row">
+                                    <span>Handling Fee:</span>
+                                    <span>₱${parseFloat(receiptData.handling_fee).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                                </div>
+                                ` : ''}
+                                <div class="amount-row total-row">
+                                    <span>TOTAL AMOUNT:</span>
+                                    <span>₱${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="footer">
+                            <div class="footer-text">
+                                Thank you for choosing ATMICX Laundry Machine Trading!<br>
+                                <strong>This is a computer-generated receipt.</strong>
+                            </div>
+                            
+                            <div class="signature">
+                                <div class="signature-line">
+                                    Authorized Signature
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="text-align: center; font-size: 10px; color: #666; margin-top: 10px;">
+                            Printed on: ${currentDate}
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            // Open receipt in new window and print
+            const printWindow = window.open('', 'printReceipt', 'width=600,height=800,scrollbars=yes');
+            printWindow.document.write(receiptContent);
+            printWindow.document.close();
+            
+            // Wait for content to load then print
+            printWindow.onload = function() {
+                setTimeout(() => {
+                    printWindow.print();
+                    setTimeout(() => {
+                        printWindow.close();
+                    }, 1000);
+                }, 500);
+            };
+            
+            alert('🎉 Receipt printed successfully! Print functionality working perfectly!');
+        }
+        
+        // Add escape key functionality
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>

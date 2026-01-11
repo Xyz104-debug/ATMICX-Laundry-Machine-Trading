@@ -45,7 +45,7 @@ try {
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     // Find the client by email
-    $stmt = $pdo->prepare("SELECT Client_ID, Name, Password_Hash FROM client WHERE Email = ?");
+    $stmt = $pdo->prepare("SELECT Client_ID, Name, Email, Password_Hash FROM client WHERE Email = ?");
     $stmt->execute([$email]);
     $client = $stmt->fetch(PDO::FETCH_ASSOC);
 

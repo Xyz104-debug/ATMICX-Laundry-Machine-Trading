@@ -1,7 +1,31 @@
 <?php
 error_reporting(E_ALL & ~E_NOTICE);
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+
+require_once 'role_session_manager.php';
+
+// Try to detect which role session exists
+$active_role = null;
+$session_names = [
+    'manager' => 'ATMICX_MGR_SESSION',
+    'secretary' => 'ATMICX_SEC_SESSION',
+    'client' => 'ATMICX_CLIENT_SESSION'
+];
+
+foreach ($session_names as $role => $session_name) {
+    if (isset($_COOKIE[$session_name])) {
+        $active_role = $role;
+        break;
+    }
+}
+
+// If no role session found, try default session
+if (!$active_role) {
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+} else {
+    // Start the appropriate role session
+    RoleSessionManager::start($active_role);
 }
 
 header('Content-Type: application/json');
@@ -15,10 +39,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-// Ensure only logged-in managers can use this API
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'manager') {
+// Check authentication using RoleSessionManager
+if (!RoleSessionManager::isAuthenticated()) {
     http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+    echo json_encode(['success' => false, 'message' => 'Not authenticated']);
+    exit;
+}
+
+$current_role = RoleSessionManager::getRole();
+if (!in_array(strtolower($current_role), ['manager', 'secretary'])) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Unauthorized - requires manager or secretary role (current: ' . $current_role . ')']);
     exit;
 }
 
@@ -53,14 +84,30 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
     // LIST USERS
-    $stmt = $pdo->prepare("SELECT User_ID, Name, Role, Status, email FROM user ORDER BY User_ID ASC");
-    $stmt->execute();
-    $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    try {
+        $stmt = $pdo->prepare("SELECT User_ID, Name, Role, Status, email FROM user ORDER BY User_ID ASC");
+        $stmt->execute();
+        $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    echo json_encode([
-        'success' => true,
-        'users' => $users
-    ]);
+        // Ensure all fields have default values
+        foreach ($users as &$user) {
+            $user['Status'] = $user['Status'] ?? 'Active';
+            $user['email'] = $user['email'] ?? '';
+            $user['Role'] = $user['Role'] ?? 'User';
+        }
+
+        echo json_encode([
+            'success' => true,
+            'users' => $users,
+            'count' => count($users)
+        ]);
+        
+    } catch (PDOException $e) {
+        echo json_encode([
+            'success' => false, 
+            'message' => 'Database error: ' . $e->getMessage()
+        ]);
+    }
     exit;
 }
 

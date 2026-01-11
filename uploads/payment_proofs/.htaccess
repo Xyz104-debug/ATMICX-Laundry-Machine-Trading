@@ -1,0 +1,17 @@
+# Deny direct access to uploaded files
+Deny from all
+<Files *.jpg>
+    Allow from all
+</Files>
+<Files *.jpeg>
+    Allow from all
+</Files>
+<Files *.png>
+    Allow from all
+</Files>
+<Files *.gif>
+    Allow from all
+</Files>
+<Files *.pdf>
+    Allow from all
+</Files>

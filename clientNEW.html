@@ -366,17 +366,6 @@
         .total-summary-card .value { font-size: 38px; font-weight: 800; color: var(--gold); margin: 5px 0; }
         .total-summary-card .note { font-size: 12px; opacity: 0.8; }
         
-        /* Maintenance Styles */
-        .machine-list { border: 1px solid #e2e8f0; border-radius: var(--radius-md); overflow: hidden; }
-        .machine-item { padding: 15px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: flex-start; gap: 15px; background: var(--white); }
-        .machine-item:last-child { border-bottom: none; }
-        .machine-item input[type="checkbox"] { margin-top: 8px; transform: scale(1.0); } 
-        .m-details { flex: 1; }
-        .m-details h5 { font-size: 15px; margin-bottom: 2px; color: var(--navy-dark); }
-        .m-details p { font-size: 12px; color: var(--text-muted); }
-        .labor-est { font-weight: 700; color: #10b981; font-size: 13px; margin-top: 5px; }
-        .alert-note { background: var(--warning-bg); padding: 10px; font-size: 12px; color: var(--warning-text); margin-top: 5px; border-radius: 6px; border: 1px solid #fcd34d;}
-
         /* Quotations Styles */
         .quotations-panel {
             background: var(--white);
@@ -502,7 +491,6 @@
         <ul class="nav-links">
             <li class="nav-item"><button class="nav-btn active" onclick="showSection('dashboard', this)"><i class="fas fa-th-large"></i> Dashboard</button></li>
             <li class="nav-item"><button class="nav-btn" onclick="showSection('shop', this)"><i class="fas fa-store"></i> Shop Packages</button></li>
-            <li class="nav-item"><button class="nav-btn" onclick="showSection('maintenance', this)"><i class="fas fa-tools"></i> Request Repair</button></li>
             <li class="nav-item"><button class="nav-btn" onclick="showSection('quotes', this)"><i class="fas fa-file-invoice-dollar"></i> My Quotations</button></li>
             <li class="nav-item"><button class="nav-btn" onclick="showSection('payments', this)"><i class="fas fa-wallet"></i> Payments</button></li>
             <li class="nav-item"><button class="nav-btn" onclick="showSection('schedule', this)"><i class="fas fa-calendar-alt"></i> My Schedule</button></li>
@@ -561,14 +549,6 @@
                         </div>
                         <button class="btn btn-primary" onclick="showSection('shop', document.querySelectorAll('.nav-btn')[1])">View Catalog</button>
                     </div>
-                    <div class="action-card">
-                        <div>
-                            <i class="fas fa-wrench card-icon"></i>
-                            <h3>Request Maintenance</h3>
-                            <p>Fix issues with your existing machines. Schedule a technician for diagnosis or repair.</p>
-                        </div>
-                        <button class="btn btn-outline" onclick="showSection('maintenance', document.querySelectorAll('.nav-btn')[2])">Request Service</button>
-                    </div>
                 </div>
 
                 <div class="recent-quotes-panel">
@@ -583,10 +563,10 @@
                         </div>
                         <div class="dash-quote-item" onclick="showSection('quotes', document.querySelectorAll('.nav-btn')[3])">
                             <div class="dash-quote-details">
-                                <h5>Quote Ref: #SVC-2025-99 (Repair Service)</h5>
-                                <span class="dash-quote-status">Washer & Dryer Repair <span class="status-badge status-info">Awaiting Payment</span></span>
+                                <h5>Quote Ref: #SVC-2025-89 (PMS Service)</h5>
+                                <span class="dash-quote-status">Preventive Maintenance Service <span class="status-badge status-success">Approved</span></span>
                             </div>
-                            <span class="dash-quote-amount">₱4,000.00</span>
+                            <span class="dash-quote-amount">₱2,500.00</span>
                         </div>
                     </div>
                 </div>
@@ -713,73 +693,6 @@
                 </div>
             </div>
 
-            <div id="maintenance" class="section">
-                <div class="panel">
-                    <form onsubmit="alert('Repair Request Submitted. Awaiting Quotation.'); return false;">
-                        <h2 class="panel-title" style="margin-bottom: 20px;">Request Repair or Service</h2>
-                        <div class="form-group">
-                            <label class="form-label">1. Select Service Type</label>
-                            <select class="form-control" name="service_type" onchange="updateRepairEst()">
-                                <option value="repair">Full Repair / Parts Replacement (Est. Labor Fee applies)</option>
-                                <option value="diagnosis">Diagnosis Only (₱800 check-up fee/machine)</option>
-                                <option value="pms">Preventive Maintenance Service (PMS)</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group" style="margin-bottom: 20px;">
-                            <label class="form-label">Service Scheduling</label>
-                            <div class="alert-note" style="background: var(--info-bg); color: var(--info-text); border-color: #0ea5e9;">
-                                <i class="fas fa-calendar-alt"></i> Your service date will be scheduled by the Secretary after quote approval.
-                            </div>
-                        </div>
-                        <div class="form-group" style="margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #e2e8f0;">
-                            <h4 class="panel-title" style="font-size: 16px; margin-bottom: 15px; color: var(--gold);">2. Machines to be Serviced</h4>
-                            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px;">Select the machine(s) needing attention and describe the issue for a fast quotation.</p>
-                            
-                            <div class="machine-list">
-                                <div class="machine-item">
-                                    <input type="checkbox" id="m1" name="machine_1_select" onchange="updateRepairEst()">
-                                    <div class="m-details">
-                                        <h5>Machine #1 (Washer): Haier Pro XL</h5>
-                                        <p>Serial: SN-123456789</p>
-                                        <textarea class="form-control" name="machine_1_issue" rows="2" style="margin-top: 5px; font-size: 12px; padding: 8px 12px;" placeholder="Describe the issue with the Washer (e.g., Not Draining, Motor noise)"></textarea>
-                                        <div class="labor-est">Est. Labor: ₱1,000.00 (Repair) / ₱800 (Diagnosis)</div>
-                                    </div>
-                                </div>
-                                <div class="machine-item">
-                                    <input type="checkbox" id="m2" name="machine_2_select" onchange="updateRepairEst()">
-                                    <div class="m-details">
-                                        <h5>Machine #2 (Dryer): Haier Pro XL</h5>
-                                        <p>Serial: SN-987654321</p>
-                                        <textarea class="form-control" name="machine_2_issue" rows="2" style="margin-top: 5px; font-size: 12px; padding: 8px 12px;" placeholder="Describe the issue with the Dryer (e.g., Not Heating, Drum not spinning)"></textarea>
-                                        <div class="labor-est">Est. Labor: ₱1,500.00 (Repair) / ₱800 (Diagnosis)</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div style="margin-bottom: 30px;">
-                            <h4 class="panel-title" style="font-size: 16px; margin-bottom: 15px; color: var(--gold);">3. Location and Summary</h4>
-                            <div class="form-group">
-                                <label class="form-label">Service Location</label>
-                                <input type="text" class="form-control" value="Bacolod City (Far North)" name="service_location" readonly>
-                                <div class="alert-note" style="margin-top: 10px;">
-                                    <i class="fas fa-exclamation-triangle"></i> System Note: Location may be subject to <strong>₱1,500 Trip Charge</strong> for remote areas. This is included in the estimated total.
-                                </div>
-                            </div>
-                            
-                            <div class="total-summary-card" style="padding: 15px 20px; background: #991b1b; color: white;">
-                                <div class="label" style="color: #fca5a5;">ESTIMATED TOTAL FEE</div>
-                                <h2 class="value" id="repair-total" style="font-size: 30px;">₱1,500</h2>
-                                <span class="note">This is an estimate. Final quotation will be provided by a Sales Secretary.</span>
-                            </div>
-                        </div>
-
-                        <button class="btn btn-primary" type="submit" style="width: 100%; padding: 15px;">Submit Repair Request for Quote</button>
-                    </form>
-                </div>
-            </div>
-
             <div id="quotes" class="section">
                 <div class="quotations-panel">
                     <h2 class="panel-title" style="margin-bottom: 20px;">My Quotations</h2>
@@ -863,7 +776,7 @@
                                 <label class="form-label">Paying For:</label>
                                 <select class="form-control">
                                     <option>Quote #QT-2025-88 (2-Set Package)</option>
-                                    <option>Quote #SVC-2025-99 (Repair)</option>
+                                    <option>Quote #SVC-2025-89 (PMS)</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -999,7 +912,6 @@
             const titles = {
                 'dashboard': 'Dashboard',
                 'shop': 'Shop Packages',
-                'maintenance': 'Request Repair',
                 'quotes': 'My Quotations',
                 'payments': 'Payments',
                 'schedule': 'My Schedule',
@@ -1017,7 +929,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             showSection('dashboard', document.querySelectorAll('.nav-btn')[0]);
             updatePriceFromCheckboxes(); // Initialize shop total on load
-            updateRepairEst(); // Initialize repair estimate on load
         });
         
         // Helper function to get nav button
@@ -1107,48 +1018,7 @@
         }
 
 
-        // --- MAINTENANCE LOGIC ---
-        function updateRepairEst() {
-            let total = 0;
-            const tripCharge = 1500; // Fixed trip charge
-            const diagnosisFee = 800; // Per machine diagnosis fee
 
-            // Get the value from the Service Type dropdown
-            const serviceSelect = document.querySelector('#maintenance select[name="service_type"]');
-            const serviceType = serviceSelect ? serviceSelect.value : 'repair';
-
-            let machineSelected = false;
-
-            // --- Machine 1 (Washer) Calculation ---
-            if (document.getElementById('m1').checked) {
-                machineSelected = true;
-                if (serviceType === 'diagnosis') {
-                    total += diagnosisFee; 
-                } else if (serviceType === 'repair') {
-                    total += 1000; // Washer labor estimate
-                }
-            }
-
-            // --- Machine 2 (Dryer) Calculation ---
-            if (document.getElementById('m2').checked) {
-                machineSelected = true;
-                if (serviceType === 'diagnosis') {
-                    total += diagnosisFee; 
-                } else if (serviceType === 'repair') {
-                    total += 1500; // Dryer labor estimate
-                }
-            }
-            
-            // Add trip charge only if *any* machine is selected for service (and not PMS which is assumed prepaid/contractual)
-            if (machineSelected && serviceType !== 'pms') {
-                total += tripCharge; 
-            }
-
-            // Update the total price display
-            document.getElementById('repair-total').innerText = "₱" + total.toLocaleString();
-        }
-        
-        // --- REMOVED NEW SCHEDULING LOGIC to give control to Secretary ---
 
     </script>
 </body>

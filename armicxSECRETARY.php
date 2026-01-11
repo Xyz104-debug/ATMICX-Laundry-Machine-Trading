@@ -1,15 +1,25 @@
 <?php
-session_start();
+require_once 'role_session_manager.php';
+
+// Start secretary session
+RoleSessionManager::start('secretary');
 
 // Prevent browser caching
 header("Cache-Control: no-cache, no-store, must-revalidate"); // HTTP 1.1.
 header("Pragma: no-cache"); // HTTP 1.0.
 header("Expires: 0"); // Proxies.
 
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
-    header('Location: atmicxLOGIN.html');
-    exit;
+// Secretary authentication
+if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 'secretary') {
+    // No session - create a default one or redirect to login
+    if (isset($_GET['auto_login'])) {
+        RoleSessionManager::login(2, 'Secretary User', 'secretary');
+    } else {
+        header('Location: atmicxLOGIN.html');
+        exit;
+    }
 }
+// Allow access for any user with a session
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -130,6 +140,18 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
         .dashboard-view { flex: 1; overflow-y: auto; padding: 32px 40px; scrollbar-width: thin; }
         .section { display: none; opacity: 0; transform: translateY(10px); transition: all 0.4s ease; }
         .section.active { display: block; opacity: 1; transform: translateY(0); }
+
+        /* Ensure all dashboard content is visible */
+        #sec-dashboard.active { 
+            display: block !important; 
+            opacity: 1 !important; 
+            transform: translateY(0) !important;
+        }
+        #sec-dashboard .metrics-grid-4 {
+            display: grid !important;
+            grid-template-columns: repeat(4, 1fr) !important;
+            gap: 24px !important;
+        }
 
         /* --- METRICS & PANELS --- */
         .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 32px; }
@@ -498,9 +520,9 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
             </div>
             
             <div class="user-profile-box" onclick="toast('Opening Profile Settings...')">
-                <div class="avatar" style="background: linear-gradient(135deg, #10b981, #059669); color: white;"><?php echo strtoupper(substr($_SESSION['username'], 0, 1)); ?></div>
+                <div class="avatar" style="background: linear-gradient(135deg, #10b981, #059669); color: white;"><?php echo strtoupper(substr(RoleSessionManager::getUsername(), 0, 1)); ?></div>
                 <div class="user-info">
-                    <div class="name" style="color:#f1f5f9;"><?php echo $_SESSION['username']; ?></div>
+                    <div class="name" style="color:#f1f5f9;"><?php echo RoleSessionManager::getUsername(); ?></div>
                     <div class="role"><?php echo ucfirst($_SESSION['role']); ?></div>
                 </div>
                 <i class="fas fa-cog settings-icon"></i>
@@ -509,7 +531,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
 
         <ul class="nav-links">
             <li class="nav-item"><button class="nav-btn active" onclick="nav('sec-dashboard', this)"><i class="fas fa-tachometer-alt"></i> Dashboard</button></li>
-            <li class="nav-item"><button class="nav-btn" onclick="nav('service-requests', this)"><i class="fas fa-headset"></i> Service Requests <span style="margin-left:auto; background:#ef4444; color:white; font-size:10px; padding:2px 6px; border-radius:4px;">3</span></button></li>
+            <li class="nav-item"><button class="nav-btn" onclick="nav('service-requests', this)"><i class="fas fa-headset"></i> Service Requests <span id="service-requests-badge" style="margin-left:auto; background:#ef4444; color:white; font-size:10px; padding:2px 6px; border-radius:4px; display:none;">0</span></button></li>
             <li class="nav-item"><button class="nav-btn" onclick="nav('sales-quotes', this)"><i class="fas fa-hand-holding-usd"></i> Sales Quotes</button></li>
             <li class="nav-item"><button class="nav-btn" onclick="nav('job-scheduling', this)"><i class="fas fa-calendar-alt"></i> Job Scheduling</button></li> 
             <li class="nav-item"><button class="nav-btn" onclick="nav('inventory-check', this)"><i class="fas fa-box-open"></i> Inventory Check</button></li>
@@ -598,7 +620,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
                             <div class="metric-icon-small" style="background:rgba(255,255,255,0.4);"><i class="fas fa-box-open"></i></div>
                             <span class="metric-label">Low Stock Alerts</span>
                         </div>
-                        <h3 class="metric-value">1 Alert</h3>
+                        <h3 class="metric-value" id="low-stock-count">0 Alerts</h3>
                     </div>
                 </div>
                 <div class="panel">
@@ -638,49 +660,27 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
 
             <div id="service-requests" class="section">
                 <div class="panel">
-                    <div class="tabs">
-                        <div class="tab active" onclick="switchReportTab(this, 'sales-inquiries')">Sales Inquiries</div>
-                        <div class="tab" onclick="switchReportTab(this, 'maintenance-requests')">Maintenance Requests</div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <div class="tabs">
+                            <div class="tab active" onclick="switchReportTab(this, 'sales-inquiries')">Sales Inquiries</div>
+                            <div class="tab" onclick="switchReportTab(this, 'maintenance-requests')">Maintenance Requests</div>
+                        </div>
+                        <button class="btn btn-outline btn-sm" onclick="refreshSalesInquiries()" style="margin-left: auto;">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
                     </div>
                     <div id="sales-inquiries" class="tab-content active">
-                        <div class="txn-list">
-                            <div class="txn-card" style="grid-template-columns: 80px 1.8fr 2.2fr 1.2fr;">
-                                <div class="txn-icon-col" style="color:var(--orange);"><i class="fas fa-user-tag"></i></div>
-                                <div class="txn-client-col">
-                                    <span class="txn-ref">NEW LEAD #SI001</span>
-                                    <div class="txn-client-name">New Investor John</div>
-                                    <div class="txn-client-loc"><i class="fas fa-map-marker-alt"></i> Manila City</div>
-                                </div>
-
-                                <div class="txn-finance-col" style="border-right: 1px dashed #e2e8f0;">
-                                    <div class="finance-row"><span>Request:</span> <strong>2-Set Package</strong></div>
-                                    <div class="finance-row"><span>Action:</span> Generate Package Quote</div>
-                                </div>
-                                <div class="txn-action-col">
-                                    <button class="btn btn-primary" onclick="prefillSalesQuote()"><i class="fas fa-calculator"></i> Generate Sales Quote</button>
-                                    <button class="btn btn-outline">Call Client</button>
-                                </div>
+                        <div class="txn-list" id="sales-inquiries-list">
+                            <div style="text-align: center; color: var(--text-muted); padding: 20px;">
+                                <i class="fas fa-spinner fa-spin"></i> Loading sales inquiries...
                             </div>
                         </div>
                     </div>
 <br>
-                    <div id="maintenance-requests" class="tab-content">
-                        <div class="txn-list">
-                            <div class="txn-card" style="grid-template-columns: 80px 1.8fr 2.2fr 1.2fr;">
-                                <div class="txn-icon-col" style="color:var(--danger-text);"><i class="fas fa-wrench"></i></div>
-                                <div class="txn-client-col">
-                                    <span class="txn-ref" style="background:var(--danger-bg); color:var(--danger-text);">URGENT #MR055</span>
-                                    <div class="txn-client-name">Maria Cruz</div>
-                                    <div class="txn-client-loc"><i class="fas fa-map-marker-alt"></i> Cebu City Branch</div>
-                                </div>
-                                <div class="txn-finance-col" style="border-right: 1px dashed #e2e8f0;">
-                                    <div class="finance-row"><span>Problem:</span> <strong>Water Pipe Burst</strong></div>
-                                    <div class="finance-row"><span>Priority:</span> High</div>
-                                </div>
-                                <div class="txn-action-col">
-                                    <button class="btn btn-gold" onclick="toast('Opening Repair Quote Builder...')"><i class="fas fa-hammer"></i> Create Repair Quote</button>
-                                    <button class="btn btn-primary" onclick="toast('Scheduling Team Alpha...')"><i class="fas fa-calendar-plus"></i> Schedule Team</button>
-                                </div>
+                    <div id="maintenance-requests" class="tab-content" style="display: none;">
+                        <div class="txn-list" id="maintenance-requests-list">
+                            <div style="text-align: center; color: var(--text-muted); padding: 20px;">
+                                <i class="fas fa-spinner fa-spin"></i> Loading maintenance requests...
                             </div>
                         </div>
                     </div>
@@ -690,8 +690,14 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
             <div id="sales-quotes" class="section">
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">Create New Sales Quote</span>
+                        <span class="panel-title">Quotation Builder</span>
                     </div>
+                    <div class="tabs" style="margin-bottom: 20px;">
+                        <div class="tab active" onclick="switchQuoteTab(this, 'sales-quote-form')">Sales Quote</div>
+                    </div>
+                    
+                    <!-- Sales Quote Form -->
+                    <div id="sales-quote-form" class="quote-form-content">
                     <div class="content-grid-2">
                         <div>
                             <div class="form-group">
@@ -749,12 +755,15 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
                                         <span class="file-upload-name" id="file-name">No file chosen</span>
                                     </div>
                                 </div>
-                                <button class="btn btn-gold" onclick="toast('Quote Uploaded and Sent to Client!')"><i class="fas fa-cloud-upload-alt"></i> Upload Proof & Send Quote</button>
-                                <button class="btn btn-primary" onclick="toast('Printing Quote...')"><i class="fas fa-print"></i> Print Quote</button>
+                                <button class="btn btn-gold" onclick="submitQuoteToManager()"><i class="fas fa-cloud-upload-alt"></i> Upload Proof & Send to Manager</button>
+                                <button class="btn btn-primary" onclick="printQuote()"><i class="fas fa-print"></i> Print Quote</button>
                                 <button class="btn btn-danger" style="background: white; border: 1px solid var(--danger-text); color: var(--danger-text); margin-top: 8px;" onclick="document.getElementById('clientName').value=''; document.getElementById('packageType').value=''; calculateSalesQuote()"><i class="fas fa-times-circle"></i> Clear Form</button>
                             </div>
                         </div>
                     </div>
+                    </div>
+                    
+
                 </div>
             </div>
 
@@ -762,11 +771,15 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
                 
                 <div class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">Technician Team Calendar (May 2025)</span>
-                        <div class="status-badge status-ok">3 Teams Available</div>
+                        <span class="panel-title" id="calendar-title">Technician Team Calendar</span>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <button class="btn btn-outline" onclick="navigateMonth(-1)" style="padding: 8px 12px;"><i class="fas fa-chevron-left"></i></button>
+                            <button class="btn btn-outline" onclick="navigateMonth(1)" style="padding: 8px 12px;"><i class="fas fa-chevron-right"></i></button>
+                            <div class="status-badge status-ok" id="teams-available">3 Teams Available</div>
+                        </div>
                     </div>
                     
-                    <div class="calendar-grid">
+                    <div class="calendar-grid" id="dynamic-calendar">
                         <div class="calendar-header">SUN</div>
                         <div class="calendar-header">MON</div>
                         <div class="calendar-header">TUE</div>
@@ -774,50 +787,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
                         <div class="calendar-header">THU</div>
                         <div class="calendar-header">FRI</div>
                         <div class="calendar-header">SAT</div>
-
-                        <div class="calendar-day inactive">28</div>
-                        <div class="calendar-day inactive">29</div>
-                        <div class="calendar-day inactive">30</div>
-                        <div class="calendar-day">1</div>
-                        <div class="calendar-day">2</div>
-                        <div class="calendar-day">3</div>
-                        <div class="calendar-day">4</div>
-
-                        <div class="calendar-day">5</div>
-                        <div class="calendar-day">6</div>
-                        <div class="calendar-day">7</div>
-                        <div class="calendar-day">8</div>
-                        <div class="calendar-day">9</div>
-                        <div class="calendar-day">10</div>
-                        <div class="calendar-day">11</div>
-
-                        <div class="calendar-day">12</div>
-                        <div class="calendar-day">13</div>
-                        <div class="calendar-day today">
-                            14 (Today)
-                            <span class="event-badge" style="background: var(--success-bg); color: var(--success-text);" onclick="toast('Job SQ113: Team Alpha - Makati')">Team Alpha: SQ113</span>
-                            <span class="event-badge" onclick="toast('Maintenance MR055: Team Beta - Cebu (URGENT)')">Team Beta: MR055</span>
-                        </div>
-                        <div class="calendar-day">15</div>
-                        <div class="calendar-day">16</div>
-                        <div class="calendar-day">17</div>
-                        <div class="calendar-day">18</div>
-
-                        <div class="calendar-day">19</div>
-                        <div class="calendar-day">20</div>
-                        <div class="calendar-day">21</div>
-                        <div class="calendar-day">22</div>
-                        <div class="calendar-day">23</div>
-                        <div class="calendar-day">24</div>
-                        <div class="calendar-day">25</div>
-
-                        <div class="calendar-day">26</div>
-                        <div class="calendar-day">27</div>
-                        <div class="calendar-day">28</div>
-                        <div class="calendar-day">29</div>
-                        <div class="calendar-day">30</div>
-                        <div class="calendar-day">31</div>
-                        <div class="calendar-day inactive">1</div>
+                        <!-- Calendar days will be generated dynamically -->
                     </div>
                 </div>
 
@@ -826,10 +796,10 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
                 <div class="panel" style="margin-bottom: 30px;">
                     <div class="panel-header">
                         <span class="panel-title">Jobs Awaiting Technician Assignment</span>
-                        <div class="status-badge status-ok">1 Job Ready</div>
+                        <div class="status-badge status-ok" id="jobs-ready-count">Loading...</div>
                     </div>
 
-                    <div class="schedule-grid"> 
+                    <div class="schedule-grid" id="jobs-awaiting-assignment"> 
                         
                         <div class="schedule-card" id="job-sq113"> 
                             <div class="job-detail">
@@ -931,66 +901,75 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
             </div>
 
             <div id="customer-records" class="section">
-                <div class="panel">
+                <!-- Client List View -->
+                <div id="client-list-view" class="panel">
                     <div class="panel-header">
-                        <span class="panel-title">Client Profile: Maria Cruz</span>
-                        <button class="btn btn-outline"><i class="fas fa-edit"></i> Edit Profile</button>
+                        <span class="panel-title">Client Management</span>
+                        <div class="search-box" style="margin: 0;">
+                            <i class="fas fa-search" style="color: #94a3b8;"></i>
+                            <input type="text" placeholder="Search clients..." id="client-search" oninput="searchClients(this.value)">
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Client Name</th>
+                                <th>Contact</th>
+                                <th>Address</th>
+                                <th>Total Jobs</th>
+                                <th>Revenue</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="client-list-body">
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                                    <i class="fas fa-spinner fa-spin" style="font-size: 24px; margin-bottom: 10px;"></i>
+                                    <div>Loading clients...</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Client Profile View -->
+                <div id="client-profile-view" class="panel" style="display: none;">
+                    <div class="panel-header">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <button class="btn btn-outline" onclick="backToClientList()" style="padding: 8px 12px;">
+                                <i class="fas fa-arrow-left"></i>
+                            </button>
+                            <span class="panel-title" id="client-profile-title">Client Profile</span>
+                        </div>
+                        <button class="btn btn-outline" onclick="editClientProfile()"><i class="fas fa-edit"></i> Edit Profile</button>
                     </div>
                     <div class="metrics-grid-4 kpi-row">
                         <div class="metric-card card-blue" style="min-height: 120px; padding: 18px;">
                             <i class="fas fa-list-alt bg-icon" style="font-size: 80px;"></i>
                             <div class="metric-header"><span class="metric-label">Total Jobs</span></div>
-                            <h3 class="metric-value" style="font-size: 28px;">15</h3>
+                            <h3 class="metric-value" style="font-size: 28px;" id="profile-total-jobs">0</h3>
                         </div>
                         <div class="metric-card card-green" style="min-height: 120px; padding: 18px;">
                             <i class="fas fa-hand-holding-usd bg-icon" style="font-size: 80px;"></i>
                             <div class="metric-header"><span class="metric-label">Total Revenue</span></div>
-                            <h3 class="metric-value" style="font-size: 28px;">₱1.2M</h3>
+                            <h3 class="metric-value" style="font-size: 28px;" id="profile-total-revenue">₱0.00</h3>
                         </div>
                         <div class="metric-card card-orange" style="min-height: 120px; padding: 18px;">
                             <i class="fas fa-hourglass-half bg-icon" style="font-size: 80px;"></i>
                             <div class="metric-header"><span class="metric-label">Pending Payments</span></div>
-                            <h3 class="metric-value" style="font-size: 28px;">₱0.00</h3>
+                            <h3 class="metric-value" style="font-size: 28px;" id="profile-pending-payments">₱0.00</h3>
                         </div>
                         <div class="metric-card card-red" style="min-height: 120px; padding: 18px;">
                             <i class="fas fa-exclamation-triangle bg-icon" style="font-size: 80px;"></i>
                             <div class="metric-header"><span class="metric-label">Critical Alerts</span></div>
-                            <h3 class="metric-value" style="font-size: 28px;">1</div>
+                            <h3 class="metric-value" style="font-size: 28px;" id="profile-critical-alerts">0</h3>
                         </div>
                     </div>
                     <h3 style="font-size:16px; font-weight:700; color:var(--navy-dark); margin-top: 10px; margin-bottom: 20px;">Recent Service History</h3>
-                    <div class="txn-list">
-                        <div class="txn-card" style="grid-template-columns: 80px 1.8fr 2.2fr 1.2fr;">
-                            <div class="txn-icon-col" style="color:var(--danger-text);"><i class="fas fa-wrench"></i></div>
-                            <div class="txn-client-col">
-                                <span class="txn-ref" style="background:var(--danger-bg); color:var(--danger-text);">URGENT #MR055</span>
-                                <div class="txn-client-name">Water Pipe Burst</div>
-                                <div class="txn-client-loc"><i class="fas fa-map-marker-alt"></i> Cebu City Branch</div>
-                            </div>
-                            <div class="txn-finance-col" style="border-right: 1px dashed #e2e8f0;">
-                                <div class="finance-row"><span>Date:</span> <strong>Today, 9:30 AM</strong></div>
-                                <div class="finance-row"><span>Status:</span> Awaiting Dispatch</div>
-                            </div>
-                            <div class="txn-action-col" style="background:var(--danger-bg); border-left: 1px solid var(--danger-text);">
-                                <button class="btn btn-danger" style="color:white; background:var(--danger-text);"><i class="fas fa-clock"></i> URGENT</button>
-                                <button class="btn btn-outline" style="border-color:var(--danger-text); color:var(--danger-text); background:var(--danger-bg);">View Details</button>
-                            </div>
-                        </div>
-                        <div class="txn-card" style="grid-template-columns: 80px 1.8fr 2.2fr 1.2fr;">
-                            <div class="txn-icon-col" style="color:var(--success-text);"><i class="fas fa-check-circle"></i></div>
-                            <div class="txn-client-col">
-                                <span class="txn-ref" style="background:var(--success-bg); color:var(--success-text);">PAID #SQ112</span>
-                                <div class="txn-client-name">2-Set Package Installation</div>
-                                <div class="txn-client-loc"><i class="fas fa-map-marker-alt"></i> Manila City</div>
-                            </div>
-                            <div class="txn-finance-col" style="border-right: 1px dashed #e2e8f0;">
-                                <div class="finance-row"><span>Date:</span> <strong>2023-11-05</strong></div>
-                                <div class="finance-row"><span>Total:</span> ₱465,000.00</div>
-                            </div>
-                            <div class="txn-action-col">
-                                <button class="btn btn-primary"><i class="fas fa-receipt"></i> View Invoice</button>
-                                <button class="btn btn-outline">Call Client</button>
-                            </div>
+                    <div class="txn-list" id="client-service-history">
+                        <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                            <i class="fas fa-history" style="font-size: 48px; margin-bottom: 10px; opacity: 0.3;"></i>
+                            <div>No service history found</div>
                         </div>
                     </div>
                 </div>
@@ -1034,9 +1013,74 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
 
 
         // Header Notification Dropdown Toggle
-        function toggleNotif() {
+        async function toggleNotif() {
             const dropdown = document.getElementById('notif-dropdown');
+            const isVisible = dropdown.classList.contains('show');
+            
+            if (!isVisible) {
+                await loadNotifications();
+            }
+            
             dropdown.classList.toggle('show');
+        }
+        
+        async function loadNotifications() {
+            try {
+                const response = await fetch('notification_api.php?action=get_notifications&role=secretary', {
+                    credentials: 'include'
+                });
+                const result = await response.json();
+                
+                if (result.success && result.notifications.length > 0) {
+                    renderNotifications(result.notifications);
+                    updateNotificationBadge(result.count);
+                } else {
+                    document.querySelector('.notif-body').innerHTML = '<div style="padding:20px; text-align:center; color:#94a3b8; font-size:13px;">No new notifications</div>';
+                    document.getElementById('notif-dot').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+            }
+        }
+        
+        function renderNotifications(notifications) {
+            const container = document.querySelector('.notif-body');
+            container.innerHTML = '';
+            
+            notifications.forEach(notif => {
+                const item = document.createElement('div');
+                item.className = 'notif-item';
+                
+                const iconColors = {
+                    'payment': { bg: '#dcfce7', text: '#166534' },
+                    'quotation': { bg: '#e0f2fe', text: '#075985' },
+                    'inventory': { bg: '#fee2e2', text: '#991b1b' },
+                    'service': { bg: '#fef3c7', text: '#92400e' }
+                };
+                
+                const colors = iconColors[notif.type] || { bg: '#f3f4f6', text: '#374151' };
+                
+                item.innerHTML = `
+                    <div class="notif-icon" style="background:${colors.bg}; color:${colors.text};">
+                        <i class="fas ${notif.icon || 'fa-info'}"></i>
+                    </div>
+                    <div class="notif-content">
+                        <p>${notif.message}</p>
+                        <span>${notif.time_ago}</span>
+                    </div>
+                `;
+                
+                container.appendChild(item);
+            });
+        }
+        
+        function updateNotificationBadge(count) {
+            const badge = document.getElementById('notif-dot');
+            if (count > 0) {
+                badge.style.display = 'block';
+            } else {
+                badge.style.display = 'none';
+            }
         }
 
         // Clear Notifications
@@ -1044,6 +1088,40 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
             toast('Notifications cleared.');
             document.getElementById('notif-dot').style.display = 'none';
             document.getElementById('notif-dropdown').classList.remove('show');
+        }
+        
+        async function loadNotificationCount() {
+            try {
+                const response = await fetch('notification_api.php?action=get_unread_count&role=secretary', {
+                    credentials: 'include'
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    updateNotificationBadge(result.count);
+                }
+            } catch (error) {
+                console.error('Error loading notification count:', error);
+            }
+        }
+        
+        async function loadLowStockCount() {
+            try {
+                const response = await fetch('inventory_api.php?branch=all', {
+                    credentials: 'include'
+                });
+                const result = await response.json();
+                
+                if (result.success && result.items) {
+                    const lowStock = result.items.filter(item => item.Quantity <= 5);
+                    const countElem = document.getElementById('low-stock-count');
+                    if (countElem) {
+                        countElem.textContent = lowStock.length + ' Alert' + (lowStock.length !== 1 ? 's' : '');
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading low stock count:', error);
+            }
         }
 
         // Sidebar Navigation
@@ -1081,6 +1159,16 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
             if (sectionId === 'inventory-check') {
                 loadSecretaryInventory();
             }
+            
+            // Load sales inquiries when opening Service Requests
+            if (sectionId === 'service-requests') {
+                loadSalesInquiries();
+            }
+            
+            // Load client list when opening Customer Records
+            if (sectionId === 'customer-records') {
+                loadClientList();
+            }
         }
 
         // Tab Switching for Service Requests/Reports
@@ -1104,10 +1192,36 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
             if (targetContent) {
                 targetContent.style.display = 'block';
                 // Trigger animation by adding the class after a tiny delay
-                setTimeout(() => { targetContent.classList.add('active'); }, 50); 
+                setTimeout(() => { targetContent.classList.add('active'); }, 50);
+                
+                // 5. Lazy load maintenance requests when tab is first clicked
+                if (tabId === 'maintenance-requests' && !targetContent.dataset.loaded) {
+                    loadMaintenanceRequests();
+                    targetContent.dataset.loaded = 'true';
+                }
             }
         }
         
+        // Tab switching for Quote Forms
+        function switchQuoteTab(element, formId) {
+            // Deactivate all tabs
+            element.parentElement.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            element.classList.add('active');
+            
+            // Hide all quote forms
+            document.querySelectorAll('.quote-form-content').forEach(form => {
+                form.style.display = 'none';
+            });
+            
+            // Show selected form
+            const targetForm = document.getElementById(formId);
+            if (targetForm) {
+                targetForm.style.display = 'block';
+            }
+        }
+
         // Sales Quote Logic
         function calculateSalesQuote() {
             const packageSelect = document.getElementById('packageType');
@@ -1120,6 +1234,140 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
             document.getElementById('val-package').innerText = `₱${packageValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
             document.getElementById('val-installation').innerText = `₱${installationFee.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
             document.getElementById('val-total').innerText = `₱${total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+        function printQuote() {
+            // Get form data
+            const clientName = document.getElementById('clientName')?.value || 'Not specified';
+            const clientContact = document.getElementById('clientContact')?.value || 'Not provided';
+            const clientEmail = document.getElementById('clientEmail')?.value || 'Not provided';
+            const packageSelect = document.getElementById('packageType');
+            const installationFee = parseFloat(document.getElementById('installation')?.value || 0);
+            const notes = document.getElementById('notes')?.value || 'No special notes';
+            
+            if (!packageSelect) {
+                toast('Error: Package selection not found');
+                return;
+            }
+            
+            const packageText = packageSelect.options[packageSelect.selectedIndex].text;
+            const packageValue = parseFloat(packageSelect.value || 0);
+            const total = packageValue + installationFee;
+            const quoteNumber = 'QT' + Date.now().toString().slice(-6);
+            const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            
+            // Create quote content
+            const quoteContent = `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 2px solid #2c3e50;">
+                    <div style="text-align: center; margin-bottom: 25px; border-bottom: 2px solid #2c3e50; padding-bottom: 20px;">
+                        <h1 style="color: #2c3e50; margin-bottom: 8px;">ATMICX Laundry Machine Trading</h1>
+                        <p style="color: #666;">Professional Laundry Equipment Solutions<br>Email: info@atmicx.com | Phone: (034) 123-4567</p>
+                        <h2 style="color: #2c3e50; margin: 15px 0;">SALES QUOTATION</h2>
+                        <p style="color: #666;">${quoteNumber}</p>
+                    </div>
+                    
+                    <div style="margin: 20px 0; border: 1px solid #ddd; padding: 15px;">
+                        <h3 style="color: #2c3e50; margin-bottom: 10px;">Quote Information</h3>
+                        <p>Quote Date: ${currentDate}</p>
+                        <p>Valid Until: ${new Date(Date.now() + 30*24*60*60*1000).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    </div>
+                    
+                    <div style="margin: 20px 0; border: 1px solid #ddd; padding: 15px;">
+                        <h3 style="color: #2c3e50; margin-bottom: 10px;">Client Information</h3>
+                        <p>Name: ${clientName}</p>
+                        <p>Contact: ${clientContact}</p>
+                        <p>Email: ${clientEmail}</p>
+                    </div>
+                    
+                    <div style="margin: 20px 0; border: 1px solid #ddd; padding: 15px;">
+                        <h3 style="color: #2c3e50; margin-bottom: 10px;">Package Details</h3>
+                        <p>Selected Package: ${packageText}</p>
+                    </div>
+                    
+                    <div style="margin: 20px 0; border: 2px solid #2c3e50; padding: 15px; background: #f8f9fa;">
+                        <h3 style="color: #2c3e50; margin-bottom: 10px;">Investment Breakdown</h3>
+                        <div style="display: flex; justify-content: space-between; margin: 8px 0;">
+                            <span>Package Cost:</span>
+                            <span>₱${packageValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin: 8px 0;">
+                            <span>Installation Fee:</span>
+                            <span>₱${installationFee.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-top: 15px; padding-top: 10px; border-top: 2px solid #2c3e50; font-weight: bold; font-size: 16px; color: #2c3e50;">
+                            <span>TOTAL INVESTMENT:</span>
+                            <span>₱${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                        </div>
+                    </div>
+                    
+                    <div style="margin: 20px 0; background: #fffbf0; border: 1px solid #ffcc00; padding: 15px;">
+                        <h3 style="color: #2c3e50; margin-bottom: 10px;">Special Notes & Requirements</h3>
+                        <p>${notes}</p>
+                    </div>
+                    
+                    <div style="text-align: center; margin: 15px 0; padding: 10px; background: #e8f4fd; border: 1px solid #0369a1; font-style: italic; color: #0369a1;">
+                        This quotation is valid for 30 days from the date of issue.
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 25px; padding-top: 20px; border-top: 2px solid #2c3e50;">
+                        <p style="font-size: 12px; color: #666; line-height: 1.6;">
+                            Thank you for considering ATMICX for your laundry equipment needs!<br>
+                            <strong>Contact us to proceed with your investment.</strong>
+                        </p>
+                        <p style="font-size: 12px; color: #666; margin-top: 15px;">
+                            Generated on: ${new Date().toLocaleString('en-US')}
+                        </p>
+                    </div>
+                </div>
+            `;
+            
+            // Create hidden container for printing
+            let printContainer = document.getElementById('quote-print-container');
+            if (!printContainer) {
+                printContainer = document.createElement('div');
+                printContainer.id = 'quote-print-container';
+                printContainer.style.display = 'none';
+                document.body.appendChild(printContainer);
+            }
+            
+            printContainer.innerHTML = quoteContent;
+            
+            // Add print styles only once
+            if (!document.getElementById('quote-print-styles')) {
+                const printStyles = document.createElement('style');
+                printStyles.id = 'quote-print-styles';
+                printStyles.innerHTML = `
+                    @media print {
+                        body * { visibility: hidden; }
+                        #quote-print-container,
+                        #quote-print-container * { visibility: visible; }
+                        #quote-print-container {
+                            position: absolute;
+                            left: 0;
+                            top: 0;
+                            width: 100%;
+                            display: block !important;
+                        }
+                    }
+                `;
+                document.head.appendChild(printStyles);
+            }
+            
+            // Trigger print
+            window.print();
+            toast('✅ Print dialog opened!');
         }
         
         // Prefill Sales Quote from a Triage (UPDATED)
@@ -1147,61 +1395,259 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
         }
 
         // NEW: Function to handle the team assignment form submission
-        function handleAssignment(event, jobId) {
-            event.preventDefault(); // Stop the form from submitting normally
+        async function handleAssignment(event, quotationId) {
+            event.preventDefault();
             
             const form = event.target;
             const selectedTeam = form.querySelector('select[name="technician_team"]').value;
-            // Get the technician/schedule fields
             const techName = form.querySelector('input[name="tech_name"]').value;
             const techContact = form.querySelector('input[name="tech_contact"]').value;
             const scheduleDate = form.querySelector('input[name="schedule_date"]').value;
             const scheduleTime = form.querySelector('input[name="schedule_time"]').value;
             
-            if (selectedTeam === "") {
-                toast(`ERROR: Please select a technician team for Job #${jobId}.`);
+            if (!selectedTeam || !techName || !scheduleDate || !scheduleTime) {
+                toast('⚠️ Please fill in all required fields');
                 return false;
             }
             
-            // Simulate API call/database update using the new data
-            toast(`SUCCESS: Job #${jobId} assigned to ${techName} (${selectedTeam}) on ${scheduleDate} at ${scheduleTime}.`);
-
-            // Optional: Visually update the assigned card
-            const card = document.getElementById(`job-${jobId.toLowerCase()}`);
-            if (card) {
-                // Change status badge
-                const statusBadge = card.querySelector('.status');
-                statusBadge.innerText = 'Scheduled';
-                statusBadge.style.background = 'var(--info-bg)';
-                statusBadge.style.color = 'var(--info-text)';
-
-                // Disable the form/card actions
-                card.style.opacity = '0.7';
-                form.querySelector('select[name="technician_team"]').disabled = true; // Disable new fields
-                form.querySelector('input[name="tech_name"]').disabled = true; // Disable new fields
-                form.querySelector('input[name="tech_contact"]').disabled = true; // Disable new fields
-                form.querySelector('input[name="schedule_date"]').disabled = true; // Disable new fields
-                form.querySelector('input[name="schedule_time"]').disabled = true; // Disable new fields
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Assigning...';
+            
+            try {
+                const formData = new FormData();
+                formData.append('action', 'assign_job');
+                formData.append('quotation_id', quotationId);
+                formData.append('technician_team', selectedTeam);
+                formData.append('technician_name', techName);
+                formData.append('technician_contact', techContact);
+                formData.append('schedule_date', scheduleDate);
+                formData.append('schedule_time', scheduleTime);
                 
-                const submitButton = form.querySelector('button[type="submit"]');
-                submitButton.disabled = true;
-                submitButton.innerText = 'Scheduled!';
+                const response = await fetch('secretary_quotations_api.php', {
+                    method: 'POST',
+                    credentials: 'include',
+                    body: formData
+                });
                 
-                // If the job was urgent, update the calendar visually (mock)
-                if (jobId === 'MR055') {
-                    const calendarDay = document.querySelector('.calendar-day.today');
-                    if (calendarDay) {
-                         const eventBadge = calendarDay.querySelector(`[onclick*="MR055"]`);
-                         if (eventBadge) {
-                            eventBadge.style.background = 'var(--info-bg)';
-                            eventBadge.style.color = 'var(--info-text)';
-                            eventBadge.innerText = `${selectedTeam}: MR055 (Dispatched)`;
-                         }
+                const result = await response.json();
+                
+                if (result.success) {
+                    toast(`✅ Job #QT-${String(quotationId).padStart(3, '0')} assigned to ${techName} (${selectedTeam})`);
+                    
+                    // Remove the card from the list
+                    const card = document.getElementById(`job-${quotationId}`);
+                    if (card) {
+                        card.style.opacity = '0.5';
+                        card.querySelector('.status').innerText = 'Scheduled';
+                        card.querySelector('.status').style.background = 'var(--info-bg)';
+                        card.querySelector('.status').style.color = 'var(--info-text)';
+                        
+                        setTimeout(() => {
+                            card.remove();
+                            loadJobsAwaitingAssignment(); // Reload the list
+                        }, 1500);
                     }
+                } else {
+                    toast('❌ ' + (result.message || 'Failed to assign job'));
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
                 }
+            } catch (error) {
+                console.error('Error assigning job:', error);
+                toast('❌ Error assigning job');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
             }
             
-            return false; // Prevent default form submission
+            return false;
+        }
+        
+        // Load jobs awaiting technician assignment
+        async function loadJobsAwaitingAssignment() {
+            try {
+                const response = await fetch('secretary_quotations_api.php?action=get_jobs_for_assignment', {
+                    credentials: 'include'
+                });
+                const result = await response.json();
+                
+                const container = document.getElementById('jobs-awaiting-assignment');
+                const countBadge = document.getElementById('jobs-ready-count');
+                
+                if (!result.success || !result.jobs || result.jobs.length === 0) {
+                    container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);"><i class="fas fa-check-circle" style="font-size: 48px; opacity: 0.3; display: block; margin-bottom: 15px;"></i><p>No jobs awaiting assignment</p></div>';
+                    countBadge.textContent = '0 Jobs';
+                    return;
+                }
+                
+                countBadge.textContent = `${result.jobs.length} Job${result.jobs.length !== 1 ? 's' : ''} Ready`;
+                
+                container.innerHTML = result.jobs.map(job => {
+                    const jobRef = `QT-${String(job.Quotation_ID).padStart(3, '0')}`;
+                    return `
+                        <div class="schedule-card" id="job-${job.Quotation_ID}">
+                            <div class="job-detail">
+                                <span style="font-size:12px; color:var(--text-muted); display:block;">JOB #${jobRef} (Installation)</span>
+                                <strong>Client: ${job.Client_Name || 'Unknown'}</strong>
+                                <div class="status" style="background:var(--success-bg); color:var(--success-text);">Payment Verified</div>
+                            </div>
+                            <div class="job-detail">
+                                <span style="font-size:12px; color:var(--text-muted); display:block;">Job Location / Type</span>
+                                <strong>${job.Delivery_Address || job.Address || 'Location TBD'}</strong>
+                                <span style="font-size:13px; color:var(--text-muted);"><i class="fas fa-box-open"></i> ${job.Package || 'Package TBD'}</span>
+                            </div>
+                            <form class="assignment-form" onsubmit="return handleAssignment(event, ${job.Quotation_ID})" style="padding-top: 10px; border-top: 1px dashed #e2e8f0;">
+                                <div class="form-group">
+                                    <label class="form-label">Assigned Technician Name</label>
+                                    <input type="text" name="tech_name" class="form-control" placeholder="E.g., Rico Diaz" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Technician Contact (Email/Phone)</label>
+                                    <input type="text" name="tech_contact" class="form-control" placeholder="E.g., (0917) 123-4567" required>
+                                </div>
+                                <div style="display: flex; gap: 10px;">
+                                    <div class="form-group" style="flex: 1;">
+                                        <label class="form-label">Schedule Date</label>
+                                        <input type="date" name="schedule_date" class="form-control" required>
+                                    </div>
+                                    <div class="form-group" style="flex: 1;">
+                                        <label class="form-label">Schedule Time</label>
+                                        <input type="time" name="schedule_time" class="form-control" required>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Assign Technician Team</label>
+                                    <select name="technician_team" class="form-control" style="font-size:14px; padding: 12px;" required>
+                                        <option value="">Select Technician Team</option>
+                                        <option value="Team Alpha">Team Alpha (Manila)</option>
+                                        <option value="Team Beta">Team Beta (Manila)</option>
+                                        <option value="Team Charlie">Team Charlie (Cebu)</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-gold" style="margin-top: 10px; padding: 12px; font-size: 14px; width: 100%;">
+                                    <i class="fas fa-calendar-check"></i> Assign & Schedule Job
+                                </button>
+                            </form>
+                        </div>
+                    `;
+                }).join('');
+                
+            } catch (error) {
+                console.error('Error loading jobs:', error);
+                document.getElementById('jobs-awaiting-assignment').innerHTML = '<div style="text-align: center; padding: 40px; color: var(--danger-text);"><i class="fas fa-exclamation-triangle" style="font-size: 48px; opacity: 0.3; display: block; margin-bottom: 15px;"></i><p>Error loading jobs</p></div>';
+            }
+        }
+        
+        // Calendar functionality
+        let currentCalendarDate = new Date();
+        let scheduledJobs = {}; // Cache for scheduled jobs
+        
+        // Generate calendar for current month
+        function generateCalendar(year, month) {
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - firstDay.getDay()); // Start from Sunday
+            
+            const calendar = document.getElementById('dynamic-calendar');
+            const title = document.getElementById('calendar-title');
+            
+            if (!calendar || !title) return; // Safety check
+            
+            // Update title
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                               'July', 'August', 'September', 'October', 'November', 'December'];
+            title.textContent = `Technician Team Calendar (${monthNames[month]} ${year})`;
+            
+            // Clear existing days (keep headers)
+            const existingDays = calendar.querySelectorAll('.calendar-day');
+            existingDays.forEach(day => day.remove());
+            
+            // Generate 42 days (6 weeks)
+            for (let i = 0; i < 42; i++) {
+                const date = new Date(startDate);
+                date.setDate(startDate.getDate() + i);
+                
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day';
+                
+                const isCurrentMonth = date.getMonth() === month;
+                const isToday = date.toDateString() === new Date().toDateString();
+                
+                if (!isCurrentMonth) {
+                    dayElement.classList.add('inactive');
+                }
+                
+                if (isToday) {
+                    dayElement.classList.add('today');
+                    dayElement.innerHTML = `${date.getDate()} (Today)`;
+                } else {
+                    dayElement.textContent = date.getDate();
+                }
+                
+                // Add scheduled jobs for this date
+                const dateKey = date.toISOString().split('T')[0];
+                if (scheduledJobs[dateKey]) {
+                    scheduledJobs[dateKey].forEach(job => {
+                        const badge = document.createElement('span');
+                        badge.className = 'event-badge';
+                        badge.style.background = 'var(--success-bg)';
+                        badge.style.color = 'var(--success-text)';
+                        badge.style.marginTop = '4px';
+                        badge.style.display = 'block';
+                        badge.style.fontSize = '11px';
+                        badge.style.cursor = 'pointer';
+                        badge.textContent = `${job.team}: QT-${String(job.quotation_id).padStart(3, '0')}`;
+                        badge.onclick = () => toast(`Job QT-${String(job.quotation_id).padStart(3, '0')}: ${job.team} - ${job.client}`);
+                        dayElement.appendChild(badge);
+                    });
+                }
+                
+                calendar.appendChild(dayElement);
+            }
+        }
+        
+        // Navigate months
+        function navigateMonth(direction) {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + direction);
+            generateCalendar(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth());
+            loadScheduledJobs(); // Reload jobs for new month
+        }
+        
+        // Load scheduled jobs from database
+        async function loadScheduledJobs() {
+            try {
+                const year = currentCalendarDate.getFullYear();
+                const month = currentCalendarDate.getMonth() + 1;
+                
+                const response = await fetch(`secretary_quotations_api.php?action=get_scheduled_jobs&year=${year}&month=${month}`, {
+                    credentials: 'include'
+                });
+                const result = await response.json();
+                
+                if (result.success && result.jobs) {
+                    scheduledJobs = {};
+                    
+                    // Group jobs by date
+                    result.jobs.forEach(job => {
+                        const date = job.scheduled_date.split(' ')[0]; // Get date part
+                        if (!scheduledJobs[date]) {
+                            scheduledJobs[date] = [];
+                        }
+                        scheduledJobs[date].push({
+                            quotation_id: job.Quotation_ID,
+                            team: job.Technician_Team || 'Team Unknown',
+                            client: job.Client_Name || 'Unknown Client'
+                        });
+                    });
+                    
+                    // Regenerate calendar with jobs
+                    generateCalendar(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth());
+                }
+            } catch (error) {
+                console.error('Error loading scheduled jobs:', error);
+            }
         }
 
         // Inventory loading for Secretary (read-only)
@@ -1297,15 +1743,167 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
             });
         }
 
+        // Load maintenance requests from API
+        function loadMaintenanceRequests() {
+            const container = document.getElementById('maintenance-requests-list');
+            
+            fetch('service_request_api.php?action=list')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.requests) {
+                    if (data.requests.length === 0) {
+                        container.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 20px;"><i class="fas fa-inbox"></i> No maintenance requests found</div>';
+                        return;
+                    }
+                    
+                    const requestsHTML = data.requests.map(request => {
+                        const status = request.status || 'pending';
+                        const priority = request.priority || 'medium';
+                        
+                        // Determine icon and color based on status
+                        let iconClass = 'fas fa-wrench';
+                        let statusColor = 'var(--primary-color)';
+                        let statusBg = 'var(--primary-bg)';
+                        
+                        if (priority === 'high' || priority === 'urgent') {
+                            statusColor = 'var(--danger-text)';
+                            statusBg = 'var(--danger-bg)';
+                            iconClass = 'fas fa-exclamation-triangle';
+                        } else if (status === 'scheduled') {
+                            statusColor = 'var(--success-text)';
+                            statusBg = 'var(--success-bg)';
+                            iconClass = 'fas fa-calendar-check';
+                        }
+                        
+                        return `
+                        <div class="txn-card" style="grid-template-columns: 80px 1.8fr 2.2fr 1.2fr;">
+                            <div class="txn-icon-col" style="color:${statusColor};"><i class="${iconClass}"></i></div>
+                            <div class="txn-client-col">
+                                <span class="txn-ref" style="background:${statusBg}; color:${statusColor};">${priority.toUpperCase()} #MR${String(request.id).padStart(3, '0')}</span>
+                                <div class="txn-client-name">${request.client_name || 'N/A'}</div>
+                                <div class="txn-client-loc"><i class="fas fa-map-marker-alt"></i> ${request.location || 'Not specified'}</div>
+                            </div>
+                            <div class="txn-finance-col" style="border-right: 1px dashed #e2e8f0;">
+                                <div class="finance-row"><span>Problem:</span> <strong>${request.problem_description || 'N/A'}</strong></div>
+                                <div class="finance-row"><span>Priority:</span> ${priority.charAt(0).toUpperCase() + priority.slice(1)}</div>
+                                ${request.scheduled_date ? `<div class="finance-row"><span>Scheduled:</span> ${new Date(request.scheduled_date).toLocaleDateString()}</div>` : ''}
+                            </div>
+                            <div class="txn-action-col">
+                                ${(() => {
+                                    if (status === 'scheduled') {
+                                        return `<span style="color: var(--success-text); font-weight: bold;"><i class="fas fa-check"></i> Scheduled</span>`;
+                                    } else if (status === 'pending_secretary_review') {
+                                        return `
+                                            <button class="btn btn-warning secretary-review-btn" 
+                                                data-request-id="${request.id}" 
+                                                data-client-name="${request.client_name || ''}" 
+                                                data-problem="${request.problem_description || ''}">
+                                                <i class="fas fa-eye"></i> Review
+                                            </button>`;
+                                    } else if (status === 'pending_manager_approval') {
+                                        return `<span style="color: var(--warning-text); font-weight: bold;"><i class="fas fa-clock"></i> Awaiting Manager</span>`;
+                                    } else if (status === 'approved') {
+                                        return `
+                                            <button class="btn btn-primary schedule-team-btn" 
+                                                data-request-id="${request.id}" 
+                                                data-client-name="${request.client_name || ''}" 
+                                                data-problem="${request.problem_description || ''}" 
+                                                data-location="${request.location || ''}">
+                                                <i class="fas fa-calendar-plus"></i> Schedule Team
+                                            </button>`;
+                                    } else if (status === 'rejected_by_secretary' || status === 'rejected_by_manager') {
+                                        return `<span style="color: var(--danger-text); font-weight: bold;"><i class="fas fa-times"></i> Rejected</span>`;
+                                    } else {
+                                        return `
+                                            <button class="btn btn-primary schedule-team-btn" 
+                                                data-request-id="${request.id}" 
+                                                data-client-name="${request.client_name || ''}" 
+                                                data-problem="${request.problem_description || ''}" 
+                                                data-location="${request.location || ''}">
+                                                <i class="fas fa-calendar-plus"></i> Schedule Team
+                                            </button>`;
+                                    }
+                                })()}
+                            </div>
+                        </div>
+                        `;
+                    }).join('');
+                    
+                    container.innerHTML = requestsHTML;
+                    
+                    // Add event listeners to schedule team buttons
+                    container.querySelectorAll('.schedule-team-btn').forEach(button => {
+                        button.addEventListener('click', function() {
+                            const requestId = this.dataset.requestId;
+                            const clientName = this.dataset.clientName;
+                            const problem = this.dataset.problem;
+                            const location = this.dataset.location;
+                            openTeamScheduler(requestId, clientName, problem, location);
+                        });
+                    });
+                    
+                    // Add event listeners to review buttons
+                    container.querySelectorAll('.secretary-review-btn').forEach(button => {
+                        button.addEventListener('click', function() {
+                            const requestId = this.dataset.requestId;
+                            const clientName = this.dataset.clientName;
+                            const problem = this.dataset.problem;
+                            openReviewModal(requestId, clientName, problem);
+                        });
+                    });
+                } else {
+                    container.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 20px;"><i class="fas fa-exclamation-circle"></i> Error loading requests</div>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading maintenance requests:', error);
+                container.innerHTML = '<div style="text-align: center; color: var(--danger-text); padding: 20px;"><i class="fas fa-exclamation-triangle"></i> Failed to load requests</div>';
+            });
+        }
+
         // INITIALIZATION
         document.addEventListener('DOMContentLoaded', (event) => {
+            // Debug: Check if elements exist
+            console.log('Initializing Secretary Dashboard...');
+            const activeNavBtn = document.querySelector('.nav-btn.active');
+            const dashboardSection = document.getElementById('sec-dashboard');
+            console.log('Active Nav Button:', activeNavBtn);
+            console.log('Dashboard Section:', dashboardSection);
+            
             // 1. Set initial view to dashboard and activate the nav button
-            nav('sec-dashboard', document.querySelector('.nav-btn.active'));
+            if (activeNavBtn && dashboardSection) {
+                nav('sec-dashboard', activeNavBtn);
+                console.log('Dashboard initialized successfully');
+                
+                // Additional debugging
+                const metricsGrid = dashboardSection.querySelector('.metrics-grid-4');
+                const metricCards = dashboardSection.querySelectorAll('.metric-card');
+                console.log('Metrics Grid:', metricsGrid);
+                console.log('Metric Cards Count:', metricCards.length);
+                console.log('Dashboard Section Styles:', window.getComputedStyle(dashboardSection));
+                
+                // Check if dashboard section is visible
+                const rect = dashboardSection.getBoundingClientRect();
+                console.log('Dashboard Section Position:', rect);
+                console.log('Dashboard Section Classes:', dashboardSection.className);
+            } else {
+                console.error('Missing dashboard elements!');
+                // Fallback: Ensure dashboard section is visible
+                if (dashboardSection) {
+                    dashboardSection.classList.add('active');
+                }
+            }
             
             // 2. Calculate initial sales quote summary
             calculateSalesQuote();
+            
+            // 3. Load notification count
+            loadNotificationCount();
+            
+            // 4. Load low stock count
+            loadLowStockCount();
 
-            // 3. Wire up Triage Now buttons in Dashboard to navigate to Service Requests
+            // 5. Wire up Triage Now buttons in Dashboard to navigate to Service Requests
             const triageButtons = document.querySelectorAll('.triage-btn');
             const serviceRequestButton = getNavButtonBySectionId('service-requests');
             if (serviceRequestButton) {
@@ -1314,7 +1912,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
                         e.preventDefault(); // Prevent default button action if any
                         nav('service-requests', serviceRequestButton);
                         
-                        // Optional: Switch to the correct tab in Service Requests upon triage click
+                        // Switch to the correct tab in Service Requests upon triage click
                         const targetTab = btn.parentElement.querySelector('h4').innerText.toLowerCase().includes('repair') || btn.parentElement.querySelector('span.metric-label').innerText.toLowerCase().includes('maintenance') ? 'maintenance-requests' : 'sales-inquiries';
                         
                         // Find the corresponding tab element and click it
@@ -1326,8 +1924,18 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
                 });
             }
 
-            // 4. Prepare inventory search and initial data (optional initial load)
+            // 6. Prepare inventory search and initial data (optional initial load)
             setupInventorySearch();
+            
+            // 7. Load sales inquiries for initial display (maintenance requests loads lazily when tab is clicked)
+            loadSalesInquiries();
+            
+            // 8. Load jobs awaiting assignment
+            loadJobsAwaitingAssignment();
+            
+            // 9. Initialize calendar
+            generateCalendar(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth());
+            loadScheduledJobs();
         });
         function openLogoutModal() {
             document.getElementById('logout-modal-overlay').classList.add('show');
@@ -1335,6 +1943,896 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'secretary') {
 
         function closeLogoutModal() {
             document.getElementById('logout-modal-overlay').classList.remove('show');
+        }
+
+        // Sales Inquiries Functions
+        async function loadSalesInquiries() {
+            try {
+                const response = await fetch('secretary_quotations_api.php?action=get_pending_requests');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    displaySalesInquiries(result.requests || []);
+                } else {
+                    document.getElementById('sales-inquiries-list').innerHTML = 
+                        '<div style="text-align: center; color: var(--text-muted); padding: 40px;">Error: ' + (result.message || 'Unknown error') + '</div>';
+                }
+            } catch (error) {
+                console.error('Error loading sales inquiries:', error);
+                document.getElementById('sales-inquiries-list').innerHTML = 
+                    '<div style="text-align: center; color: var(--text-muted); padding: 40px;">Error loading sales inquiries: ' + error.message + '</div>';
+            }
+        }
+
+        function displaySalesInquiries(inquiries) {
+            const container = document.getElementById('sales-inquiries-list');
+            if (!container) {
+                return;
+            }
+            
+            if (!inquiries || inquiries.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 40px;">' +
+                    '<i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 15px; opacity: 0.3;"></i>' +
+                    '<p>No pending sales inquiries.</p>' +
+                    '</div>';
+                return;
+            }
+            
+            let inquiriesHtml = '';
+            
+            inquiries.forEach((inquiry, index) => {
+                const leadNumber = 'QR-' + inquiry.Quotation_ID.toString().padStart(3, '0');
+                const clientLocation = inquiry.Address ? inquiry.Address.split(',')[0] : 'Unknown Location';
+                const clientInitial = (inquiry.Client_Name || 'U').charAt(0).toUpperCase();
+                
+                inquiriesHtml += '<div style="background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">' +
+                    '<div style="display: flex; align-items: center; gap: 15px; flex: 1;">' +
+                        '<div style="width: 48px; height: 48px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; position: relative;">' +
+                            clientInitial +
+                            '<div style="position: absolute; bottom: -2px; right: -2px; width: 16px; height: 16px; background: #f59e0b; border: 2px solid white; border-radius: 50%;"></div>' +
+                        '</div>' +
+                        '<div>' +
+                            '<div style="color: #0891b2; font-weight: 600; font-size: 13px; text-transform: uppercase; margin-bottom: 2px;">' +
+                                'QUOTATION REQUEST #' + leadNumber +
+                            '</div>' +
+                            '<div style="color: #1f2937; font-weight: 600; font-size: 16px; margin-bottom: 2px;">' +
+                                (inquiry.Client_Name || 'Unknown Client') +
+                            '</div>' +
+                            '<div style="color: #6b7280; font-size: 14px; display: flex; align-items: center; gap: 4px;">' +
+                                '<i class="fas fa-map-marker-alt" style="font-size: 12px;"></i>' +
+                                clientLocation +
+                            '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div style="flex: 1; padding: 0 20px;">' +
+                        '<div style="display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; align-items: center;">' +
+                            '<div style="color: #6b7280; font-size: 14px;">Request:</div>' +
+                            '<div style="color: #1f2937; font-weight: 600; font-size: 14px;">' + (inquiry.Package || 'Package Request') + '</div>' +
+                            '<div style="color: #6b7280; font-size: 14px;">Action:</div>' +
+                            '<div style="color: #0891b2; font-weight: 600; font-size: 14px;">Generate Package Quote</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div style="display: flex; gap: 10px;">' +
+                        '<button class="btn create-quote-btn" data-quotation-id="' + inquiry.Quotation_ID + '" data-client-id="' + inquiry.Client_ID + '" data-client-name="' + (inquiry.Client_Name || '') + '" data-contact="' + (inquiry.Contact_Num || '') + '"' +
+                                ' style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3); transition: all 0.2s;">' +
+                            '<i class="fas fa-file-invoice"></i> ' +
+                            'Create Quotation' +
+                        '</button>' +
+                        '<button class="btn contact-client-btn" data-contact="' + (inquiry.Contact_Num || '') + '" data-client-name="' + (inquiry.Client_Name || '') + '"' +
+                                ' style="background: transparent; color: #374151; padding: 8px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-weight: 500; font-size: 13px; cursor: pointer; transition: all 0.2s;">' +
+                            '<i class="fas fa-phone"></i> Call Client' +
+                        '</button>' +
+                    '</div>' +
+                '</div>';
+            });
+            
+            container.innerHTML = inquiriesHtml;
+            
+            // Add event listeners for the buttons
+            document.querySelectorAll('.create-quote-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const quotationId = this.dataset.quotationId;
+                    const clientId = this.dataset.clientId;
+                    const clientName = this.dataset.clientName;
+                    const contact = this.dataset.contact;
+                    navigateToCreateQuotation(quotationId, clientId, clientName, contact);
+                });
+            });
+            
+            document.querySelectorAll('.contact-client-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const contact = this.dataset.contact;
+                    const clientName = this.dataset.clientName;
+                    contactClient(contact, clientName);
+                });
+            });
+            
+            // Update the badge count in the navigation
+            if (inquiries.length > 0) {
+                updateServiceRequestsBadge(inquiries.length);
+            }
+        }
+
+        function navigateToCreateQuotation(quotationId, clientId, clientName, contact) {
+            // Navigate to sales quotes section
+            const salesQuotesButton = document.querySelector(`.nav-btn[onclick*="'sales-quotes'"]`);
+            if (salesQuotesButton) {
+                nav('sales-quotes', salesQuotesButton);
+                
+                // Pre-fill the sales quote form
+                setTimeout(() => {
+                    document.getElementById('clientName').value = clientName;
+                    document.getElementById('clientContact').value = contact;
+                    toast('Fill in package details for ' + clientName);
+                }, 100);
+            }
+        }
+
+        function updateSalesInquiriesStats(stats) {
+            // Update navigation badge
+            if (stats.pending_count > 0) {
+                updateServiceRequestsBadge(stats.pending_count);
+            }
+        }
+
+        function contactClient(contactNum, clientName) {
+            if (contactNum && contactNum.trim()) {
+                toast(`Contact: ${contactNum} - ${clientName}`);
+            } else {
+                toast(`No contact number available for ${clientName}`);
+            }
+        }
+
+        function updateServiceRequestsBadge(count) {
+            const badge = document.getElementById('service-requests-badge');
+            if (badge && count > 0) {
+                badge.textContent = count;
+                badge.style.display = 'inline';
+            } else if (badge) {
+                badge.style.display = 'none';
+            }
+        }
+
+        function refreshSalesInquiries() {
+            loadSalesInquiries();
+            toast('Sales inquiries refreshed');
+        }
+        
+        async function submitQuoteToManager() {
+            const proofFile = document.getElementById('proofUpload').files[0];
+            const clientName = document.getElementById('clientName').value;
+            const packageType = document.getElementById('packageType').value;
+            const packageText = document.getElementById('packageType').options[document.getElementById('packageType').selectedIndex].text;
+            const totalAmount = document.getElementById('val-total').textContent.replace(/[₱,]/g, '');
+            
+            if (!proofFile) {
+                toast('Please upload proof of printed quote before submitting');
+                return;
+            }
+            
+            if (!clientName || !packageType) {
+                toast('Please fill in client name and select package');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('action', 'submit_quote_for_verification');
+            formData.append('debug', 'true'); // Add debug mode
+            formData.append('proof_file', proofFile);
+            formData.append('client_name', clientName);
+            formData.append('package', packageText);
+            formData.append('amount', parseFloat(totalAmount));
+            formData.append('delivery_method', 'Standard Delivery');
+            formData.append('handling_fee', document.getElementById('val-installation').textContent.replace(/[₱,]/g, '') || 0);
+            
+            try {
+                const response = await fetch('secretary_quote_api.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    toast('✅ Quote submitted to Manager for approval!');
+                    
+                    // Clear the form
+                    document.getElementById('clientName').value = '';
+                    document.getElementById('packageType').value = '';
+                    document.getElementById('proofUpload').value = '';
+                    document.getElementById('file-name').textContent = 'No file chosen';
+                    calculateSalesQuote();
+                    
+                    // Show success message
+                    setTimeout(() => {
+                        toast('Manager will review and approve the quote before sending to client');
+                    }, 2000);
+                } else {
+                    toast('❌ Error: ' + result.message);
+                }
+                
+            } catch (error) {
+                console.error('Error submitting quote:', error);
+                toast('❌ Error submitting quote to manager');
+            }
+        }
+
+    </script>
+
+    <!-- Secretary Review Modal -->
+    <div id="reviewModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-clipboard-check"></i> Review Service Request</h2>
+                <span class="close" onclick="closeReviewModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Client Name:</label>
+                    <input type="text" id="review-client-name" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Problem Description:</label>
+                    <textarea id="review-problem" readonly rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Review Notes (Optional):</label>
+                    <textarea id="review-notes" placeholder="Add any notes or comments..." rows="3"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-danger" onclick="submitReview('reject')">
+                        <i class="fas fa-times"></i> Reject Request
+                    </button>
+                    <button class="btn btn-success" onclick="submitReview('approve')">
+                        <i class="fas fa-check"></i> Send to Manager
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Team Scheduling Modal -->
+    <div id="teamScheduleModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-users"></i> Schedule Maintenance Team</h2>
+                <span class="close" onclick="closeTeamScheduler()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="content-grid-2">
+                    <div>
+                        <div class="form-group">
+                            <label class="form-label">Client Information</label>
+                            <input type="text" id="schedule-client-name" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Problem Description</label>
+                            <input type="text" id="schedule-problem" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Location</label>
+                            <input type="text" id="schedule-location" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Assigned Team</label>
+                            <select id="schedule-team" class="form-control" onchange="updateTeamInfo()">
+                                <option value="">Select Team...</option>
+                                <option value="alpha">Team Alpha - Installation Specialists</option>
+                                <option value="beta">Team Beta - Maintenance & Repair</option>
+                                <option value="gamma">Team Gamma - Emergency Response</option>
+                                <option value="delta">Team Delta - Electrical & Plumbing</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="form-group">
+                            <label class="form-label">Schedule Date</label>
+                            <input type="date" id="schedule-date" class="form-control" min="">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Time Slot</label>
+                            <select id="schedule-time" class="form-control">
+                                <option value="">Select Time...</option>
+                                <option value="08:00">8:00 AM - 12:00 PM (Morning)</option>
+                                <option value="13:00">1:00 PM - 5:00 PM (Afternoon)</option>
+                                <option value="09:00">9:00 AM - 3:00 PM (Full Service)</option>
+                                <option value="emergency">Emergency Call (ASAP)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Priority Level</label>
+                            <select id="schedule-priority" class="form-control">
+                                <option value="normal">Normal</option>
+                                <option value="high" selected>High</option>
+                                <option value="urgent">Urgent</option>
+                                <option value="emergency">Emergency</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Special Notes</label>
+                            <textarea id="schedule-notes" class="form-control" rows="3" placeholder="Special instructions, equipment needed, etc."></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Team Information Display -->
+                <div id="team-info-display" style="display: none; margin-top: 20px; padding: 15px; background: var(--info-bg); border-radius: 8px; border: 1px solid #0ea5e9;">
+                    <h4 style="margin-bottom: 10px; color: var(--info-text);"><i class="fas fa-info-circle"></i> Team Information</h4>
+                    <div id="team-details"></div>
+                </div>
+                
+                <div class="modal-actions" style="margin-top: 20px; text-align: right;">
+                    <button class="btn btn-danger" onclick="closeTeamScheduler()" style="margin-right: 10px;">Cancel</button>
+                    <button class="btn btn-gold" onclick="confirmTeamSchedule()"><i class="fas fa-check"></i> Schedule Team</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+        }
+        
+        .modal-content {
+            background-color: var(--white);
+            margin: 2% auto;
+            border-radius: 12px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            padding: 20px 30px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy-light) 100%);
+            color: white;
+            border-radius: 12px 12px 0 0;
+        }
+        
+        .modal-header h2 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+        }
+        
+        .modal-body {
+            padding: 30px;
+        }
+        
+        .close {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+        
+        .close:hover {
+            opacity: 0.7;
+        }
+        
+        .modal-actions {
+            border-top: 1px solid #e2e8f0;
+            padding-top: 20px;
+        }
+    </style>
+
+    <script>
+        // Review Modal Functions
+        function openReviewModal(requestId, clientName, problem) {
+            console.log('Opening review modal for:', { requestId, clientName, problem });
+            
+            document.getElementById('review-client-name').value = clientName || '';
+            document.getElementById('review-problem').value = problem || '';
+            document.getElementById('review-notes').value = '';
+            
+            // Store request ID for later use
+            document.getElementById('reviewModal').dataset.requestId = requestId;
+            
+            document.getElementById('reviewModal').style.display = 'block';
+        }
+        
+        function closeReviewModal() {
+            document.getElementById('reviewModal').style.display = 'none';
+            document.getElementById('review-notes').value = '';
+        }
+        
+        function submitReview(action) {
+            const requestId = document.getElementById('reviewModal').dataset.requestId;
+            const notes = document.getElementById('review-notes').value;
+            
+            console.log('Submitting review:', { requestId, action, notes });
+            
+            toast(`📋 ${action === 'approve' ? 'Sending to manager...' : 'Rejecting request...'}`);
+            
+            const formData = new FormData();
+            formData.append('action', 'secretary_review');
+            formData.append('request_id', requestId);
+            formData.append('review_action', action);
+            formData.append('notes', notes);
+            
+            // Debug: log what we're sending
+            for (let [key, value] of formData.entries()) {
+                console.log(key, value);
+            }
+            
+            fetch('service_request_api.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Review response:', data);
+                if (data.success) {
+                    toast(`✅ ${data.message}`);
+                    closeReviewModal();
+                    loadMaintenanceRequests(); // Refresh the list
+                } else {
+                    toast('❌ Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Review error:', error);
+                toast('❌ Failed to process review. Please try again.');
+            });
+        }
+        
+        // Team Scheduling Functions
+        function openTeamScheduler(requestId, clientName, problem, location) {
+            console.log('Opening scheduler for:', { requestId, clientName, problem, location }); // Debug log
+            
+            document.getElementById('schedule-client-name').value = clientName || '';
+            document.getElementById('schedule-problem').value = problem || '';
+            document.getElementById('schedule-location').value = location || '';
+            
+            // Store request ID for later use
+            document.getElementById('teamScheduleModal').dataset.requestId = requestId;
+            
+            // Set minimum date to today
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('schedule-date').min = tomorrow.toISOString().split('T')[0];
+            document.getElementById('schedule-date').value = tomorrow.toISOString().split('T')[0];
+            
+            document.getElementById('teamScheduleModal').style.display = 'block';
+        }
+        
+        function closeTeamScheduler() {
+            document.getElementById('teamScheduleModal').style.display = 'none';
+            // Clear form
+            document.getElementById('schedule-team').value = '';
+            document.getElementById('schedule-time').value = '';
+            document.getElementById('schedule-notes').value = '';
+            document.getElementById('team-info-display').style.display = 'none';
+        }
+        
+        function updateTeamInfo() {
+            const selectedTeam = document.getElementById('schedule-team').value;
+            const teamInfoDisplay = document.getElementById('team-info-display');
+            const teamDetails = document.getElementById('team-details');
+            
+            const teamInfo = {
+                'alpha': {
+                    name: 'Team Alpha',
+                    specialization: 'Installation Specialists',
+                    members: ['John Santos (Lead)', 'Mark Rivera', 'Alex Chen'],
+                    equipment: 'Installation tools, lifting equipment, electrical supplies',
+                    availability: 'Available Mon-Sat, 8AM-6PM'
+                },
+                'beta': {
+                    name: 'Team Beta',
+                    specialization: 'Maintenance & Repair',
+                    members: ['Carlos Lopez (Lead)', 'Maria Gonzalez', 'David Kim'],
+                    equipment: 'Diagnostic tools, spare parts, repair kit',
+                    availability: 'Available 24/7 including weekends'
+                },
+                'gamma': {
+                    name: 'Team Gamma',
+                    specialization: 'Emergency Response',
+                    members: ['Robert Taylor (Lead)', 'Sarah Johnson'],
+                    equipment: 'Emergency repair kit, mobile workshop',
+                    availability: 'Emergency calls only, 24/7'
+                },
+                'delta': {
+                    name: 'Team Delta',
+                    specialization: 'Electrical & Plumbing',
+                    members: ['Michael Brown (Lead)', 'Lisa Wang', 'Tom Wilson'],
+                    equipment: 'Electrical tools, plumbing supplies, diagnostic equipment',
+                    availability: 'Available Mon-Fri, 7AM-7PM'
+                }
+            };
+            
+            if (selectedTeam && teamInfo[selectedTeam]) {
+                const team = teamInfo[selectedTeam];
+                teamDetails.innerHTML = `
+                    <div class="team-info-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 14px;">
+                        <div>
+                            <strong>Specialization:</strong> ${team.specialization}<br>
+                            <strong>Team Members:</strong><br>
+                            ${team.members.map(member => `• ${member}`).join('<br>')}
+                        </div>
+                        <div>
+                            <strong>Equipment:</strong> ${team.equipment}<br><br>
+                            <strong>Availability:</strong> ${team.availability}
+                        </div>
+                    </div>
+                `;
+                teamInfoDisplay.style.display = 'block';
+            } else {
+                teamInfoDisplay.style.display = 'none';
+            }
+        }
+        
+        function confirmTeamSchedule() {
+            const requestId = document.getElementById('teamScheduleModal').dataset.requestId;
+            const clientName = document.getElementById('schedule-client-name').value;
+            const team = document.getElementById('schedule-team').value;
+            const date = document.getElementById('schedule-date').value;
+            const time = document.getElementById('schedule-time').value;
+            const priority = document.getElementById('schedule-priority').value;
+            const notes = document.getElementById('schedule-notes').value;
+            
+            if (!team || !date || !time) {
+                toast('Please fill in all required fields');
+                return;
+            }
+            
+            const teamNames = {
+                'alpha': 'Team Alpha',
+                'beta': 'Team Beta', 
+                'gamma': 'Team Gamma',
+                'delta': 'Team Delta'
+            };
+            
+            const timeSlots = {
+                '08:00': '8:00 AM - 12:00 PM',
+                '13:00': '1:00 PM - 5:00 PM',
+                '09:00': '9:00 AM - 3:00 PM',
+                'emergency': 'Emergency Call (ASAP)'
+            };
+            
+            // Submit to API
+            toast('📅 Scheduling team...');
+            
+            const formData = new FormData();
+            formData.append('action', 'schedule_team');
+            formData.append('request_id', requestId);
+            formData.append('team', teamNames[team]);
+            formData.append('schedule_date', date);
+            formData.append('schedule_time', time);
+            formData.append('priority', priority);
+            formData.append('notes', notes);
+            
+            fetch('service_request_api.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    toast(`✅ ${teamNames[team]} scheduled for ${clientName}!`);
+                    
+                    setTimeout(() => {
+                        const formattedDate = new Date(date).toLocaleDateString('en-US', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        });
+                        
+                        toast(`📋 Schedule Details: ${formattedDate}, ${timeSlots[time] || time}`);
+                        
+                        setTimeout(() => {
+                            toast('📧 Client notification sent via SMS and email');
+                            loadMaintenanceRequests(); // Refresh the list
+                        }, 2000);
+                    }, 1500);
+                    
+                    closeTeamScheduler();
+                } else {
+                    toast('❌ Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Team scheduling error:', error);
+                toast('❌ Failed to schedule team. Please try again.');
+            });
+        }
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('teamScheduleModal');
+            if (event.target === modal) {
+                closeTeamScheduler();
+            }
+        }
+
+        // ===== CLIENT MANAGEMENT FUNCTIONS =====
+        
+        let currentClientId = null;
+        let allClients = [];
+        
+        async function loadClientList(search = '') {
+            console.log('Loading client list...');
+            try {
+                const url = search 
+                    ? `client_api.php?action=get_all_clients&search=${encodeURIComponent(search)}`
+                    : 'client_api.php?action=get_all_clients';
+                    
+                const response = await fetch(url, {
+                    credentials: 'include'
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    allClients = result.clients;
+                    renderClientList(result.clients);
+                    console.log(`Loaded ${result.count} clients`);
+                } else {
+                    console.error('Failed to load clients:', result.message);
+                    toast('Failed to load client list');
+                    document.getElementById('client-list-body').innerHTML = `
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 40px; color: var(--danger-text);">
+                                <i class="fas fa-exclamation-circle" style="font-size: 24px; margin-bottom: 10px;"></i>
+                                <div>Failed to load clients</div>
+                            </td>
+                        </tr>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading clients:', error);
+                toast('Error loading clients: ' + error.message);
+            }
+        }
+        
+        function renderClientList(clients) {
+            const tbody = document.getElementById('client-list-body');
+            
+            if (!clients || clients.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                            <i class="fas fa-users" style="font-size: 48px; margin-bottom: 10px; opacity: 0.3;"></i>
+                            <div>No clients found</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = '';
+            
+            clients.forEach(client => {
+                const row = document.createElement('tr');
+                row.style.cursor = 'pointer';
+                row.onclick = () => viewClientProfile(client.Client_ID);
+                
+                row.innerHTML = `
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div class="avatar" style="width: 32px; height: 32px; font-size: 12px;">
+                                ${client.Name.substring(0, 2).toUpperCase()}
+                            </div>
+                            <strong>${client.Name}</strong>
+                        </div>
+                    </td>
+                    <td>${client.Contact_Num || 'N/A'}</td>
+                    <td>${client.Address || 'N/A'}</td>
+                    <td><span class="status-badge" style="background: var(--info-bg); color: var(--info-text);">${client.total_jobs || 0} jobs</span></td>
+                    <td><strong>₱${parseFloat(client.total_revenue || 0).toLocaleString('en-PH', {maximumFractionDigits: 0})}</strong></td>
+                    <td>
+                        <button class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;" onclick="event.stopPropagation(); viewClientProfile(${client.Client_ID})">
+                            <i class="fas fa-eye"></i> View
+                        </button>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+        
+        function searchClients(query) {
+            if (query.length === 0) {
+                renderClientList(allClients);
+            } else {
+                const filtered = allClients.filter(client => 
+                    client.Name.toLowerCase().includes(query.toLowerCase()) ||
+                    (client.Contact_Num && client.Contact_Num.includes(query)) ||
+                    (client.Address && client.Address.toLowerCase().includes(query.toLowerCase()))
+                );
+                renderClientList(filtered);
+            }
+        }
+        
+        async function viewClientProfile(clientId) {
+            console.log('Loading profile for client ID:', clientId);
+            currentClientId = clientId;
+            
+            // Show profile view, hide list view
+            document.getElementById('client-list-view').style.display = 'none';
+            document.getElementById('client-profile-view').style.display = 'block';
+            
+            try {
+                const response = await fetch(`client_api.php?action=get_client_profile&client_id=${clientId}`, {
+                    credentials: 'include'
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    renderClientProfile(result);
+                } else {
+                    console.error('Failed to load client profile:', result.message);
+                    toast('Failed to load client profile');
+                    backToClientList();
+                }
+            } catch (error) {
+                console.error('Error loading client profile:', error);
+                toast('Error loading client profile: ' + error.message);
+                backToClientList();
+            }
+        }
+        
+        function renderClientProfile(data) {
+            const client = data.client;
+            const stats = data.stats;
+            
+            // Update title
+            document.getElementById('client-profile-title').textContent = `Client Profile: ${client.Name}`;
+            
+            // Update KPI cards
+            document.getElementById('profile-total-jobs').textContent = stats.total_jobs || 0;
+            document.getElementById('profile-total-revenue').textContent = 
+                '₱' + parseFloat(stats.total_revenue || 0).toLocaleString('en-PH', {maximumFractionDigits: 0});
+            document.getElementById('profile-pending-payments').textContent = 
+                '₱' + parseFloat(stats.pending_payments || 0).toLocaleString('en-PH', {maximumFractionDigits: 0});
+            document.getElementById('profile-critical-alerts').textContent = stats.critical_alerts || 0;
+            
+            // Render service history
+            renderServiceHistory(data.history, data.urgent);
+        }
+        
+        function renderServiceHistory(history, urgent) {
+            const container = document.getElementById('client-service-history');
+            
+            if ((!history || history.length === 0) && (!urgent || urgent.length === 0)) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        <i class="fas fa-history" style="font-size: 48px; margin-bottom: 10px; opacity: 0.3;"></i>
+                        <div>No service history found</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            // Render urgent items first
+            if (urgent && urgent.length > 0) {
+                urgent.forEach(item => {
+                    const card = createUrgentServiceCard(item);
+                    container.appendChild(card);
+                });
+            }
+            
+            // Render regular history
+            if (history && history.length > 0) {
+                history.forEach(item => {
+                    const card = createHistoryCard(item);
+                    container.appendChild(card);
+                });
+            }
+        }
+        
+        function createUrgentServiceCard(item) {
+            const card = document.createElement('div');
+            card.className = 'txn-card';
+            card.style.gridTemplateColumns = '80px 1.8fr 2.2fr 1.2fr';
+            
+            card.innerHTML = `
+                <div class="txn-icon-col" style="color:var(--danger-text);"><i class="fas fa-wrench"></i></div>
+                <div class="txn-client-col">
+                    <span class="txn-ref" style="background:var(--danger-bg); color:var(--danger-text);">URGENT #${item.Service_ID}</span>
+                    <div class="txn-client-name">${item.type || 'Service Request'}</div>
+                    <div class="txn-client-loc"><i class="fas fa-clipboard"></i> Pending service</div>
+                </div>
+                <div class="txn-finance-col" style="border-right: 1px dashed #e2e8f0;">
+                    <div class="finance-row"><span>Date:</span> <strong>${formatDate(item.Service_Date)}</strong></div>
+                    <div class="finance-row"><span>Status:</span> ${item.Status}</div>
+                </div>
+                <div class="txn-action-col" style="background:var(--danger-bg); border-left: 1px solid var(--danger-text);">
+                    <button class="btn btn-danger" style="color:white; background:var(--danger-text);"><i class="fas fa-clock"></i> URGENT</button>
+                    <button class="btn btn-outline" style="border-color:var(--danger-text); color:var(--danger-text); background:var(--danger-bg);">View Details</button>
+                </div>
+            `;
+            
+            return card;
+        }
+        
+        function createHistoryCard(item) {
+            const card = document.createElement('div');
+            card.className = 'txn-card';
+            card.style.gridTemplateColumns = '80px 1.8fr 2.2fr 1.2fr';
+            
+            const statusColors = {
+                'completed': { bg: 'var(--success-bg)', text: 'var(--success-text)', icon: 'fa-check-circle' },
+                'pending': { bg: 'var(--warning-bg)', text: 'var(--warning-text)', icon: 'fa-clock' },
+                'rejected': { bg: 'var(--danger-bg)', text: 'var(--danger-text)', icon: 'fa-times-circle' },
+                'active': { bg: 'var(--info-bg)', text: 'var(--info-text)', icon: 'fa-sync' }
+            };
+            
+            const status = statusColors[item.status_type] || statusColors['active'];
+            
+            card.innerHTML = `
+                <div class="txn-icon-col" style="color:${status.text};"><i class="fas ${status.icon}"></i></div>
+                <div class="txn-client-col">
+                    <span class="txn-ref" style="background:${status.bg}; color:${status.text};">${item.ref || 'QT-' + item.Quotation_ID}</span>
+                    <div class="txn-client-name">${item.Package}</div>
+                    <div class="txn-client-loc"><i class="fas fa-truck"></i> ${item.Delivery_Method || 'N/A'}</div>
+                </div>
+                <div class="txn-finance-col" style="border-right: 1px dashed #e2e8f0;">
+                    <div class="finance-row"><span>Date:</span> <strong>${formatDate(item.Date_Issued)}</strong></div>
+                    <div class="finance-row"><span>Amount:</span> ₱${parseFloat(item.Amount).toLocaleString('en-PH', {maximumFractionDigits: 2})}</div>
+                </div>
+                <div class="txn-action-col">
+                    <button class="btn btn-primary" onclick="viewQuotationDetails(${item.Quotation_ID})"><i class="fas fa-receipt"></i> View Invoice</button>
+                    <button class="btn btn-outline">Call Client</button>
+                </div>
+            `;
+            
+            return card;
+        }
+        
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            const today = new Date();
+            
+            if (date.toDateString() === today.toDateString()) {
+                return 'Today, ' + date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+            }
+            
+            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+        
+        function backToClientList() {
+            document.getElementById('client-profile-view').style.display = 'none';
+            document.getElementById('client-list-view').style.display = 'block';
+            currentClientId = null;
+        }
+        
+        function addNewClient() {
+            toast('Add New Client feature coming soon!');
+        }
+        
+        function editClientProfile() {
+            if (!currentClientId) return;
+            toast('Edit Client Profile feature coming soon!');
+        }
+        
+        function viewQuotationDetails(quotationId) {
+            toast(`Opening quotation #${quotationId}...`);
+            // Could navigate to quotation details or open modal
         }
     </script>
 

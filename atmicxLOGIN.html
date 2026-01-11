@@ -298,7 +298,7 @@
                         <div class="form-inner">
                             <form id="loginForm">
                                 <div class="field">
-                                    <input type="text" id="email" placeholder="Email" required>
+                                    <input type="text" id="email" placeholder="Email or Username" required>
                                     <i class="fas fa-user"></i>
                                 </div>
                                 
@@ -313,6 +313,12 @@
                                     <input type="submit" value="Sign In">
                                 </div>
                                 <div id="errorMessage" style="color: red; text-align: center; margin-top: 10px;"></div>
+                                
+                                <!-- Hidden role selector -->
+                                <select id="roleSelect" style="display: none;">
+                                    <option value="manager">Manager</option>
+                                    <option value="secretary">Secretary</option>
+                                </select>
                             </form>
                         </div>
 
@@ -416,41 +422,100 @@
         // AJAX login
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const email = document.getElementById('email').value;
+            const username = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const errorMessage = document.getElementById('errorMessage');
 
-            if (!email || !password) {
+            if (!username || !password) {
                 errorMessage.textContent = 'Please fill in all fields.';
                 return;
             }
 
-            try {
-                const response = await fetch('login.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        email: email,
-                        password: password
-                    })
-                });
+            console.log('Starting login attempt for:', username);
+            errorMessage.textContent = ''; // Clear previous errors
 
-                const result = await response.json();
-                if (result.success) {
-                    // Redirect based on role
-                    if (result.role === 'manager') {
-                        window.location.href = 'atmicxMANAGER.php';
-                    } else if (result.role === 'secretary') {
-                        window.location.href = 'armicxSECRETARY.php';
+            // Try both manager and secretary roles to find the user
+            const roles = ['manager', 'secretary'];
+            let loginSuccess = false;
+            let lastError = '';
+
+            for (const role of roles) {
+                try {
+                    console.log(`Trying role: ${role}`);
+                    const response = await fetch('role_login_api.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            username: username,
+                            password: password,
+                            role: role
+                        })
+                    });
+
+                    console.log(`Response status for ${role}:`, response.status);
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.log('HTTP Error:', response.status, response.statusText);
+                        console.log('Error response:', errorText);
+                        
+                        // Try to parse error message from JSON
+                        try {
+                            const errorData = JSON.parse(errorText);
+                            console.log('Detailed error:', errorData.message);
+                            lastError = errorData.message || `HTTP Error: ${response.status}`;
+                        } catch (e) {
+                            lastError = `HTTP Error: ${response.status}`;
+                        }
+                        continue;
                     }
-                } else {
-                    errorMessage.textContent = result.message || 'Login failed.';
+
+                    const responseText = await response.text();
+                    console.log(`Raw response for ${role}:`, responseText);
+
+                    let result;
+                    try {
+                        result = JSON.parse(responseText);
+                    } catch (parseError) {
+                        console.error('JSON parse error:', parseError);
+                        console.log('Raw response that failed to parse:', responseText);
+                        lastError = 'Server response error';
+                        continue;
+                    }
+
+                    console.log(`Parsed result for ${role}:`, result);
+
+                    if (result.success) {
+                        loginSuccess = true;
+                        console.log('Login successful! Redirecting to:', result.role);
+                        
+                        // Redirect based on actual user role
+                        if (result.role === 'manager') {
+                            console.log('Redirecting to manager dashboard');
+                            window.location.href = 'atmicxMANAGER.php';
+                        } else if (result.role === 'secretary') {
+                            console.log('Redirecting to secretary dashboard');
+                            window.location.href = 'armicxSECRETARY.php';
+                        } else {
+                            console.error('Unknown role:', result.role);
+                            errorMessage.textContent = 'Unknown user role: ' + result.role;
+                        }
+                        break;
+                    } else {
+                        lastError = result.message || 'Login failed';
+                        console.log(`Login failed for ${role}:`, result.message);
+                    }
+                } catch (error) {
+                    console.error('Login attempt error for role', role, ':', error);
+                    lastError = 'Network error: ' + error.message;
                 }
-            } catch (error) {
-                console.log('Login error:', error);
-                errorMessage.textContent = 'An error occurred. Please try again.';
+            }
+
+            if (!loginSuccess) {
+                console.log('Login failed. Last error:', lastError);
+                errorMessage.textContent = lastError || 'Invalid username or password.';
             }
         });
 
@@ -526,6 +591,15 @@
                 errorMessage.textContent = 'An error occurred. Please try again.';
             }
         });
+
+        // Auto-detect active sessions and login accordingly
+        async function checkAndAutoLogin() {
+            // Simplified - just show the login form
+            console.log('Login form ready');
+        }
+
+        // Run session check when page loads
+        window.addEventListener('load', checkAndAutoLogin);
     </script>
 
 </body>

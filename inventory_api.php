@@ -1,8 +1,6 @@
 <?php
 error_reporting(E_ALL & ~E_NOTICE);
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once 'role_session_manager.php';
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *'); // Tighten in production
@@ -15,12 +13,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
+// Check for authentication using RoleSessionManager
+// Try both secretary and manager sessions
+$user_id = null;
+$user_role = null;
+
+// Check secretary session first
+try {
+    RoleSessionManager::start('secretary');
+    if (RoleSessionManager::isAuthenticated()) {
+        $user_id = RoleSessionManager::getUserId();
+        $user_role = RoleSessionManager::getRole();
+    }
+} catch (Exception $e) {
+    // Ignore and try manager session
+}
+
+// If no secretary session, check manager session
+if (!$user_id) {
+    try {
+        RoleSessionManager::start('manager');
+        if (RoleSessionManager::isAuthenticated()) {
+            $user_id = RoleSessionManager::getUserId();
+            $user_role = RoleSessionManager::getRole();
+        }
+    } catch (Exception $e) {
+        // Ignore
+    }
+}
+
 // Basic auth: only logged-in staff may access.
 // - Managers: full read/write
 // - Secretaries: read-only (GET only)
-if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'], ['manager', 'secretary'])) {
+if (!$user_id || !in_array($user_role, ['manager', 'secretary'])) {
     http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+    echo json_encode(['success' => false, 'message' => 'Unauthorized - Please log in as secretary or manager']);
     exit;
 }
 
@@ -74,8 +101,8 @@ if ($method === 'GET') {
 
 if ($method === 'POST') {
     // Secretaries are not allowed to modify inventory
-    if ($_SESSION['role'] !== 'manager') {
-        inv_error('Forbidden', 403);
+    if ($user_role !== 'manager') {
+        inv_error('Forbidden - Only managers can modify inventory', 403);
     }
     $input = json_decode(file_get_contents('php://input'), true);
     if (!$input) {

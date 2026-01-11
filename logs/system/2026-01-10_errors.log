@@ -1,0 +1,6 @@
+[2026-01-10 04:13:59] [ERROR] [errors] PHP Error: file_put_contents(tmp/rate_limit_::1.json): Failed to open stream: No such file or directory in C:\xampp\htdocs\ATMICX-Laundry-Machine-Trading\security.php:162
+[2026-01-10 04:13:59] [ERROR] [errors] Unauthorized payment verification attempt
+[2026-01-10 04:13:59] [ERROR] [errors] PHP Error: file_put_contents(tmp/rate_limit_::1.json): Failed to open stream: No such file or directory in C:\xampp\htdocs\ATMICX-Laundry-Machine-Trading\security.php:162
+[2026-01-10 04:13:59] [ERROR] [errors] Unauthorized payment verification attempt
+[2026-01-10 04:13:59] [ERROR] [errors] PHP Error: file_put_contents(tmp/rate_limit_::1.json): Failed to open stream: No such file or directory in C:\xampp\htdocs\ATMICX-Laundry-Machine-Trading\security.php:162
+[2026-01-10 04:13:59] [ERROR] [errors] Unauthorized payment verification attempt

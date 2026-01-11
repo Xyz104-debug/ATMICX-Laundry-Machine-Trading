@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Print Receipt</title>
+</head>
+<body>
+    <h1>Test Print Receipt Functionality</h1>
+    
+    <button onclick="testPrintReceipt()">Test Print Receipt</button>
+    
+    <script>
+        function testPrintReceipt() {
+            const quote = {
+                quotation_id: 67,
+                client_name: 'blazeking123',
+                client_contact: '09604215897',
+                package: 'The Micro Start (2 Sets)',
+                amount: 600000,
+                handling_fee: 0,
+                date_issued: '2026-01-11',
+                status: 'Scheduled'
+            };
+            
+            const totalAmount = parseFloat(quote.amount) + parseFloat(quote.handling_fee || 0);
+            const currentDate = new Date().toLocaleString('en-US', {
+                year: 'numeric',
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            const receiptContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Receipt - QT-${String(quote.quotation_id).padStart(4, '0')}</title>
+                    <style>
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: white; color: #333; }
+                        .receipt { max-width: 400px; margin: 20px auto; padding: 20px; border: 2px solid #2c3e50; }
+                        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #2c3e50; padding-bottom: 15px; }
+                        .company-name { font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 5px; }
+                        .company-info { font-size: 12px; color: #666; }
+                        .receipt-title { font-size: 16px; font-weight: bold; margin: 15px 0 10px 0; text-align: center; }
+                        .receipt-id { font-size: 14px; text-align: center; color: #666; margin-bottom: 15px; }
+                        .section { margin: 15px 0; }
+                        .section-title { font-size: 12px; font-weight: bold; color: #2c3e50; margin-bottom: 8px; text-transform: uppercase; border-bottom: 1px solid #ddd; padding-bottom: 3px; }
+                        .info-row { display: flex; justify-content: space-between; margin: 5px 0; font-size: 12px; }
+                        .info-label { color: #666; }
+                        .info-value { font-weight: 600; }
+                        .amount-section { border: 1px solid #ddd; padding: 10px; background: #f8f9fa; }
+                        .amount-row { display: flex; justify-content: space-between; margin: 3px 0; font-size: 12px; }
+                        .total-row { border-top: 1px solid #333; margin-top: 8px; padding-top: 5px; font-weight: bold; font-size: 14px; }
+                        .footer { text-align: center; margin-top: 20px; padding-top: 15px; border-top: 2px solid #2c3e50; }
+                        .footer-text { font-size: 10px; color: #666; line-height: 1.4; }
+                        .signature { margin-top: 15px; text-align: right; }
+                        .signature-line { border-top: 1px solid #333; width: 150px; margin-left: auto; padding-top: 5px; font-size: 10px; text-align: center; }
+                        @media print {
+                            body { margin: 0; }
+                            .receipt { margin: 0; border: none; max-width: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="receipt">
+                        <div class="header">
+                            <div class="company-name">ATMICX Laundry Machine Trading</div>
+                            <div class="company-info">Professional Laundry Solutions<br>Email: info@atmicx.com | Phone: (034) 123-4567</div>
+                        </div>
+                        
+                        <div class="receipt-title">TRANSACTION RECEIPT</div>
+                        <div class="receipt-id">QT-${String(quote.quotation_id).padStart(4, '0')}</div>
+                        
+                        <div class="section">
+                            <div class="section-title">Client Information</div>
+                            <div class="info-row">
+                                <span class="info-label">Name:</span>
+                                <span class="info-value">${quote.client_name}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Contact:</span>
+                                <span class="info-value">${quote.client_contact || 'N/A'}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <div class="section-title">Transaction Details</div>
+                            <div class="info-row">
+                                <span class="info-label">Date:</span>
+                                <span class="info-value">${new Date(quote.date_issued).toLocaleDateString('en-US')}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Status:</span>
+                                <span class="info-value">${quote.status}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <div class="section-title">Package Details</div>
+                            <div class="info-row">
+                                <span class="info-label">Package:</span>
+                                <span class="info-value">${quote.package}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="section">
+                            <div class="section-title">Amount Breakdown</div>
+                            <div class="amount-section">
+                                <div class="amount-row">
+                                    <span>Package Amount:</span>
+                                    <span>₱${parseFloat(quote.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                                </div>
+                                ${quote.handling_fee > 0 ? `
+                                <div class="amount-row">
+                                    <span>Handling Fee:</span>
+                                    <span>₱${parseFloat(quote.handling_fee).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                                </div>
+                                ` : ''}
+                                <div class="amount-row total-row">
+                                    <span>TOTAL AMOUNT:</span>
+                                    <span>₱${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="footer">
+                            <div class="footer-text">
+                                Thank you for choosing ATMICX Laundry Machine Trading!<br>
+                                <strong>This is a computer-generated receipt.</strong>
+                            </div>
+                            
+                            <div class="signature">
+                                <div class="signature-line">
+                                    Authorized Signature
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="text-align: center; font-size: 10px; color: #666; margin-top: 10px;">
+                            Printed on: ${currentDate}
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            // Open receipt in new window and print
+            const printWindow = window.open('', 'printReceipt', 'width=600,height=800,scrollbars=yes');
+            printWindow.document.write(receiptContent);
+            printWindow.document.close();
+            
+            // Wait for content to load then print
+            printWindow.onload = function() {
+                setTimeout(() => {
+                    printWindow.print();
+                    setTimeout(() => {
+                        printWindow.close();
+                    }, 1000);
+                }, 500);
+            };
+            
+            alert('Receipt opened for printing!');
+        }
+    </script>
+</body>
+</html>

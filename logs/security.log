@@ -1,0 +1,57 @@
+[2025-12-29 12:12:56] [INFO] [IP: ::1] Successful login for user: hughz2004@gmail.com
+[2025-12-29 12:12:58] [INFO] [IP: ::1] Successful login for user: hughz2004@gmail.com
+[2025-12-29 12:12:58] [INFO] [IP: ::1] Successful login for user: hughz2004@gmail.com
+[2025-12-29 12:13:02] [INFO] [IP: ::1] Successful login for user: barbasgaming1@gmail.com
+[2025-12-29 12:13:04] [INFO] [IP: ::1] Successful login for user: barbasgaming1@gmail.com
+[2025-12-29 12:13:04] [INFO] [IP: ::1] Successful login for user: barbasgaming1@gmail.com
+[2025-12-29 12:16:59] [WARNING] [IP: ::1] Failed login attempt for email: hughz2004@gmail.com
+[2025-12-29 12:17:06] [WARNING] [IP: ::1] Failed login attempt for email: barbasgaming1@gmail.com
+[2025-12-29 12:17:07] [WARNING] [IP: ::1] Failed login attempt for email: barbasgaming1@gmail.com
+[2025-12-29 12:17:21] [WARNING] [IP: ::1] Failed login attempt for email: barbasgaming1@gmail.com
+[2025-12-29 12:17:41] [INFO] [IP: ::1] Successful login for user: barbasgaming1@gmail.com
+[2025-12-29 12:17:58] [INFO] [IP: ::1] Successful login for user: barbasgaming1@gmail.com
+[2025-12-29 12:17:59] [INFO] [IP: ::1] Successful login for user: barbasgaming1@gmail.com
+[2025-12-29 12:18:00] [INFO] [IP: ::1] Successful login for user: barbasgaming1@gmail.com
+[2025-12-29 12:18:00] [INFO] [IP: ::1] Successful login for user: barbasgaming1@gmail.com
+[2025-12-29 12:18:08] [INFO] [IP: ::1] Successful login for user: barbasgaming1@gmail.com
+[2025-12-29 12:18:09] [INFO] [IP: ::1] Successful login for user: barbasgaming1@gmail.com
+[2025-12-29 12:18:09] [INFO] [IP: ::1] Successful login for user: barbasgaming1@gmail.com
+[2025-12-29 12:18:09] [INFO] [IP: ::1] Successful login for user: barbasgaming1@gmail.com
+[2025-12-29 12:18:09] [INFO] [IP: ::1] Successful login for user: barbasgaming1@gmail.com
+[2025-12-29 12:18:17] [INFO] [IP: ::1] Successful login for user: hughz2004@gmail.com
+[2025-12-29 12:18:17] [INFO] [IP: ::1] Successful login for user: hughz2004@gmail.com
+[2025-12-29 12:18:18] [INFO] [IP: ::1] Successful login for user: hughz2004@gmail.com
+[2025-12-29 12:20:13] [INFO] [IP: ::1] Successful login for user: manager@test.com
+[2025-12-29 12:21:40] [WARNING] [IP: ::1] Failed login attempt for email: manager@test.com
+[2025-12-29 12:21:41] [WARNING] [IP: ::1] Failed login attempt for email: manager@test.com
+[2025-12-29 12:21:41] [WARNING] [IP: ::1] Failed login attempt for email: manager@test.com
+[2025-12-29 12:24:50] [INFO] [IP: ::1] Successful login for user: manager@test.com
+[2025-12-29 12:33:47] [INFO] [IP: ::1] Successful login for user: hughz2004@gmail.com
+[2025-12-29 12:33:47] [INFO] [IP: ::1] Successful login for user: hughz2004@gmail.com
+[2025-12-29 12:33:48] [INFO] [IP: ::1] Successful login for user: hughz2004@gmail.com
+[2025-12-29 12:34:04] [INFO] [IP: ::1] Successful login for user: manager@test.com
+[2025-12-29 12:43:39] [INFO] [IP: ::1] Successful login for user: manager@test.com
+[2025-12-29 12:43:47] [INFO] [IP: ::1] User logged out: manager@test.com
+[2025-12-29 12:43:51] [INFO] [IP: ::1] Successful login for user: hughz2004@gmail.com
+[2025-12-29 12:43:53] [INFO] [IP: ::1] Successful login for user: hughz2004@gmail.com
+[2025-12-29 12:43:54] [INFO] [IP: ::1] Successful login for user: hughz2004@gmail.com
+[2025-12-29 12:43:54] [INFO] [IP: ::1] Successful login for user: hughz2004@gmail.com
+[2025-12-29 12:44:41] [INFO] [IP: ::1] Successful login for user: manager@test.com
+[2025-12-29 12:47:06] [INFO] [IP: ::1] New staff user registered: barbasgaming1@gmail.com with role: secretary
+[2025-12-29 12:47:15] [INFO] [IP: ::1] Successful login for user: barbasgaming1@gmail.com
+[2025-12-29 12:50:21] [INFO] [IP: ::1] User logged out: barbasgaming1@gmail.com
+[2025-12-29 12:50:30] [WARNING] [IP: ::1] Failed client login attempt: barbasgaming1@gmail.com
+[2025-12-29 12:50:35] [WARNING] [IP: ::1] Failed client login attempt: test_email@gmail.com
+[2025-12-29 12:51:12] [INFO] [IP: ::1] New client registered: testemail@gmail.com
+[2025-12-29 12:51:21] [INFO] [IP: ::1] Successful client login: testemail@gmail.com
+[2025-12-29 12:52:06] [INFO] [IP: ::1] Successful login for user: barbasgaming1@gmail.com
+[2025-12-29 13:04:53] [WARNING] [IP: ::1] Failed client login attempt: barbasgaming1@gmail.com
+[2025-12-29 13:07:46] [WARNING] [IP: ::1] Failed client login attempt: testemail@gmail.com
+[2025-12-29 13:08:10] [WARNING] [IP: ::1] Failed client login attempt: testemail@gmail.com
+[2025-12-29 13:08:10] [WARNING] [IP: ::1] Failed client login attempt: testemail@gmail.com
+[2025-12-29 13:08:27] [INFO] [IP: ::1] Successful client login: testemail@gmail.com
+[2025-12-29 13:08:33] [INFO] [IP: ::1] Successful client login: testemail@gmail.com
+[2025-12-29 14:58:30] [INFO] [IP: ::1] Successful client login: testemail@gmail.com
+[2025-12-29 14:58:37] [WARNING] [IP: ::1] Failed login attempt for email: testemail@gmail.com
+[2025-12-29 14:58:42] [WARNING] [IP: ::1] Failed login attempt for email: test_email@gmail.com
+[2025-12-29 14:58:45] [INFO] [IP: ::1] Successful login for user: barbasgaming1@gmail.com

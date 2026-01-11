@@ -296,9 +296,9 @@
                     <div class="form-container">
                         
                         <div class="form-inner">
-                            <form action="#">
+                            <form id="loginForm">
                                 <div class="field">
-                                    <select required>
+                                    <select id="roleSelect" required>
                                         <option value="" disabled selected>Select Role</option>
                                         <option value="manager">Manager</option>
                                         <option value="secretary">Secretary</option>
@@ -308,19 +308,19 @@
                                 </div>
 
                                 <div class="field">
-                                    <input type="text" placeholder="Username" required>
+                                    <input type="text" id="username" placeholder="Username" required>
                                     <i class="fas fa-user"></i>
                                 </div>
                                 
                                 <div class="field">
-                                    <input type="password" placeholder="Password" required>
+                                    <input type="password" id="password" placeholder="Password" required>
                                     <i class="fas fa-lock"></i>
                                 </div>
 
                                 <div class="pass-link"><a href="#">Forgot password?</a></div>
                                 
                                 <div class="field btn-layer">
-                                    <input type="submit" value="Log in" onclick="window.location.href='client-dashboard.html'; return false;">
+                                    <input type="submit" value="Log in">
                                 </div>
                             </form>
                         </div>
@@ -391,6 +391,65 @@
 
         signupBtn.onclick = () => { showSignup(); }
         loginBtn.onclick = () => { showLogin(); }
+
+        // Handle role selection auto-fill
+        const roleSelect = document.getElementById('roleSelect');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+
+        roleSelect.addEventListener('change', function() {
+            const selectedRole = this.value;
+            if (selectedRole === 'manager') {
+                usernameInput.value = 'manager';
+                passwordInput.value = 'manager123';
+            } else if (selectedRole === 'secretary') {
+                usernameInput.value = 'secretary';
+                passwordInput.value = 'secretary123';
+            }
+        });
+
+        // Handle form submission
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const role = roleSelect.value;
+            const username = usernameInput.value;
+            const password = passwordInput.value;
+            
+            if (!role) {
+                alert('Please select a role');
+                return;
+            }
+            
+            try {
+                const response = await fetch('role_login_api.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password,
+                        role: role
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Redirect based on role
+                    if (role === 'manager') {
+                        window.location.href = 'atmicxMANAGER.php';
+                    } else if (role === 'secretary') {
+                        window.location.href = 'armicxSECRETARY.php';
+                    }
+                } else {
+                    alert('Login failed: ' + result.message);
+                }
+            } catch (error) {
+                alert('Login error: ' + error.message);
+            }
+        });
     </script>
 
 </body>

@@ -14,33 +14,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // Check for authentication using RoleSessionManager
-// Try both secretary and manager sessions
-$user_id = null;
-$user_role = null;
+// Start manager session (page should already have started it)
+RoleSessionManager::start('manager');
 
-// Check secretary session first
-try {
-    RoleSessionManager::start('secretary');
-    if (RoleSessionManager::isAuthenticated()) {
-        $user_id = RoleSessionManager::getUserId();
-        $user_role = RoleSessionManager::getRole();
-    }
-} catch (Exception $e) {
-    // Ignore and try manager session
-}
-
-// If no secretary session, check manager session
-if (!$user_id) {
-    try {
-        RoleSessionManager::start('manager');
-        if (RoleSessionManager::isAuthenticated()) {
-            $user_id = RoleSessionManager::getUserId();
-            $user_role = RoleSessionManager::getRole();
-        }
-    } catch (Exception $e) {
-        // Ignore
-    }
-}
+$user_id = RoleSessionManager::getUserId();
+$user_role = RoleSessionManager::getRole();
 
 // Basic auth: only logged-in staff may access.
 // - Managers: full read/write

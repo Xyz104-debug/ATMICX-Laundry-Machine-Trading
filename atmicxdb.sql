@@ -355,6 +355,35 @@ ALTER TABLE `service`
 ALTER TABLE `service_item`
   ADD CONSTRAINT `service_item_ibfk_1` FOREIGN KEY (`Item_ID`) REFERENCES `inventory` (`Item_ID`),
   ADD CONSTRAINT `service_item_ibfk_2` FOREIGN KEY (`Service_ID`) REFERENCES `service` (`Service_ID`);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `client_feedback`
+--
+
+CREATE TABLE `client_feedback` (
+  `Feedback_ID` int(11) NOT NULL AUTO_INCREMENT,
+  `Client_ID` int(11) NOT NULL,
+  `Rating` int(1) NOT NULL CHECK (`Rating` >= 1 AND `Rating` <= 5),
+  `Category` varchar(50) NOT NULL,
+  `Message` text NOT NULL,
+  `Status` enum('new','reviewed','responded','resolved') DEFAULT 'new',
+  `Manager_Response` text DEFAULT NULL,
+  `Responded_At` datetime DEFAULT NULL,
+  `Created_At` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`Feedback_ID`),
+  KEY `Client_ID` (`Client_ID`),
+  KEY `Status` (`Status`),
+  KEY `Created_At` (`Created_At`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Constraints for table `client_feedback`
+--
+ALTER TABLE `client_feedback`
+  ADD CONSTRAINT `client_feedback_ibfk_1` FOREIGN KEY (`Client_ID`) REFERENCES `client` (`Client_ID`) ON DELETE CASCADE;
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

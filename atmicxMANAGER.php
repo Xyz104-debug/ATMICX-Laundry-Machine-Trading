@@ -299,6 +299,8 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
         .card-orange { background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%); }
         .card-red { background: linear-gradient(135deg, #b91c1c 0%, #ef4444 100%); }
         .card-blue { background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%); }
+        .card-purple { background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%); }
+        .card-gold { background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%); }
 
         .panel { background: var(--white); border-radius: var(--radius-lg); padding: 26px; box-shadow: var(--shadow-card); height: 100%; border: 1px solid #e2e8f0; display: flex; flex-direction: column; }
         .content-grid-2 { display: grid; grid-template-columns: 1.85fr 1.15fr; gap: 22px; min-height: 400px; margin-top: 0; }
@@ -505,7 +507,7 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
             display: none; /* Default to hidden */
             justify-content: center;
             align-items: center;
-            z-index: 1000;
+            z-index: 99999;
             padding: 20px;
         }
         .modal-overlay.show {
@@ -692,7 +694,7 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
             <li class="nav-item"><button class="nav-btn" onclick="nav('approvals', this)"><i class="fas fa-clipboard-check"></i> Service Approvals <span id="approvals-badge" style="margin-left:auto; background:var(--gold); color:var(--navy-dark); font-size:10px; padding:2px 6px; border-radius:4px; display:none;">0</span></button></li>
             <li class="nav-item"><button class="nav-btn" onclick="nav('payment', this)"><i class="fas fa-file-invoice-dollar"></i> Payment Verify <span style="margin-left:auto; background:var(--gold); color:var(--navy-dark); font-size:10px; padding:2px 6px; border-radius:4px;">2</span></button></li>
             <li class="nav-item"><button class="nav-btn" onclick="nav('inventory', this)"><i class="fas fa-boxes"></i> Inventory</button></li>
-            
+            <li class="nav-item"><button class="nav-btn" onclick="nav('feedback', this)"><i class="fas fa-comment-dots"></i> Client Feedback <span id="feedback-badge" style="margin-left:auto; background:var(--gold); color:var(--navy-dark); font-size:10px; padding:2px 6px; border-radius:4px; display:none;">0</span></button></li>
             <li class="nav-item"><button class="nav-btn" onclick="nav('reports', this)"><i class="fas fa-chart-pie"></i> Sales Reports</button></li>
             <li class="nav-item"><button class="nav-btn" onclick="nav('users', this)"><i class="fas fa-users-cog"></i> Users & Staff</button></li>
         </ul>
@@ -1137,6 +1139,76 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
                 </div>
             </div>
 
+            <!-- FEEDBACK SECTION -->
+            <div id="feedback" class="section">
+                <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom: 30px;">
+                    <div class="metric-card card-blue">
+                        <div class="metric-header">
+                            <div class="metric-icon-small"><i class="fas fa-comments"></i></div>
+                            <span class="metric-label">Total Feedback</span>
+                        </div>
+                        <h3 class="metric-value" id="total-feedback">0</h3>
+                    </div>
+                    <div class="metric-card card-orange">
+                        <div class="metric-header">
+                            <div class="metric-icon-small"><i class="fas fa-bell"></i></div>
+                            <span class="metric-label">New</span>
+                        </div>
+                        <h3 class="metric-value" id="new-feedback">0</h3>
+                    </div>
+                    <div class="metric-card card-purple">
+                        <div class="metric-header">
+                            <div class="metric-icon-small"><i class="fas fa-eye"></i></div>
+                            <span class="metric-label">Reviewed</span>
+                        </div>
+                        <h3 class="metric-value" id="reviewed-feedback">0</h3>
+                    </div>
+                    <div class="metric-card card-green">
+                        <div class="metric-header">
+                            <div class="metric-icon-small"><i class="fas fa-reply"></i></div>
+                            <span class="metric-label">Responded</span>
+                        </div>
+                        <h3 class="metric-value" id="responded-feedback">0</h3>
+                    </div>
+                    <div class="metric-card card-gold">
+                        <div class="metric-header">
+                            <div class="metric-icon-small"><i class="fas fa-star"></i></div>
+                            <span class="metric-label">Avg Rating</span>
+                        </div>
+                        <h3 class="metric-value" id="avg-rating">0.0</h3>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">Client Feedback</span>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <select id="feedback-status-filter" class="form-control" style="width: 150px;" onchange="loadFeedback()">
+                                <option value="">All Status</option>
+                                <option value="new">New</option>
+                                <option value="reviewed">Reviewed</option>
+                                <option value="responded">Responded</option>
+                                <option value="resolved">Resolved</option>
+                            </select>
+                            <select id="feedback-rating-filter" class="form-control" style="width: 150px;" onchange="loadFeedback()">
+                                <option value="">All Ratings</option>
+                                <option value="5">⭐⭐⭐⭐⭐</option>
+                                <option value="4">⭐⭐⭐⭐</option>
+                                <option value="3">⭐⭐⭐</option>
+                                <option value="2">⭐⭐</option>
+                                <option value="1">⭐</option>
+                            </select>
+                            <button class="btn btn-outline" style="width: auto;" onclick="loadFeedback()">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div id="feedback-list">
+                        <!-- Feedback items will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
         </div>
     </main>
 
@@ -1246,6 +1318,53 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
         </div>
     </div>
     
+    <div id="logout-modal-overlay" class="modal-overlay">
+        <div class="modal-content delete-confirm">
+
+    <!-- Feedback Response Modal -->
+    <div id="feedback-response-modal-overlay" class="modal-overlay">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h4 class="panel-title">Respond to Feedback</h4>
+                <button class="modal-close-btn" onclick="closeFeedbackModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <div style="margin-bottom: 15px;">
+                        <strong style="color: var(--navy-dark);">Client:</strong> <span id="modal-feedback-client"></span>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <strong style="color: var(--navy-dark);">Rating:</strong> <span id="modal-feedback-rating"></span>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <strong style="color: var(--navy-dark);">Category:</strong> <span id="modal-feedback-category"></span>
+                    </div>
+                    <div>
+                        <strong style="color: var(--navy-dark);">Message:</strong>
+                        <p id="modal-feedback-message" style="margin-top: 8px; line-height: 1.6;"></p>
+                    </div>
+                </div>
+
+                <form id="feedback-response-form">
+                    <input type="hidden" id="modal-feedback-id">
+                    
+                    <div class="form-group">
+                        <label class="form-label">Your Response <span style="color: red;">*</span></label>
+                        <textarea id="feedback-response-text" class="form-control" rows="6" placeholder="Write your response to the client..." required minlength="10"></textarea>
+                        <small style="color: var(--text-muted);">This response will be visible to the client</small>
+                    </div>
+
+                    <div style="margin-top: 30px; display: flex; gap: 10px;">
+                        <button type="submit" class="btn btn-primary" style="flex: 1;">
+                            <i class="fas fa-paper-plane"></i> Send Response
+                        </button>
+                        <button type="button" class="btn btn-outline" style="flex: 1;" onclick="closeFeedbackModal()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <div id="logout-modal-overlay" class="modal-overlay">
         <div class="modal-content delete-confirm">
             <div style="padding: 32px; display: flex; flex-direction: column; align-items: center; text-align: center;">
@@ -1500,7 +1619,7 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
             document.getElementById(id).classList.add('active');
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            const titles = {'dashboard':'Executive Dashboard', 'approvals':'Service Approvals', 'payment':'Payment Verification', 'inventory':'Inventory Distribution', 'reports':'Sales Reports', 'users':'User Management'};
+            const titles = {'dashboard':'Executive Dashboard', 'approvals':'Service Approvals', 'payment':'Payment Verification', 'inventory':'Inventory Distribution', 'reports':'Sales Reports', 'users':'User Management', 'feedback':'Client Feedback'};
             document.getElementById('page-title').innerText = titles[id];
 
             if (id === 'users') {
@@ -1520,6 +1639,9 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
             }
             if (id === 'dashboard') {
                 loadDashboard();
+            }
+            if (id === 'feedback') {
+                loadFeedback();
             }
         }
 
@@ -3759,7 +3881,401 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
                     }
                 }
             });
+
+            // Load feedback when section is accessed
+            loadFeedback();
         });
+
+        // =============================================
+        // FEEDBACK MANAGEMENT SYSTEM
+        // =============================================
+
+        async function loadFeedback() {
+            const statusFilter = document.getElementById('feedback-status-filter')?.value || '';
+            const ratingFilter = document.getElementById('feedback-rating-filter')?.value || '';
+            
+            const params = new URLSearchParams();
+            if (statusFilter) params.append('status', statusFilter);
+            if (ratingFilter) params.append('rating', ratingFilter);
+            
+            try {
+                const response = await fetch(`feedback_api.php?${params.toString()}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Update statistics
+                    document.getElementById('total-feedback').textContent = result.stats.total_feedback || 0;
+                    document.getElementById('new-feedback').textContent = result.stats.new_count || 0;
+                    document.getElementById('reviewed-feedback').textContent = result.stats.reviewed_count || 0;
+                    document.getElementById('responded-feedback').textContent = result.stats.responded_count || 0;
+                    document.getElementById('avg-rating').textContent = result.stats.avg_rating ? parseFloat(result.stats.avg_rating).toFixed(1) : '0.0';
+                    
+                    // Update badge
+                    const badge = document.getElementById('feedback-badge');
+                    if (result.stats.new_count > 0) {
+                        badge.textContent = result.stats.new_count;
+                        badge.style.display = 'inline-block';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                    
+                    // Render feedback list
+                    const feedbackList = document.getElementById('feedback-list');
+                    
+                    if (result.feedbacks.length === 0) {
+                        feedbackList.innerHTML = `
+                            <div style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+                                <i class="fas fa-inbox" style="font-size: 64px; margin-bottom: 20px;"></i>
+                                <p style="font-size: 18px;">No feedback found</p>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    feedbackList.innerHTML = result.feedbacks.map(feedback => {
+                        const stars = [...Array(5)].map((_, i) => 
+                            `<i class="fas fa-star" style="color: ${i < feedback.Rating ? 'var(--gold)' : '#d1d5db'};"></i>`
+                        ).join('');
+                        
+                        const statusColors = {
+                            'new': 'background: #fff7ed; color: #9a3412;',
+                            'reviewed': 'background: #e0f2fe; color: #075985;',
+                            'responded': 'background: #dcfce7; color: #166534;',
+                            'resolved': 'background: #e0e7ff; color: #3730a3;'
+                        };
+                        
+                        return `
+                            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 15px;">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                                    <div>
+                                        <div style="font-size: 16px; font-weight: 600; color: var(--navy-dark); margin-bottom: 5px;">
+                                            ${feedback.Client_Name}
+                                        </div>
+                                        <div style="color: var(--text-muted); font-size: 13px;">
+                                            ${feedback.Contact_Num || 'No contact'}
+                                        </div>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div style="margin-bottom: 5px;">${stars}</div>
+                                        <span style="${statusColors[feedback.Status]} padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; display: inline-block;">
+                                            ${feedback.Status.toUpperCase()}
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                                    <div style="display: inline-block; background: #e0f2fe; color: #075985; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-bottom: 10px;">
+                                        ${feedback.Category}
+                                    </div>
+                                    <p style="color: var(--text-main); line-height: 1.6; margin: 0;">${feedback.Message}</p>
+                                </div>
+                                
+                                ${feedback.Manager_Response ? `
+                                    <div style="background: #dcfce7; border-left: 4px solid #22c55e; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                                        <strong style="color: #166534; display: block; margin-bottom: 8px;">Your Response:</strong>
+                                        <p style="margin: 0; line-height: 1.6;">${feedback.Manager_Response}</p>
+                                        <div style="color: #166534; font-size: 12px; margin-top: 8px;">
+                                            Responded on ${new Date(feedback.Responded_At).toLocaleDateString('en-US', { 
+                                                year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+                                            })}
+                                        </div>
+                                    </div>
+                                ` : ''}
+                                
+                                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                                    <div style="color: var(--text-muted); font-size: 13px;">
+                                        <i class="fas fa-clock"></i> ${new Date(feedback.Created_At).toLocaleDateString('en-US', { 
+                                            year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+                                        })}
+                                    </div>
+                                    <div style="display: flex; gap: 8px;">
+                                        ${feedback.Status === 'new' ? `
+                                            <button class="btn btn-outline" style="width: auto; font-size: 13px; padding: 6px 12px;" onclick="updateFeedbackStatus(${feedback.Feedback_ID}, 'reviewed')">
+                                                <i class="fas fa-eye"></i> Mark Reviewed
+                                            </button>
+                                        ` : ''}
+                                        ${!feedback.Manager_Response ? `
+                                            <button class="btn btn-primary" style="width: auto; font-size: 13px; padding: 6px 12px;" onclick="openFeedbackResponseModal(${feedback.Feedback_ID})">
+                                                <i class="fas fa-reply"></i> Respond
+                                            </button>
+                                        ` : `
+                                            <button class="btn btn-outline" style="width: auto; font-size: 13px; padding: 6px 12px;" onclick="updateFeedbackStatus(${feedback.Feedback_ID}, 'resolved')">
+                                                <i class="fas fa-check"></i> Mark Resolved
+                                            </button>
+                                        `}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            } catch (error) {
+                console.error('Error loading feedback:', error);
+                showToast('Failed to load feedback', 'error');
+            }
+        }
+
+        async function openFeedbackResponseModal(feedbackId) {
+            console.log('Opening modal for feedback ID:', feedbackId);
+            try {
+                const response = await fetch(`feedback_api.php?action=detail&id=${feedbackId}`);
+                const result = await response.json();
+                
+                console.log('Feedback detail response:', result);
+                
+                if (result.success) {
+                    const feedback = result.feedback;
+                    
+                    document.getElementById('modal-feedback-id').value = feedback.Feedback_ID;
+                    document.getElementById('modal-feedback-client').textContent = feedback.Client_Name;
+                    
+                    const stars = [...Array(5)].map((_, i) => 
+                        `<i class="fas fa-star" style="color: ${i < feedback.Rating ? 'var(--gold)' : '#d1d5db'};"></i>`
+                    ).join('');
+                    document.getElementById('modal-feedback-rating').innerHTML = stars;
+                    
+                    document.getElementById('modal-feedback-category').textContent = feedback.Category;
+                    document.getElementById('modal-feedback-message').textContent = feedback.Message;
+                    
+                    const modal = document.getElementById('feedback-response-modal-overlay');
+                    
+                    // Move modal to end of body to ensure it's on top
+                    if (modal && modal.parentElement !== document.body) {
+                        document.body.appendChild(modal);
+                    }
+                    
+                    // Apply proper modal overlay styles
+                    modal.style.cssText = `
+                        position: fixed !important;
+                        top: 0 !important;
+                        left: 0 !important;
+                        right: 0 !important;
+                        bottom: 0 !important;
+                        width: 100vw !important;
+                        height: 100vh !important;
+                        background: rgba(0, 0, 0, 0.7) !important;
+                        display: flex !important;
+                        justify-content: center !important;
+                        align-items: center !important;
+                        z-index: 999999 !important;
+                        padding: 20px !important;
+                        visibility: visible !important;
+                        opacity: 1 !important;
+                        pointer-events: auto !important;
+                    `;
+                    
+                    modal.classList.add('show');
+                    document.body.style.overflow = 'hidden';
+                    
+                    // Style modal content with clean white design
+                    const modalContent = modal.querySelector('.modal-content');
+                    if (modalContent) {
+                        modalContent.style.cssText = `
+                            position: relative !important;
+                            z-index: 1000000 !important;
+                            background: white !important;
+                            display: block !important;
+                            visibility: visible !important;
+                            max-width: 700px !important;
+                            width: 90% !important;
+                            padding: 0 !important;
+                            border-radius: 12px !important;
+                            margin: auto !important;
+                            box-shadow: 0 10px 40px rgba(0,0,0,0.3) !important;
+                        `;
+                    }
+                    console.log('Modal computed style:', window.getComputedStyle(modal).display);
+                    console.log('Modal computed z-index:', window.getComputedStyle(modal).zIndex);
+                    console.log('Modal computed position:', window.getComputedStyle(modal).position);
+                } else {
+                    showToast('Failed to load feedback details: ' + result.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error loading feedback details:', error);
+                showToast('Failed to load feedback details', 'error');
+            }
+        }
+
+        function closeFeedbackModal() {
+            const modal = document.getElementById('feedback-response-modal-overlay');
+            modal.classList.remove('show');
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+            document.getElementById('feedback-response-form').reset();
+        }
+
+        // Attach form submission handler when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            const feedbackForm = document.getElementById('feedback-response-form');
+            if (feedbackForm) {
+                feedbackForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const feedbackId = document.getElementById('modal-feedback-id').value;
+                    const response = document.getElementById('feedback-response-text').value;
+                    
+                    const submitBtn = e.target.querySelector('button[type="submit"]');
+                    const originalText = submitBtn.innerHTML;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+                    submitBtn.disabled = true;
+                    
+                    try {
+                        const res = await fetch('feedback_api.php?action=respond', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                feedback_id: parseInt(feedbackId),
+                                response: response
+                            })
+                        });
+                        
+                        const result = await res.json();
+                        
+                        if (result.success) {
+                            showToast('Response sent successfully', 'success');
+                            closeFeedbackModal();
+                            loadFeedback();
+                        } else {
+                            showToast(result.message || 'Failed to send response', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error sending response:', error);
+                        showToast('Failed to send response', 'error');
+                    } finally {
+                        submitBtn.innerHTML = originalText;
+                        submitBtn.disabled = false;
+                    }
+                });
+            }
+        });
+
+        async function updateFeedbackStatus(feedbackId, status) {
+            try {
+                const response = await fetch('feedback_api.php?action=status', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        feedback_id: feedbackId,
+                        status: status
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast('Status updated successfully', 'success');
+                    loadFeedback();
+                } else {
+                    showToast(result.message || 'Failed to update status', 'error');
+                }
+            } catch (error) {
+                console.error('Error updating status:', error);
+                showToast('Failed to update status', 'error');
+            }
+        }
+
+        // Toast notification function
+        function showToast(message, type = 'info') {
+            // Remove any existing toasts
+            const existingToast = document.querySelector('.toast-notification');
+            if (existingToast) {
+                existingToast.remove();
+            }
+
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification';
+            
+            // Set colors based on type
+            let bgColor, textColor, icon;
+            switch(type) {
+                case 'success':
+                    bgColor = '#dcfce7';
+                    textColor = '#166534';
+                    icon = 'fa-check-circle';
+                    break;
+                case 'error':
+                    bgColor = '#fee2e2';
+                    textColor = '#991b1b';
+                    icon = 'fa-exclamation-circle';
+                    break;
+                case 'info':
+                    bgColor = '#e0f2fe';
+                    textColor = '#075985';
+                    icon = 'fa-info-circle';
+                    break;
+                default:
+                    bgColor = '#f3f4f6';
+                    textColor = '#374151';
+                    icon = 'fa-bell';
+            }
+            
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${bgColor};
+                color: ${textColor};
+                padding: 16px 24px;
+                border-radius: 12px;
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                font-weight: 600;
+                animation: slideIn 0.3s ease-out;
+                max-width: 400px;
+            `;
+            
+            toast.innerHTML = `
+                <i class="fas ${icon}" style="font-size: 20px;"></i>
+                <span>${message}</span>
+            `;
+            
+            // Add animation keyframes if not already added
+            if (!document.querySelector('#toast-animations')) {
+                const style = document.createElement('style');
+                style.id = 'toast-animations';
+                style.textContent = `
+                    @keyframes slideIn {
+                        from {
+                            transform: translateX(100%);
+                            opacity: 0;
+                        }
+                        to {
+                            transform: translateX(0);
+                            opacity: 1;
+                        }
+                    }
+                    @keyframes slideOut {
+                        from {
+                            transform: translateX(0);
+                            opacity: 1;
+                        }
+                        to {
+                            transform: translateX(100%);
+                            opacity: 0;
+                        }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            document.body.appendChild(toast);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+            
+            // Click to dismiss
+            toast.addEventListener('click', () => {
+                toast.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => toast.remove(), 300);
+            });
+        }
     </script>
 </body>
 </html>

@@ -848,6 +848,118 @@ if (!isset($_SESSION['name'])) {
         }
 
         .schedule-item:hover {
+            background: #f8fafc;
+            border-color: var(--gold);
+            transform: translateX(4px);
+        }
+
+        /* --- FEEDBACK STYLES --- */
+        .star-rating {
+            display: flex;
+            gap: 10px;
+            font-size: 32px;
+            margin: 10px 0;
+        }
+
+        .star-rating i {
+            color: #d1d5db;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .star-rating i:hover,
+        .star-rating i.active {
+            color: var(--gold);
+        }
+
+        .feedback-item {
+            background: var(--white);
+            border: 1px solid #e2e8f0;
+            border-radius: var(--radius-md);
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        .feedback-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .feedback-rating {
+            color: var(--gold);
+            font-size: 16px;
+        }
+
+        .feedback-category {
+            display: inline-block;
+            padding: 4px 12px;
+            background: var(--info-bg);
+            color: var(--info-text);
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .feedback-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .feedback-status.new {
+            background: var(--warning-bg);
+            color: var(--warning-text);
+        }
+
+        .feedback-status.reviewed {
+            background: var(--info-bg);
+            color: var(--info-text);
+        }
+
+        .feedback-status.responded {
+            background: var(--success-bg);
+            color: var(--success-text);
+        }
+
+        .feedback-status.resolved {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+
+        .feedback-message {
+            color: var(--text-main);
+            margin: 10px 0;
+            line-height: 1.6;
+        }
+
+        .feedback-response {
+            background: #f0fdf4;
+            border-left: 4px solid #22c55e;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 8px;
+        }
+
+        .feedback-response-label {
+            font-weight: 600;
+            color: #166534;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .feedback-date {
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .schedule-item:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             border-color: var(--gold);
@@ -1364,6 +1476,11 @@ if (!isset($_SESSION['name'])) {
                     <i class="fas fa-calendar-alt"></i> My Schedule
                 </button>
             </li>
+            <li class="nav-item">
+                <button class="nav-btn" onclick="showSection('feedback', this)" id="nav-feedback">
+                    <i class="fas fa-comment-dots"></i> Feedback
+                </button>
+            </li>
         </ul>
 
         <div class="sidebar-footer">
@@ -1622,6 +1739,59 @@ if (!isset($_SESSION['name'])) {
             <div id="schedule" class="section">
                 <h2 class="panel-title" style="margin-bottom: 25px;">Upcoming Appointments</h2>
                 <div class="schedule-list" id="schedule-list">
+                </div>
+            </div>
+
+            <!-- FEEDBACK SECTION -->
+            <div id="feedback" class="section">
+                <h2 class="panel-title" style="margin-bottom: 25px;"><i class="fas fa-comment-dots"></i> Send Feedback</h2>
+                
+                <div class="panel">
+                    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 15px; color: var(--navy-dark);">Share Your Experience</h3>
+                    <p style="color: var(--text-muted); margin-bottom: 25px; line-height: 1.6;">We value your feedback! Please share your thoughts about our services.</p>
+                    
+                    <form id="feedback-form">
+                        <div class="form-group">
+                            <label class="form-label" for="feedback-rating" style="font-weight: 600;">Rating <span style="color: red;">*</span></label>
+                            <div class="star-rating" id="star-rating">
+                                <i class="fas fa-star" data-rating="1"></i>
+                                <i class="fas fa-star" data-rating="2"></i>
+                                <i class="fas fa-star" data-rating="3"></i>
+                                <i class="fas fa-star" data-rating="4"></i>
+                                <i class="fas fa-star" data-rating="5"></i>
+                            </div>
+                            <input type="hidden" id="feedback-rating" name="rating" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="feedback-category" style="font-weight: 600;">Category <span style="color: red;">*</span></label>
+                            <select id="feedback-category" class="form-control" name="category" required>
+                                <option value="">Select a category</option>
+                                <option value="General">General</option>
+                                <option value="Service Quality">Service Quality</option>
+                                <option value="Product Quality">Product Quality</option>
+                                <option value="Customer Support">Customer Support</option>
+                                <option value="Pricing">Pricing</option>
+                                <option value="Delivery">Delivery</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="feedback-message" style="font-weight: 600;">Your Message <span style="color: red;">*</span></label>
+                            <textarea id="feedback-message" class="form-control" name="message" rows="5" placeholder="Tell us about your experience..." required minlength="10" maxlength="1000"></textarea>
+                            <small style="color: var(--text-muted); display: block; margin-top: 8px;">Minimum 10 characters, maximum 1000 characters</small>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 16px; padding: 14px;">
+                            <i class="fas fa-paper-plane"></i> Submit Feedback
+                        </button>
+                    </form>
+                </div>
+                
+                <h3 style="font-size: 18px; font-weight: 700; margin: 35px 0 20px; color: var(--navy-dark);"><i class="fas fa-history"></i> Your Previous Feedback</h3>
+                <div id="feedback-history">
+                    <!-- Feedback history will be loaded here -->
                 </div>
             </div>
 
@@ -3014,6 +3184,7 @@ if (!isset($_SESSION['name'])) {
             fetchQuotations(); // Fetch real quotations from database
             fetchPaymentHistory(); // Load real payment data
             fetchSchedule(); // Load real appointment data
+            fetchFeedbackHistory(); // Load feedback history
             renderDashboardOwnedMachines();
 
             showSection('home', document.querySelector('.nav-btn.active'));
@@ -3155,6 +3326,190 @@ if (!isset($_SESSION['name'])) {
         document.addEventListener('DOMContentLoaded', function() {
             renderQuotations();
         });
+
+        // =============================================
+        // FEEDBACK SYSTEM
+        // =============================================
+
+        // Star rating functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const stars = document.querySelectorAll('.star-rating i');
+            const ratingInput = document.getElementById('feedback-rating');
+            
+            stars.forEach((star, index) => {
+                star.addEventListener('click', function() {
+                    const rating = this.getAttribute('data-rating');
+                    ratingInput.value = rating;
+                    
+                    // Update star display
+                    stars.forEach((s, i) => {
+                        if (i < rating) {
+                            s.classList.add('active');
+                        } else {
+                            s.classList.remove('active');
+                        }
+                    });
+                });
+                
+                // Hover effect
+                star.addEventListener('mouseenter', function() {
+                    const rating = this.getAttribute('data-rating');
+                    stars.forEach((s, i) => {
+                        if (i < rating) {
+                            s.style.color = 'var(--gold)';
+                        } else {
+                            s.style.color = '#d1d5db';
+                        }
+                    });
+                });
+            });
+            
+            // Reset on mouse leave
+            document.querySelector('.star-rating').addEventListener('mouseleave', function() {
+                const currentRating = ratingInput.value;
+                stars.forEach((s, i) => {
+                    if (i < currentRating) {
+                        s.style.color = 'var(--gold)';
+                    } else {
+                        s.style.color = '#d1d5db';
+                    }
+                });
+            });
+        });
+
+        // Submit feedback form
+        document.addEventListener('DOMContentLoaded', function() {
+            const feedbackForm = document.getElementById('feedback-form');
+            
+            feedbackForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const rating = document.getElementById('feedback-rating').value;
+                const category = document.getElementById('feedback-category').value;
+                const message = document.getElementById('feedback-message').value;
+                
+                // Validation
+                if (!rating) {
+                    showToast('Please select a rating', 'error');
+                    return;
+                }
+                
+                if (!category) {
+                    showToast('Please select a category', 'error');
+                    return;
+                }
+                
+                if (message.length < 10) {
+                    showToast('Message must be at least 10 characters', 'error');
+                    return;
+                }
+                
+                const submitBtn = feedbackForm.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+                submitBtn.disabled = true;
+                
+                try {
+                    const response = await fetch('client_feedback_api.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            rating: parseInt(rating),
+                            category: category,
+                            message: message
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        showToast('Feedback submitted successfully! Thank you for your input.', 'success');
+                        
+                        // Reset form
+                        feedbackForm.reset();
+                        document.querySelectorAll('.star-rating i').forEach(s => s.classList.remove('active'));
+                        
+                        // Reload feedback history
+                        fetchFeedbackHistory();
+                    } else {
+                        showToast(result.message || 'Failed to submit feedback', 'error');
+                    }
+                } catch (error) {
+                    console.error('Feedback submission error:', error);
+                    showToast('Failed to submit feedback. Please try again.', 'error');
+                } finally {
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }
+            });
+        });
+
+        // Fetch and display feedback history
+        async function fetchFeedbackHistory() {
+            try {
+                const response = await fetch('client_feedback_api.php');
+                const result = await response.json();
+                
+                if (result.success) {
+                    const feedbackHistory = document.getElementById('feedback-history');
+                    
+                    if (result.feedbacks.length === 0) {
+                        feedbackHistory.innerHTML = `
+                            <div class="panel" style="text-align: center; padding: 40px;">
+                                <i class="fas fa-inbox" style="font-size: 48px; color: var(--text-muted); margin-bottom: 15px;"></i>
+                                <p style="color: var(--text-muted);">No feedback submitted yet</p>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    feedbackHistory.innerHTML = result.feedbacks.map(feedback => `
+                        <div class="feedback-item">
+                            <div class="feedback-header">
+                                <div>
+                                    <span class="feedback-rating">
+                                        ${[...Array(5)].map((_, i) => 
+                                            `<i class="fas fa-star" style="color: ${i < feedback.Rating ? 'var(--gold)' : '#d1d5db'};"></i>`
+                                        ).join('')}
+                                    </span>
+                                    <span class="feedback-category">${feedback.Category}</span>
+                                </div>
+                                <span class="feedback-status ${feedback.Status}">${feedback.Status.toUpperCase()}</span>
+                            </div>
+                            <div class="feedback-message">${feedback.Message}</div>
+                            ${feedback.Manager_Response ? `
+                                <div class="feedback-response">
+                                    <span class="feedback-response-label">Manager's Response:</span>
+                                    ${feedback.Manager_Response}
+                                    <div class="feedback-date" style="margin-top: 8px;">
+                                        Responded on ${new Date(feedback.Responded_At).toLocaleDateString('en-US', { 
+                                            year: 'numeric', 
+                                            month: 'long', 
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        })}
+                                    </div>
+                                </div>
+                            ` : ''}
+                            <div class="feedback-date">
+                                Submitted on ${new Date(feedback.Created_At).toLocaleDateString('en-US', { 
+                                    year: 'numeric', 
+                                    month: 'long', 
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                })}
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error fetching feedback history:', error);
+            }
+        }
     </script>
 </body>
 </html>

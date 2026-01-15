@@ -56,10 +56,10 @@ switch ($action) {
             $service_stats = $pdo->query("
                 SELECT 
                     COUNT(*) as total_services,
-                    COUNT(CASE WHEN status = 'submitted' THEN 1 END) as pending_services,
-                    COUNT(CASE WHEN status IN ('reviewed', 'approved') THEN 1 END) as active_services,
-                    COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_services,
-                    COUNT(CASE WHEN DATE(created_at) = CURDATE() THEN 1 END) as today_services
+                    COUNT(CASE WHEN Status = 'submitted' THEN 1 END) as pending_services,
+                    COUNT(CASE WHEN Status IN ('reviewed', 'approved') THEN 1 END) as active_services,
+                    COUNT(CASE WHEN Status = 'completed' THEN 1 END) as completed_services,
+                    COUNT(CASE WHEN DATE(Service_Date) = CURDATE() THEN 1 END) as today_services
                 FROM service
             ")->fetch(PDO::FETCH_ASSOC);
             
@@ -89,14 +89,15 @@ switch ($action) {
             $client_stats = $pdo->query("
                 SELECT 
                     COUNT(*) as total_clients,
-                    COUNT(CASE WHEN DATE(created_at) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) THEN 1 END) as new_clients_30d
+                    COUNT(*) as active_clients,
+                    COUNT(CASE WHEN Client_ID > (SELECT MAX(Client_ID) - 10 FROM client) THEN 1 END) as new_clients_30d
                 FROM client
             ")->fetch(PDO::FETCH_ASSOC);
             
             // Recent Activity
             $recent_activity = $pdo->query("
-                (SELECT 'service' as type, Service_ID as id, CONCAT('New service request: ', type) as description, created_at as timestamp
-                 FROM service ORDER BY created_at DESC LIMIT 5)
+                (SELECT 'service' as type, Service_ID as id, CONCAT('New service request: ', COALESCE(Type, 'General')) as description, Service_Date as timestamp
+                 FROM service ORDER BY Service_Date DESC LIMIT 5)
                 UNION ALL
                 (SELECT 'payment' as type, Payment_ID as id, CONCAT('Payment received: ₱', Amount_Paid) as description, payment_date as timestamp
                  FROM payment ORDER BY payment_date DESC LIMIT 5)

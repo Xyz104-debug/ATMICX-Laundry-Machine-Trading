@@ -58,7 +58,7 @@ function createSalesInquiry($clientId, $packageData) {
         // Create quotation entry
         $stmt = $pdo->prepare("INSERT INTO quotation 
             (Client_ID, Package, Amount, Date_Issued, Status, Delivery_Method, Handling_Fee) 
-            VALUES (?, ?, ?, CURDATE(), 'Pending', ?, ?)");
+            VALUES (?, ?, ?, CURDATE(), 'Awaiting Secretary Review', ?, ?)");
         
         $result = $stmt->execute([
             $clientId,
@@ -97,7 +97,7 @@ function getSalesInquiries($limit = 10) {
         $sql = "SELECT q.*, c.Name as Client_Name, c.Contact_Num, c.Address 
                 FROM quotation q 
                 LEFT JOIN client c ON q.Client_ID = c.Client_ID 
-                WHERE q.Status = 'Pending' 
+                WHERE q.Status IN ('Awaiting Secretary Review', 'Pending Manager Approval') 
                 ORDER BY q.Date_Issued DESC 
                 LIMIT ?";
         

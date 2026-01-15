@@ -556,16 +556,16 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
 
         /* Quote Viewer Modal */
         #quote-viewer-modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            background-color: rgba(0, 0, 0, 0.7) !important;
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
+            z-index: 999999999 !important;
             opacity: 0;
             visibility: hidden;
             transition: all 0.3s ease;
@@ -577,9 +577,9 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
         }
 
         #quote-viewer-modal {
-            background: white;
+            background: white !important;
             border-radius: 12px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3) !important;
             max-width: 900px;
             max-height: 90vh;
             width: 90%;
@@ -587,6 +587,8 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
             flex-direction: column;
             transform: scale(0.9);
             transition: transform 0.3s ease;
+            position: relative !important;
+            z-index: 9999999999 !important;
         }
 
         #quote-viewer-modal-overlay.show #quote-viewer-modal {
@@ -870,12 +872,6 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
                             <i class="fas fa-spinner fa-spin" style="font-size: 32px; margin-bottom: 16px;"></i>
                             <p>Loading quotations from secretary...</p>
                         </div>
-                    </div>
-                    
-                    <div id="empty-state" style="display:none; padding:60px; text-align:center; color:var(--text-muted);">
-                        <i class="fas fa-check-circle" style="font-size:64px; color:var(--success-bg); margin-bottom:24px;"></i>
-                        <h3 style="color:var(--navy-dark);">All Caught Up!</h3>
-                        <p>No pending transactions to verify.</p>
                     </div>
                 </div>
 
@@ -1318,8 +1314,7 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
         </div>
     </div>
     
-    <div id="logout-modal-overlay" class="modal-overlay">
-        <div class="modal-content delete-confirm">
+    <!-- REMOVED: Incomplete/duplicate logout modal structure -->
 
     <!-- Feedback Response Modal -->
     <div id="feedback-response-modal-overlay" class="modal-overlay">
@@ -1380,8 +1375,8 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
     </div>
     
     <!-- Quote Viewer Modal -->
-    <div id="quote-viewer-modal-overlay">
-        <div id="quote-viewer-modal">
+    <div id="quote-viewer-modal-overlay" onclick="if(event.target === this) closeQuoteViewer();">
+        <div id="quote-viewer-modal" onclick="event.stopPropagation();">
             <div class="quote-modal-header">
                 <h3 class="quote-modal-title"><i class="fas fa-file-invoice-dollar"></i> Quote Details</h3>
                 <button class="quote-modal-close" onclick="closeQuoteViewer()">&times;</button>
@@ -2395,6 +2390,25 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
             }
         }
         
+        // Real-time updates - refresh data periodically
+        setInterval(loadNotificationCount, 15000); // Every 15 seconds
+        
+        // Auto-refresh dashboard data when dashboard is active
+        setInterval(() => {
+            const dashboardSection = document.getElementById('dashboard');
+            if (dashboardSection && dashboardSection.classList.contains('active')) {
+                loadDashboard();
+            }
+        }, 45000); // Every 45 seconds
+        
+        // Auto-refresh payment verification data when section is active
+        setInterval(() => {
+            const paymentSection = document.getElementById('payment');
+            if (paymentSection && paymentSection.classList.contains('active')) {
+                loadPaymentVerification();
+            }
+        }, 30000); // Every 30 seconds
+        
         function updateInventoryAlerts(alerts) {
             if (!alerts || alerts.length === 0) return;
             
@@ -2858,21 +2872,165 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
             }
         }
         
-        function viewPaymentProof(quotationId) {
-            toast('Payment proof viewer not yet implemented');
-            // TODO: Implement payment proof viewing functionality
+        async function viewPaymentProof(quotationId) {
+            try {
+                // Fetch payment details including proof file path
+                const response = await fetch(`payment_verification_api.php?action=get_payment_details&quotation_id=${quotationId}`, {
+                    credentials: 'include'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success && result.payment) {
+                    const payment = result.payment;
+                    const proofPath = payment.proof_file_path || payment.Proof_Image;
+                    
+                    if (proofPath) {
+                        // Create and show modal with payment proof
+                        showPaymentProofModal(proofPath, payment);
+                    } else {
+                        toast('No payment proof available for this transaction');
+                    }
+                } else {
+                    toast('Error loading payment proof: ' + (result.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error viewing payment proof:', error);
+                toast('Error loading payment proof');
+            }
+        }
+        
+        function showPaymentProofModal(proofPath, payment) {
+            // Get or create modal
+            let modal = document.getElementById('payment-proof-modal-overlay');
+            
+            if (!modal) {
+                // Create modal if it doesn't exist
+                modal = document.createElement('div');
+                modal.id = 'payment-proof-modal-overlay';
+                modal.className = 'modal-overlay';
+                modal.style.cssText = 'display: flex; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 10000; align-items: center; justify-content: center;';
+                modal.onclick = function(e) {
+                    if (e.target === modal) {
+                        modal.style.display = 'none';
+                    }
+                };
+                
+                modal.innerHTML = `
+                    <div style="background: white; border-radius: 12px; max-width: 90vw; max-height: 90vh; overflow: auto; position: relative;">
+                        <div style="padding: 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                            <h3 style="margin: 0; color: var(--navy-dark);"><i class="fas fa-receipt"></i> Payment Proof</h3>
+                            <button onclick="document.getElementById('payment-proof-modal-overlay').style.display='none'" 
+                                style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-muted); padding: 5px 10px;">
+                                &times;
+                            </button>
+                        </div>
+                        <div id="payment-proof-content" style="padding: 20px;">
+                            <!-- Content will be inserted here -->
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+            }
+            
+            // Update content
+            const content = modal.querySelector('#payment-proof-content');
+            const fileExtension = proofPath.split('.').pop().toLowerCase();
+            const isPDF = fileExtension === 'pdf';
+            
+            content.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: var(--bg-body); padding: 15px; border-radius: 8px;">
+                        <div><strong>Client:</strong> ${payment.Client_Name || 'N/A'}</div>
+                        <div><strong>Amount:</strong> ₱${parseFloat(payment.Amount_Paid || 0).toLocaleString()}</div>
+                        <div><strong>Reference:</strong> ${payment.reference || 'N/A'}</div>
+                        <div><strong>Date:</strong> ${payment.payment_date || 'N/A'}</div>
+                    </div>
+                </div>
+                <div style="text-align: center;">
+                    ${isPDF ? 
+                        `<iframe src="${proofPath}" style="width: 100%; height: 600px; border: 1px solid #e2e8f0; border-radius: 8px;"></iframe>` :
+                        `<img src="${proofPath}" alt="Payment Proof" style="max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />`
+                    }
+                </div>
+                <div style="margin-top: 20px; text-align: center;">
+                    <a href="${proofPath}" target="_blank" class="btn btn-primary" style="display: inline-block; padding: 10px 20px; text-decoration: none;">
+                        <i class="fas fa-external-link-alt"></i> Open in New Tab
+                    </a>
+                </div>
+            `;
+            
+            modal.style.display = 'flex';
         }
         
         function viewQuoteProof(quotationId) {
+            console.log('viewQuoteProof called with quotationId:', quotationId);
             showQuoteViewer(quotationId);
         }
         
         async function showQuoteViewer(quotationId) {
+            console.log('showQuoteViewer called with quotationId:', quotationId);
+            
+            // Get modal elements
+            const modalOverlay = document.getElementById('quote-viewer-modal-overlay');
+            const quoteContent = document.getElementById('quote-content');
+            
+            if (!modalOverlay) {
+                console.error('Quote viewer modal overlay not found!');
+                toast('Error: Modal not found');
+                return;
+            }
+            
+            if (!quoteContent) {
+                console.error('Quote content container not found!');
+                toast('Error: Content container not found');
+                return;
+            }
+            
             // Show modal
-            document.getElementById('quote-viewer-modal-overlay').classList.add('show');
+            console.log('Showing modal overlay...');
+            modalOverlay.classList.add('show');
+            
+            // Force visibility with inline styles as fallback
+            modalOverlay.style.display = 'flex';
+            modalOverlay.style.opacity = '1';
+            modalOverlay.style.visibility = 'visible';
+            
+            console.log('Modal classes:', modalOverlay.className);
+            console.log('Modal display style:', window.getComputedStyle(modalOverlay).display);
+            console.log('Modal opacity:', window.getComputedStyle(modalOverlay).opacity);
+            console.log('Modal visibility:', window.getComputedStyle(modalOverlay).visibility);
+            console.log('Modal z-index:', window.getComputedStyle(modalOverlay).zIndex);
+            
+            // Check actual dimensions and position
+            const rect = modalOverlay.getBoundingClientRect();
+            console.log('Modal position:', {
+                top: rect.top,
+                left: rect.left,
+                right: rect.right,
+                bottom: rect.bottom,
+                width: rect.width,
+                height: rect.height
+            });
+            console.log('Modal parent:', modalOverlay.parentElement);
+            console.log('Modal offsetParent:', modalOverlay.offsetParent);
+            
+            // Check inner modal
+            const innerModal = document.getElementById('quote-viewer-modal');
+            if (innerModal) {
+                const innerRect = innerModal.getBoundingClientRect();
+                console.log('Inner modal position:', {
+                    top: innerRect.top,
+                    left: innerRect.left,
+                    width: innerRect.width,
+                    height: innerRect.height
+                });
+                console.log('Inner modal display:', window.getComputedStyle(innerModal).display);
+            }
             
             // Reset content to loading state
-            document.getElementById('quote-content').innerHTML = `
+            quoteContent.innerHTML = `
                 <div style="text-align: center; padding: 40px; color: var(--text-muted);">
                     <i class="fas fa-spinner fa-spin" style="font-size: 32px; margin-bottom: 16px;"></i>
                     <p>Loading quote details...</p>
@@ -2880,12 +3038,19 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
             `;
             
             try {
-                const response = await fetch(`payment_verification_api.php?action=get_quote_details&quotation_id=${quotationId}`, {
+                const apiUrl = `payment_verification_api.php?action=get_quote_details&quotation_id=${quotationId}`;
+                console.log('Fetching quote details from:', apiUrl);
+                
+                const response = await fetch(apiUrl, {
                     credentials: 'include'
                 });
+                
+                console.log('Response status:', response.status);
                 const result = await response.json();
+                console.log('API Result:', result);
                 
                 if (result.success) {
+                    console.log('Quote data received:', result.quote);
                     displayQuoteDetails(result.quote);
                     
                     // Show/hide View Proof button based on proof file availability
@@ -2896,31 +3061,49 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
                     } else {
                         viewProofBtn.style.display = 'none';
                     }
+                    
+                    toast('Quote details loaded successfully');
                 } else {
-                    document.getElementById('quote-content').innerHTML = `
+                    console.error('API returned error:', result.message);
+                    quoteContent.innerHTML = `
                         <div style="text-align: center; padding: 40px; color: var(--danger-text);">
                             <i class="fas fa-exclamation-triangle" style="font-size: 32px; margin-bottom: 16px;"></i>
                             <p>Error: ${result.message}</p>
                         </div>
                     `;
+                    toast('Error: ' + result.message);
                 }
                 
             } catch (error) {
                 console.error('Error loading quote details:', error);
-                document.getElementById('quote-content').innerHTML = `
+                quoteContent.innerHTML = `
                     <div style="text-align: center; padding: 40px; color: var(--danger-text);">
                         <i class="fas fa-exclamation-triangle" style="font-size: 32px; margin-bottom: 16px;"></i>
                         <p>Error loading quote details</p>
+                        <p style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">${error.message}</p>
                     </div>
                 `;
+                toast('Error loading quote details');
             }
         }
         
         function displayQuoteDetails(quote) {
-            const baseAmount = quote.amount - quote.handling_fee;
-            const quoteRef = 'QT-' + new Date(quote.date_issued).getFullYear() + '-' + String(quote.quotation_id).padStart(3, '0');
+            console.log('displayQuoteDetails called with quote:', quote);
             
-            document.getElementById('quote-content').innerHTML = `
+            try {
+                const baseAmount = parseFloat(quote.amount) - parseFloat(quote.handling_fee || 0);
+                const quoteRef = 'QT-' + new Date(quote.date_issued).getFullYear() + '-' + String(quote.quotation_id).padStart(3, '0');
+                
+                console.log('Base amount:', baseAmount);
+                console.log('Quote ref:', quoteRef);
+                
+                const quoteContent = document.getElementById('quote-content');
+                if (!quoteContent) {
+                    console.error('quote-content element not found!');
+                    return;
+                }
+                
+                quoteContent.innerHTML = `
                 <div style="background: var(--white); border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px;">
                     <!-- Quote Header -->
                     <div style="text-align: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid var(--gold);">
@@ -2989,6 +3172,21 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
                     </div>
                 </div>
             `;
+            
+            console.log('Quote details HTML rendered successfully');
+        } catch (error) {
+            console.error('Error in displayQuoteDetails:', error);
+            const quoteContent = document.getElementById('quote-content');
+            if (quoteContent) {
+                quoteContent.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--danger-text);">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 32px; margin-bottom: 16px;"></i>
+                        <p>Error rendering quote details</p>
+                        <p style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">${error.message}</p>
+                    </div>
+                `;
+            }
+        }
         }
         
         function getStatusColor(status) {
@@ -3002,7 +3200,17 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
         }
         
         function closeQuoteViewer() {
-            document.getElementById('quote-viewer-modal-overlay').classList.remove('show');
+            console.log('Closing quote viewer modal');
+            const modalOverlay = document.getElementById('quote-viewer-modal-overlay');
+            if (modalOverlay) {
+                modalOverlay.classList.remove('show');
+                // Reset inline styles
+                modalOverlay.style.display = '';
+                modalOverlay.style.opacity = '';
+                modalOverlay.style.visibility = '';
+            } else {
+                console.error('Modal overlay not found when trying to close');
+            }
         }
         
         function viewProofDocument(proofFile = null) {
@@ -3023,39 +3231,44 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
             // Create a modal to display the proof document
             const modal = document.createElement('div');
             modal.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background-color: rgba(0, 0, 0, 0.8);
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                z-index: 2000;
-                overflow: auto;
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                background-color: rgba(0, 0, 0, 0.85) !important;
+                display: flex !important;
+                justify-content: center !important;
+                align-items: center !important;
+                z-index: 9999999999 !important;
+                overflow: auto !important;
             `;
             
             modal.innerHTML = `
-                <div style="position: relative; max-width: 90%; max-height: 90%; background: white; border-radius: 12px; overflow: hidden;">
-                    <div style="background: var(--navy-dark); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
-                        <h3 style="margin: 0;"><i class="fas fa-file-image"></i> Proof Document</h3>
-                        <button onclick="this.closest('.proof-modal').remove()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
+                <div style="position: relative; max-width: 90%; max-height: 90vh; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.5);">
+                    <div style="background: var(--navy-dark); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin: 0; font-size: 18px;"><i class="fas fa-file-image"></i> Proof Document</h3>
+                        <button onclick="this.closest('.proof-modal').remove()" style="background: rgba(255,255,255,0.1); border: none; color: white; font-size: 24px; cursor: pointer; width: 32px; height: 32px; border-radius: 4px; transition: all 0.2s;" 
+                                onmouseover="this.style.background='rgba(255,255,255,0.2)'" 
+                                onmouseout="this.style.background='rgba(255,255,255,0.1)'">&times;</button>
                     </div>
-                    <div style="padding: 20px; text-align: center;">
-                        <img src="${filePath}" alt="Proof Document" style="max-width: 100%; max-height: 70vh; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);" 
+                    <div style="padding: 20px; text-align: center; background: #f8fafc; max-height: calc(90vh - 140px); overflow: auto;">
+                        <img src="${filePath}" alt="Proof Document" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);" 
                              onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                         <div style="display: none; padding: 40px; color: #6b7280;">
-                            <i class="fas fa-file-alt" style="font-size: 48px; margin-bottom: 16px;"></i>
-                            <p>Unable to display file. <a href="${filePath}" target="_blank" style="color: var(--gold);">Click here to download</a></p>
+                            <i class="fas fa-file-alt" style="font-size: 48px; margin-bottom: 16px; color: #d1d5db;"></i>
+                            <p style="margin: 10px 0;">Unable to display file preview.</p>
+                            <a href="${filePath}" target="_blank" class="btn btn-primary" style="text-decoration: none; display: inline-block; margin-top: 10px;">
+                                <i class="fas fa-external-link-alt"></i> Open in New Tab
+                            </a>
                         </div>
                     </div>
-                    <div style="padding: 15px; text-align: right; border-top: 1px solid #e5e7eb;">
-                        <a href="${filePath}" download="${proofFile}" class="quote-action-btn primary" style="text-decoration: none; margin-right: 10px;">
+                    <div style="padding: 15px 20px; text-align: right; border-top: 1px solid #e5e7eb; background: white;">
+                        <a href="${filePath}" download="${proofFile}" class="quote-action-btn primary" style="text-decoration: none; margin-right: 10px; display: inline-flex;">
                             <i class="fas fa-download"></i>
                             Download
                         </a>
-                        <button onclick="this.closest('.proof-modal').remove()" class="quote-action-btn secondary">
+                        <button onclick="this.closest('.proof-modal').remove()" class="quote-action-btn secondary" style="display: inline-flex;">
                             <i class="fas fa-times"></i>
                             Close
                         </button>
@@ -3535,7 +3748,7 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
                         <button class="btn btn-outline" onclick="closeTransactionModal()">
                             <i class="fas fa-times"></i> Close
                         </button>
-                        <button class="btn btn-primary" onclick="printTransactionReceipt('${quote.quotation_id || quote.id}', '${quote.client_name || quote.client_username}', '${quote.date_issued || quote.quotation_date}', '${quote.package || 'Transaction'}', ${quote.amount || 0}, ${quote.handling_fee || 0}, '${quote.status}')">
+                        <button class="btn btn-primary" onclick="printTransactionReceipt(window.currentQuoteData)">
                             <i class="fas fa-print"></i> Print Receipt
                         </button>
                         ${quote.status === 'Verified' ? `
@@ -3546,6 +3759,9 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
                     </div>
                 </div>
             `;
+            
+            // Store quote data globally for print function
+            window.currentQuoteData = quote;
         }
         
         function closeTransactionModal() {
@@ -3559,36 +3775,38 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
             // Handle both object format and individual parameters for backward compatibility
             let quote;
             if (typeof quotationId === 'object' && quotationId !== null) {
-                // Old object format
+                // Object format - use it directly
                 quote = {
                     quotation_id: quotationId.quotation_id || quotationId.id,
-                    client_name: quotationId.client_name || quotationId.client_username,
-                    date_issued: quotationId.date_issued || quotationId.quotation_date,
+                    client_name: quotationId.client_name || quotationId.client_username || 'N/A',
+                    date_issued: quotationId.date_issued || quotationId.quotation_date || new Date().toISOString(),
                     package: quotationId.package || 'Transaction',
                     amount: parseFloat(quotationId.amount) || 0,
                     handling_fee: parseFloat(quotationId.handling_fee) || 0,
-                    status: quotationId.status,
-                    client_contact: quotationId.client_contact || '09604215897',
-                    client_address: quotationId.client_address || 'Zone 2, Brgy. Handumnan, Bacolod City',
+                    status: quotationId.status || 'N/A',
+                    client_contact: quotationId.client_contact || 'N/A',
+                    client_address: quotationId.client_address || 'N/A',
                     delivery_method: quotationId.delivery_method || 'Standard Delivery',
-                    created_by: quotationId.created_by || quotationId.client_name || quotationId.client_username
+                    created_by: quotationId.created_by || quotationId.client_name || 'N/A'
                 };
             } else {
-                // New individual parameters format
+                // Individual parameters format
                 quote = {
                     quotation_id: quotationId,
-                    client_name: clientName,
-                    date_issued: dateIssued,
-                    package: packageName,
+                    client_name: clientName || 'N/A',
+                    date_issued: dateIssued || new Date().toISOString(),
+                    package: packageName || 'Transaction',
                     amount: parseFloat(amount) || 0,
                     handling_fee: parseFloat(handlingFee) || 0,
-                    status: status,
-                    client_contact: '09604215897', // Default contact
-                    client_address: 'Zone 2, Brgy. Handumnan, Bacolod City',
+                    status: status || 'N/A',
+                    client_contact: 'N/A',
+                    client_address: 'N/A',
                     delivery_method: 'Standard Delivery',
-                    created_by: clientName
+                    created_by: clientName || 'N/A'
                 };
             }
+            
+            console.log('Printing receipt with quote data:', quote);
             
             const totalAmount = quote.amount + quote.handling_fee;
             const currentDate = new Date().toLocaleString('en-US', {
@@ -3763,56 +3981,44 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
             if (!printContainer) {
                 printContainer = document.createElement('div');
                 printContainer.id = 'print-receipt-container';
-                printContainer.style.display = 'none';
                 document.body.appendChild(printContainer);
             }
             
-            // Set the receipt content
-            printContainer.innerHTML = receiptContent;
+            // Clear and hide container
+            printContainer.innerHTML = '';
+            printContainer.style.cssText = 'display: none; position: absolute; left: -9999px; top: -9999px;';
             
-            // Add print-specific styles to the page
-            let printStyles = document.getElementById('print-receipt-styles');
-            if (!printStyles) {
-                printStyles = document.createElement('style');
-                printStyles.id = 'print-receipt-styles';
-                printStyles.innerHTML = `
-                    @media print {
-                        body * { 
-                            visibility: hidden !important; 
-                        }
-                        #print-receipt-container,
-                        #print-receipt-container * { 
-                            visibility: visible !important; 
-                        }
-                        #print-receipt-container {
-                            position: absolute !important;
-                            left: 0 !important;
-                            top: 0 !important;
-                            width: 100% !important;
-                            height: 100% !important;
-                            display: block !important;
-                            background: white !important;
-                            margin: 0 !important;
-                            padding: 0 !important;
-                        }
-                        #print-receipt-container .receipt {
-                            margin: 0 !important;
-                            padding: 20px !important;
-                            border: 1px solid #2c3e50 !important;
-                            max-width: none !important;
-                            width: 100% !important;
-                            background: white !important;
-                            box-shadow: none !important;
-                        }
-                    }
-                `;
-                document.head.appendChild(printStyles);
+            // Create iframe for printing
+            let printFrame = document.getElementById('print-frame');
+            if (printFrame) {
+                printFrame.remove();
             }
             
-            // Trigger print dialog directly
-            window.print();
+            printFrame = document.createElement('iframe');
+            printFrame.id = 'print-frame';
+            printFrame.style.cssText = 'position: absolute; width: 0; height: 0; border: none; visibility: hidden;';
+            document.body.appendChild(printFrame);
             
-            toast('✅ Print dialog opened!');
+            // Write content to iframe
+            const frameDoc = printFrame.contentWindow.document;
+            frameDoc.open();
+            frameDoc.write(receiptContent);
+            frameDoc.close();
+            
+            // Wait for iframe to load, then print
+            setTimeout(() => {
+                printFrame.contentWindow.focus();
+                printFrame.contentWindow.print();
+                
+                // Clean up after print dialog closes
+                setTimeout(() => {
+                    if (printFrame && printFrame.parentNode) {
+                        printFrame.remove();
+                    }
+                }, 1000);
+                
+                toast('✅ Print dialog opened!');
+            }, 250);
         }
         
         // Transaction Details Function\n        function viewTransactionDetails(ref, client, amount, date, status) {\n            const statusClass = status === 'Verified' || status === 'Completed' ? 'status-ok' : 'status-warn';\n            \n            // Create modal content\n            const modalContent = `\n                <div style=\"padding: 0;\">\n                    <!-- Transaction Header -->\n                    <div style=\"background: linear-gradient(135deg, var(--navy-dark), #475569); color: white; padding: 25px; margin: -20px -20px 25px -20px; border-radius: var(--radius-md) var(--radius-md) 0 0;\">\n                        <h4 style=\"margin: 0 0 8px 0; color: var(--gold); font-size: 18px;\">${ref}</h4>\n                        <p style=\"margin: 0; opacity: 0.9;\">Transaction for ${client}</p>\n                        <div style=\"margin-top: 15px; display: flex; justify-content: space-between; align-items: center;\">\n                            <span style=\"font-size: 24px; font-weight: 700;\">₱${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>\n                            <span class=\"status-badge ${statusClass}\">${status}</span>\n                        </div>\n                    </div>\n                    \n                    <!-- Transaction Details -->\n                    <div style=\"margin-bottom: 25px;\">\n                        <div style=\"display: grid; grid-template-columns: 1fr 1fr; gap: 20px;\">\n                            <div>\n                                <h5 style=\"margin: 0 0 8px 0; color: var(--navy-dark); font-size: 14px;\">📅 Transaction Date</h5>\n                                <p style=\"margin: 0; font-size: 13px; color: var(--text-main);\">${date}</p>\n                            </div>\n                            <div>\n                                <h5 style=\"margin: 0 0 8px 0; color: var(--navy-dark); font-size: 14px;\">👤 Client</h5>\n                                <p style=\"margin: 0; font-size: 13px; color: var(--text-main);\">${client}</p>\n                            </div>\n                        </div>\n                    </div>\n                    \n                    <!-- Action Buttons -->\n                    <div style=\"text-align: center;\">\n                        <button class=\"btn btn-outline\" onclick=\"closeModal()\" style=\"margin-right: 10px;\">\n                            <i class=\"fas fa-times\"></i> Close\n                        </button>\n                        <button class=\"btn btn-primary\" onclick=\\"printTransactionReceipt({quotation_id: '${ref}', client_name: '${client}', amount: ${amount}, date_issued: '${date}', status: '${status}', package: 'Transaction', handling_fee: 0})\\">\n                            <i class=\"fas fa-print\"></i> Print Receipt\n                        </button>\n                    </div>\n                </div>\n            `;\n            \n            // Show in toast or modal - using toast for simplicity\n            if (window.toast) {\n                toast(`Transaction Details: ${ref} - ${client} - ₱${amount.toLocaleString()} - ${status}`);\n            } else {\n                alert(`Transaction Details:\\nRef: ${ref}\\nClient: ${client}\\nAmount: ₱${amount.toLocaleString()}\\nDate: ${date}\\nStatus: ${status}`);\n            }\n        }

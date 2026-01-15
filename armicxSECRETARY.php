@@ -715,10 +715,17 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
                             <div class="form-group">
                                 <label for="packageType" class="form-label">Package / Product</label>
                                 <select id="packageType" class="form-control" onchange="calculateSalesQuote()">
-                                    <option>Select Package</option>
-                                    <option value="250000">1-Set Home Package (₱250,000)</option>
-                                    <option value="450000" selected>2-Set Investor Package (₱450,000)</option>
-                                    <option value="50000">Haier Pro XL Unit (₱50,000)</option>
+                                    <option value="">Select Package</option>
+                                    <option value="600000">The Micro Start - 2 Sets (₱600,000)</option>
+                                    <option value="900000" selected>The Essential Start - 3 Sets (₱900,000)</option>
+                                    <option value="1200000">The Standard Shop - 4 Sets (₱1,200,000)</option>
+                                    <option value="1500000">The Growth Model - 5 Sets (₱1,500,000)</option>
+                                    <option value="2000000">The Premium Corner - 6 Sets (₱2,000,000)</option>
+                                    <option value="2700000">The Anchor Laundromat - 8 Sets (₱2,700,000)</option>
+                                    <option value="3500000">The Industrial Lite - 10 Sets (₱3,500,000)</option>
+                                    <option value="4500000">The Multi-Load Center - 12 Sets (₱4,500,000)</option>
+                                    <option value="6000000">The Technology Hub - 15 Sets (₱6,000,000)</option>
+                                    <option value="8500000">The Flagship Enterprise - 20 Sets (₱8,500,000)</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -736,14 +743,14 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
                         <div class="quote-summary-box" style="padding:20px; border-radius:var(--radius-lg); height:fit-content;">
                             <h3 style="font-size:16px; margin-bottom:15px; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">Quote Summary</h3>
                             <div class="quote-detail-row">
-                                <span style="font-size:13px;">Package Value:</span> <strong id="val-package" style="color:var(--gold);">₱450,000.00</strong>
+                                <span style="font-size:13px;">Package Value:</span> <strong id="val-package" style="color:var(--gold);">₱900,000.00</strong>
                             </div>
                             <div class="quote-detail-row">
                                 <span style="font-size:13px;">Installation Fee:</span> <strong id="val-installation" style="color:var(--gold);">₱15,000.00</strong>
                             </div>
                             <div class="total-summary-card">
                                 <div class="label">Total Amount Due</div>
-                                <div class="value" id="val-total">₱465,000.00</div>
+                                <div class="value" id="val-total">₱915,000.00</div>
                             </div>
                             
                             <div class="quote-actions-block">
@@ -810,7 +817,7 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
                             <div class="job-detail">
                                 <span style="font-size:12px; color:var(--text-muted); display:block;">Job Location / Type</span>
                                 <strong>Makati City Branch</strong>
-                                <span style="font-size:13px; color:var(--text-muted);"><i class="fas fa-box-open"></i> 2-Set Investor Package</span>
+                                <span style="font-size:13px; color:var(--text-muted);"><i class="fas fa-box-open"></i> The Micro Start (2 Sets)</span>
                             </div>
                             <form class="assignment-form" onsubmit="return handleAssignment(event, 'SQ113')" style="padding-top: 10px; border-top: 1px dashed #e2e8f0;"> 
                                 <div class="form-group">
@@ -1104,6 +1111,25 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
                 console.error('Error loading notification count:', error);
             }
         }
+        
+        // Real-time updates - refresh data periodically
+        setInterval(loadNotificationCount, 15000); // Every 15 seconds
+        
+        // Auto-refresh client list when active
+        setInterval(() => {
+            const clientListView = document.getElementById('client-list-view');
+            if (clientListView && clientListView.style.display !== 'none') {
+                loadClientList();
+            }
+        }, 30000); // Every 30 seconds
+        
+        // Auto-refresh current client profile when viewing
+        setInterval(() => {
+            const clientProfileView = document.getElementById('client-profile-view');
+            if (clientProfileView && clientProfileView.style.display !== 'none' && currentClientId) {
+                loadClientProfile(currentClientId);
+            }
+        }, 45000); // Every 45 seconds
         
         async function loadLowStockCount() {
             try {
@@ -2018,7 +2044,7 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
                         '</div>' +
                     '</div>' +
                     '<div style="display: flex; gap: 10px;">' +
-                        '<button class="btn create-quote-btn" data-quotation-id="' + inquiry.Quotation_ID + '" data-client-id="' + inquiry.Client_ID + '" data-client-name="' + (inquiry.Client_Name || '') + '" data-contact="' + (inquiry.Contact_Num || '') + '"' +
+                        '<button class="btn create-quote-btn" data-quotation-id="' + inquiry.Quotation_ID + '" data-client-id="' + inquiry.Client_ID + '" data-client-name="' + (inquiry.Client_Name || '') + '" data-contact="' + (inquiry.Contact_Num || '') + '" data-package="' + (inquiry.Package || '') + '" data-amount="' + (inquiry.Amount || '') + '" data-handling-fee="' + (inquiry.Handling_Fee || 0) + '"' +
                                 ' style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3); transition: all 0.2s;">' +
                             '<i class="fas fa-file-invoice"></i> ' +
                             'Create Quotation' +
@@ -2040,7 +2066,10 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
                     const clientId = this.dataset.clientId;
                     const clientName = this.dataset.clientName;
                     const contact = this.dataset.contact;
-                    navigateToCreateQuotation(quotationId, clientId, clientName, contact);
+                    const packageName = this.dataset.package;
+                    const amount = this.dataset.amount;
+                    const handlingFee = this.dataset.handlingFee;
+                    navigateToCreateQuotation(quotationId, clientId, clientName, contact, packageName, amount, handlingFee);
                 });
             });
             
@@ -2058,7 +2087,13 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
             }
         }
 
-        function navigateToCreateQuotation(quotationId, clientId, clientName, contact) {
+        // Global variable to store quotation_id when editing from sales inquiry
+        let CURRENT_QUOTATION_ID = null;
+        
+        function navigateToCreateQuotation(quotationId, clientId, clientName, contact, packageName, amount, handlingFee) {
+            // Store the quotation_id globally so we can update instead of creating new
+            CURRENT_QUOTATION_ID = quotationId;
+            
             // Navigate to sales quotes section
             const salesQuotesButton = document.querySelector(`.nav-btn[onclick*="'sales-quotes'"]`);
             if (salesQuotesButton) {
@@ -2068,7 +2103,104 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
                 setTimeout(() => {
                     document.getElementById('clientName').value = clientName;
                     document.getElementById('clientContact').value = contact;
-                    toast('Fill in package details for ' + clientName);
+                    
+                    // Pre-fill the installation/handling fee from the original quotation
+                    if (handlingFee) {
+                        document.getElementById('installation').value = parseFloat(handlingFee);
+                    }
+                    
+                    // Match package by name first, then by amount as fallback
+                    const packageSelect = document.getElementById('packageType');
+                    if (packageSelect && (packageName || amount)) {
+                        const options = packageSelect.options;
+                        let matched = false;
+                        
+                        // Method 1: Try to match by package name (most reliable)
+                        if (packageName) {
+                            const cleanPackageName = packageName.toLowerCase().trim();
+                            
+                            for (let i = 0; i < options.length; i++) {
+                                const optionText = options[i].text.toLowerCase();
+                                
+                                // Check if package name contains key identifiers
+                                if (cleanPackageName.includes('micro start') && optionText.includes('micro start')) {
+                                    packageSelect.selectedIndex = i;
+                                    matched = true;
+                                    break;
+                                } else if (cleanPackageName.includes('essential start') && optionText.includes('essential start')) {
+                                    packageSelect.selectedIndex = i;
+                                    matched = true;
+                                    break;
+                                } else if (cleanPackageName.includes('standard shop') && optionText.includes('standard shop')) {
+                                    packageSelect.selectedIndex = i;
+                                    matched = true;
+                                    break;
+                                } else if (cleanPackageName.includes('growth model') && optionText.includes('growth model')) {
+                                    packageSelect.selectedIndex = i;
+                                    matched = true;
+                                    break;
+                                } else if (cleanPackageName.includes('premium corner') && optionText.includes('premium corner')) {
+                                    packageSelect.selectedIndex = i;
+                                    matched = true;
+                                    break;
+                                } else if (cleanPackageName.includes('anchor laundromat') && optionText.includes('anchor laundromat')) {
+                                    packageSelect.selectedIndex = i;
+                                    matched = true;
+                                    break;
+                                } else if (cleanPackageName.includes('industrial lite') && optionText.includes('industrial lite')) {
+                                    packageSelect.selectedIndex = i;
+                                    matched = true;
+                                    break;
+                                } else if (cleanPackageName.includes('multi-load center') && optionText.includes('multi-load center')) {
+                                    packageSelect.selectedIndex = i;
+                                    matched = true;
+                                    break;
+                                } else if (cleanPackageName.includes('technology hub') && optionText.includes('technology hub')) {
+                                    packageSelect.selectedIndex = i;
+                                    matched = true;
+                                    break;
+                                } else if (cleanPackageName.includes('flagship enterprise') && optionText.includes('flagship enterprise')) {
+                                    packageSelect.selectedIndex = i;
+                                    matched = true;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        // Method 2: Fallback to matching by amount if name matching failed
+                        if (!matched && amount) {
+                            const totalAmount = parseFloat(amount);
+                            let bestMatch = -1;
+                            let bestDiff = Infinity;
+                            
+                            for (let i = 0; i < options.length; i++) {
+                                if (!options[i].value) continue;
+                                
+                                const basePrice = parseFloat(options[i].value);
+                                const priceWithLogistics = basePrice * 1.05;
+                                
+                                const diff1 = Math.abs(basePrice - totalAmount);
+                                const diff2 = Math.abs(priceWithLogistics - totalAmount);
+                                const minDiff = Math.min(diff1, diff2);
+                                
+                                if (minDiff < bestDiff) {
+                                    bestDiff = minDiff;
+                                    bestMatch = i;
+                                }
+                                
+                                if (diff1 === 0 || diff2 === 0) break;
+                            }
+                            
+                            if (bestMatch !== -1) {
+                                packageSelect.selectedIndex = bestMatch;
+                            }
+                        }
+                    }
+                    
+                    // Recalculate the quote summary to show correct amounts
+                    calculateSalesQuote();
+                    
+                    toast('Package automatically selected: ' + (packageName || 'Unknown'));
                 }, 100);
             }
         }
@@ -2130,6 +2262,11 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
             formData.append('delivery_method', 'Standard Delivery');
             formData.append('handling_fee', document.getElementById('val-installation').textContent.replace(/[₱,]/g, '') || 0);
             
+            // If updating an existing quotation from sales inquiry, pass the quotation_id
+            if (CURRENT_QUOTATION_ID) {
+                formData.append('quotation_id', CURRENT_QUOTATION_ID);
+            }
+            
             try {
                 const response = await fetch('secretary_quote_api.php', {
                     method: 'POST',
@@ -2141,12 +2278,20 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
                 if (result.success) {
                     toast('✅ Quote submitted to Manager for approval!');
                     
+                    // Reset quotation_id after successful submission
+                    CURRENT_QUOTATION_ID = null;
+                    
                     // Clear the form
                     document.getElementById('clientName').value = '';
                     document.getElementById('packageType').value = '';
                     document.getElementById('proofUpload').value = '';
                     document.getElementById('file-name').textContent = 'No file chosen';
                     calculateSalesQuote();
+                    
+                    // Refresh the sales inquiries list
+                    if (typeof loadSalesInquiries === 'function') {
+                        loadSalesInquiries();
+                    }
                     
                     // Show success message
                     setTimeout(() => {
@@ -2796,7 +2941,7 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
                 </div>
                 <div class="txn-action-col">
                     <button class="btn btn-primary" onclick="viewQuotationDetails(${item.Quotation_ID})"><i class="fas fa-receipt"></i> View Invoice</button>
-                    <button class="btn btn-outline">Call Client</button>
+                    <button class="btn btn-outline" onclick="callClient('${item.Client_Name}')">Call Client</button>
                 </div>
             `;
             
@@ -2821,19 +2966,733 @@ if (!RoleSessionManager::isAuthenticated() || RoleSessionManager::getRole() !== 
             currentClientId = null;
         }
         
+        // Alias function for loadClientProfile (used by auto-refresh)
+        async function loadClientProfile(clientId) {
+            if (!clientId) return;
+            
+            try {
+                const response = await fetch(`client_api.php?action=get_client_profile&client_id=${clientId}`, {
+                    credentials: 'include'
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    renderClientProfile(result);
+                } else {
+                    console.error('Failed to refresh client profile:', result.message);
+                }
+            } catch (error) {
+                console.error('Error refreshing client profile:', error);
+            }
+        }
+        
         function addNewClient() {
             toast('Add New Client feature coming soon!');
         }
         
-        function editClientProfile() {
-            if (!currentClientId) return;
-            toast('Edit Client Profile feature coming soon!');
+        function callClient(clientName) {
+            toast(`Calling ${clientName}...`);
         }
         
-        function viewQuotationDetails(quotationId) {
-            toast(`Opening quotation #${quotationId}...`);
-            // Could navigate to quotation details or open modal
+        async function editClientProfile() {
+            if (!currentClientId) {
+                console.error('Error loading client data for edit: Error: Client ID is required');
+                toast('⚠️ Please select a client first');
+                return;
+            }
+            
+            try {
+                // Fetch current client data
+                const response = await fetch(`client_api.php?action=get_client_profile&client_id=${currentClientId}`);
+                const result = await response.json();
+                
+                if (!result.success) {
+                    throw new Error(result.message || 'Failed to load client data');
+                }
+                
+                const client = result.client;
+                
+                // Create edit modal
+                const modalHTML = `
+                    <div class="modal-overlay" id="edit-profile-modal" onclick="closeEditProfileModal(event)">
+                        <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 600px;">
+                            <div class="modal-header">
+                                <h3>Edit Client Profile</h3>
+                                <button class="modal-close" onclick="closeEditProfileModal()">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="edit-profile-form">
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                                        <div>
+                                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--navy-dark);">Name *</label>
+                                            <input type="text" id="edit-name" value="${client.Name || ''}" required style="width: 100%; padding: 10px; border: 1px solid var(--border-light); border-radius: var(--radius-sm);">
+                                        </div>
+                                        <div>
+                                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--navy-dark);">Email *</label>
+                                            <input type="email" id="edit-email" value="${client.Email || ''}" required style="width: 100%; padding: 10px; border: 1px solid var(--border-light); border-radius: var(--radius-sm);">
+                                        </div>
+                                    </div>
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                                        <div>
+                                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--navy-dark);">Contact Number *</label>
+                                            <input type="text" id="edit-contact" value="${client.Contact_Num || ''}" required style="width: 100%; padding: 10px; border: 1px solid var(--border-light); border-radius: var(--radius-sm);">
+                                        </div>
+                                        <div>
+                                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--navy-dark);">Business Name</label>
+                                            <input type="text" id="edit-business" value="${client.Business_Name || ''}" style="width: 100%; padding: 10px; border: 1px solid var(--border-light); border-radius: var(--radius-sm);">
+                                        </div>
+                                    </div>
+                                    <div style="margin-bottom: 16px;">
+                                        <label style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--navy-dark);">Address *</label>
+                                        <textarea id="edit-address" required style="width: 100%; padding: 10px; border: 1px solid var(--border-light); border-radius: var(--radius-sm); min-height: 80px;">${client.Address || ''}</textarea>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-outline" onclick="closeEditProfileModal()">Cancel</button>
+                                <button class="btn btn-primary" onclick="saveClientProfile()"><i class="fas fa-save"></i> Save Changes</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Remove existing modal if any
+                const existingModal = document.getElementById('edit-profile-modal');
+                if (existingModal) existingModal.remove();
+                
+                // Add modal to body
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+                
+            } catch (error) {
+                console.error('Error loading client data for edit:', error);
+                toast('Failed to load client data');
+            }
         }
+        
+        function closeEditProfileModal(event) {
+            if (event && event.target.classList.contains('modal-overlay') === false) return;
+            const modal = document.getElementById('edit-profile-modal');
+            if (modal) modal.remove();
+        }
+        
+        async function saveClientProfile() {
+            const name = document.getElementById('edit-name').value.trim();
+            const email = document.getElementById('edit-email').value.trim();
+            const contact = document.getElementById('edit-contact').value.trim();
+            const business = document.getElementById('edit-business').value.trim();
+            const address = document.getElementById('edit-address').value.trim();
+            
+            if (!name || !email || !contact || !address) {
+                toast('Please fill in all required fields', 'warning');
+                return;
+            }
+            
+            try {
+                const formData = new FormData();
+                formData.append('action', 'update_client');
+                formData.append('client_id', currentClientId);
+                formData.append('name', name);
+                formData.append('email', email);
+                formData.append('contact', contact);
+                formData.append('business_name', business);
+                formData.append('address', address);
+                
+                const response = await fetch('client_api.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    toast('✅ Client profile updated successfully!', 'success');
+                    closeEditProfileModal();
+                    // Reload client profile
+                    loadClientProfile(currentClientId);
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error('Error updating client profile:', error);
+                toast('Failed to update client profile: ' + error.message, 'error');
+            }
+        }
+        
+        async function viewQuotationDetails(quotationId) {
+            console.log('📄 Loading quotation details for ID:', quotationId);
+            
+            try {
+                const response = await fetch(`payment_verification_api.php?action=get_quote_details&quotation_id=${quotationId}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                console.log('✅ Quote data received:', result);
+                console.log('📦 Quote object:', result.quote);
+                
+                if (!result.success) {
+                    throw new Error(result.message || 'Failed to fetch quotation details');
+                }
+                
+                if (!result.quote) {
+                    throw new Error('No quote data in response');
+                }
+                
+                const quote = result.quote;
+                console.log('🎯 Calling displayInvoiceModal with:', quote);
+                displayInvoiceModal(quote);
+                
+            } catch (error) {
+                console.error('❌ Error loading quotation details:', error);
+                toast('❌ Failed to load invoice: ' + error.message);
+            }
+        }
+        
+        function displayInvoiceModal(quote) {
+            console.log('🖼️ displayInvoiceModal called with quote:', quote);
+            
+            try {
+                const totalAmount = parseFloat(quote.amount || 0) + parseFloat(quote.handling_fee || 0);
+                const statusClass = ['Verified', 'Paid', 'Completed', 'Approved'].includes(quote.status) ? 'status-ok' : 'status-warn';
+                
+                console.log('💰 Total amount calculated:', totalAmount);
+                console.log('🏷️ Status class:', statusClass);
+                
+                const modalHTML = `
+                <div class="modal-overlay" id="invoice-modal" onclick="closeInvoiceModal(event)">
+                    <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 700px;">
+                        <div class="modal-header" style="background: linear-gradient(135deg, var(--navy-dark), #475569); color: white; margin: -20px -20px 20px -20px; padding: 25px; border-radius: var(--radius-md) var(--radius-md) 0 0;">
+                            <div>
+                                <h3 style="margin: 0 0 8px 0; color: var(--gold);">INVOICE / QUOTATION</h3>
+                                <p style="margin: 0; opacity: 0.9; font-size: 18px; font-weight: 700;">QT-${String(quote.quotation_id).padStart(4, '0')}</p>
+                            </div>
+                            <button class="modal-close" onclick="closeInvoiceModal()" style="background: rgba(255,255,255,0.2); color: white; border: none; font-size: 24px; width: 32px; height: 32px; border-radius: 50%; cursor: pointer;">&times;</button>
+                        </div>
+                        <div class="modal-body" style="padding: 0 20px 20px 20px;">
+                            <!-- Client Information -->
+                            <div style="background: var(--bg-secondary); padding: 20px; border-radius: var(--radius-md); margin-bottom: 20px;">
+                                <h4 style="margin: 0 0 12px 0; color: var(--navy-dark); font-size: 14px;"><i class="fas fa-user"></i> Client Information</h4>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                    <div>
+                                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">Name</div>
+                                        <div style="font-weight: 600;">${quote.client_name || 'N/A'}</div>
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">Contact</div>
+                                        <div style="font-weight: 600;">${quote.client_contact || 'N/A'}</div>
+                                    </div>
+                                    <div style="grid-column: 1 / -1;">
+                                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">Address</div>
+                                        <div style="font-weight: 600;">${quote.client_address || 'N/A'}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Package & Transaction Details -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                                <div>
+                                    <h5 style="margin: 0 0 8px 0; color: var(--navy-dark); font-size: 12px; text-transform: uppercase;">Package</h5>
+                                    <p style="margin: 0; font-weight: 600; font-size: 15px;">${quote.package}</p>
+                                </div>
+                                <div>
+                                    <h5 style="margin: 0 0 8px 0; color: var(--navy-dark); font-size: 12px; text-transform: uppercase;">Date Issued</h5>
+                                    <p style="margin: 0; font-weight: 600;">${new Date(quote.date_issued).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                                </div>
+                                <div>
+                                    <h5 style="margin: 0 0 8px 0; color: var(--navy-dark); font-size: 12px; text-transform: uppercase;">Delivery Method</h5>
+                                    <p style="margin: 0; font-weight: 600;">${quote.delivery_method || 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <h5 style="margin: 0 0 8px 0; color: var(--navy-dark); font-size: 12px; text-transform: uppercase;">Status</h5>
+                                    <span class="status-badge ${statusClass}">${quote.status}</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Amount Breakdown -->
+                            <div style="background: var(--bg-light); border: 2px solid var(--border-light); padding: 20px; border-radius: var(--radius-md);">
+                                <h4 style="margin: 0 0 15px 0; color: var(--navy-dark); font-size: 14px;"><i class="fas fa-calculator"></i> Amount Breakdown</h4>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                    <span>Package Amount:</span>
+                                    <span style="font-weight: 600;">₱${parseFloat(quote.amount).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
+                                </div>
+                                ${quote.handling_fee > 0 ? `
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                    <span>Handling Fee:</span>
+                                    <span style="font-weight: 600;">₱${parseFloat(quote.handling_fee).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
+                                </div>
+                                ` : ''}
+                                <hr style="margin: 15px 0; border: none; border-top: 2px solid var(--border-light);">
+                                <div style="display: flex; justify-content: space-between; font-size: 18px; font-weight: 700;">
+                                    <span>TOTAL AMOUNT:</span>
+                                    <span style="color: var(--success-text);">₱${totalAmount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-outline" onclick="closeInvoiceModal()">Close</button>
+                            <button class="btn btn-primary" onclick="printInvoice(${JSON.stringify(quote).replace(/"/g, '&quot;')})"><i class="fas fa-print"></i> Print Invoice</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remove existing modal if any
+            const existingModal = document.getElementById('invoice-modal');
+            if (existingModal) {
+                console.log('🗑️ Removing existing modal');
+                existingModal.remove();
+            }
+            
+            // Add modal to body
+            console.log('➕ Adding modal to body');
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            
+            // Verify modal was added and show it
+            const newModal = document.getElementById('invoice-modal');
+            if (newModal) {
+                console.log('✅ Modal successfully added to DOM');
+                newModal.classList.add('show');
+                console.log('👁️ Modal show class added');
+            } else {
+                console.error('❌ Modal was not added to DOM!');
+            }
+            
+        } catch (error) {
+            console.error('❌ Error in displayInvoiceModal:', error);
+            toast('❌ Error displaying invoice: ' + error.message);
+        }
+    }
+        
+        function closeInvoiceModal(event) {
+            if (event && event.target.classList.contains('modal-overlay') === false) return;
+            const modal = document.getElementById('invoice-modal');
+            if (modal) modal.remove();
+        }
+        
+        function printInvoice(quote) {
+            const totalAmount = parseFloat(quote.amount) + parseFloat(quote.handling_fee || 0);
+            const currentDate = new Date().toLocaleString('en-US', {
+                year: 'numeric',
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            const receiptContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Invoice - QT-${String(quote.quotation_id).padStart(4, '0')}</title>
+                    <meta charset="UTF-8">
+                    <style>
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: white; color: #333; padding: 20px; }
+                        .invoice { max-width: 500px; margin: 0 auto; padding: 20px; border: 2px solid #2c3e50; }
+                        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #2c3e50; padding-bottom: 15px; }
+                        .company-name { font-size: 20px; font-weight: bold; color: #2c3e50; margin-bottom: 5px; }
+                        .company-info { font-size: 12px; color: #666; line-height: 1.5; }
+                        .invoice-title { font-size: 18px; font-weight: bold; margin: 15px 0; text-align: center; }
+                        .invoice-id { font-size: 16px; text-align: center; color: #666; margin-bottom: 20px; }
+                        .section { margin: 20px 0; }
+                        .section-title { font-size: 12px; font-weight: bold; color: #2c3e50; margin-bottom: 10px; text-transform: uppercase; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+                        .info-row { display: flex; justify-content: space-between; margin: 8px 0; font-size: 13px; }
+                        .info-label { color: #666; }
+                        .info-value { font-weight: 600; }
+                        .amount-section { border: 1px solid #ddd; padding: 15px; background: #f8f9fa; margin: 20px 0; }
+                        .amount-row { display: flex; justify-content: space-between; margin: 8px 0; font-size: 13px; }
+                        .total-row { border-top: 2px solid #333; margin-top: 15px; padding-top: 10px; font-weight: bold; font-size: 16px; }
+                        .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #2c3e50; }
+                        .footer-text { font-size: 11px; color: #666; line-height: 1.6; }
+                        @media print { body { margin: 0; padding: 10px; } .invoice { border: 1px solid #2c3e50; margin: 0; } }
+                    </style>
+                </head>
+                <body>
+                    <div class="invoice">
+                        <div class="header">
+                            <div class="company-name">ATMICX Laundry Machine Trading</div>
+                            <div class="company-info">Professional Laundry Solutions<br>Email: info@atmicx.com | Phone: (034) 123-4567</div>
+                        </div>
+                        <div class="invoice-title">INVOICE / QUOTATION</div>
+                        <div class="invoice-id">QT-${String(quote.quotation_id).padStart(4, '0')}</div>
+                        <div class="section">
+                            <div class="section-title">Client Information</div>
+                            <div class="info-row"><span class="info-label">Name:</span> <span class="info-value">${quote.client_name}</span></div>
+                            <div class="info-row"><span class="info-label">Contact:</span> <span class="info-value">${quote.client_contact || 'N/A'}</span></div>
+                            <div class="info-row"><span class="info-label">Address:</span> <span class="info-value">${quote.client_address || 'N/A'}</span></div>
+                        </div>
+                        <div class="section">
+                            <div class="section-title">Transaction Details</div>
+                            <div class="info-row"><span class="info-label">Date Issued:</span> <span class="info-value">${new Date(quote.date_issued).toLocaleDateString('en-US')}</span></div>
+                            <div class="info-row"><span class="info-label">Package:</span> <span class="info-value">${quote.package}</span></div>
+                            <div class="info-row"><span class="info-label">Delivery:</span> <span class="info-value">${quote.delivery_method || 'N/A'}</span></div>
+                            <div class="info-row"><span class="info-label">Status:</span> <span class="info-value">${quote.status}</span></div>
+                        </div>
+                        <div class="section">
+                            <div class="section-title">Amount Breakdown</div>
+                            <div class="amount-section">
+                                <div class="amount-row"><span>Package Amount:</span><span>₱${parseFloat(quote.amount).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span></div>
+                                ${quote.handling_fee > 0 ? `<div class="amount-row"><span>Handling Fee:</span><span>₱${parseFloat(quote.handling_fee).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span></div>` : ''}
+                                <div class="amount-row total-row"><span>TOTAL AMOUNT:</span><span>₱${totalAmount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span></div>
+                            </div>
+                        </div>
+                        <div class="footer">
+                            <div class="footer-text">Thank you for choosing ATMICX Laundry Machine Trading!<br>For inquiries, please contact us at the above information.<br><strong>This is a computer-generated invoice.</strong></div>
+                            <div style="margin-top: 15px; font-size: 10px; color: #999;">Printed on: ${currentDate}</div>
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            // Create iframe for printing
+            let printFrame = document.getElementById('print-invoice-frame');
+            if (printFrame) printFrame.remove();
+            
+            printFrame = document.createElement('iframe');
+            printFrame.id = 'print-invoice-frame';
+            printFrame.style.cssText = 'position: absolute; width: 0; height: 0; border: none; visibility: hidden;';
+            document.body.appendChild(printFrame);
+            
+            // Write content and print
+            const frameDoc = printFrame.contentWindow.document;
+            frameDoc.open();
+            frameDoc.write(receiptContent);
+            frameDoc.close();
+            
+            setTimeout(() => {
+                printFrame.contentWindow.focus();
+                printFrame.contentWindow.print();
+                setTimeout(() => printFrame && printFrame.remove(), 1000);
+            }, 250);
+            
+            toast('✅ Print dialog opened!');
+        }
+
+        // =====================================================
+        // REAL-TIME UPDATES SYSTEM
+        // =====================================================
+        
+        class RealtimeUpdateManager {
+            constructor() {
+                this.updateInterval = 10000; // Check every 10 seconds
+                this.lastCheckTimestamp = Math.floor(Date.now() / 1000);
+                this.isActive = true;
+                this.currentSection = 'sec-dashboard';
+                this.intervalId = null;
+                this.previousCounts = {};
+                
+                console.log('🔄 Real-time updates initialized');
+            }
+            
+            start() {
+                this.stop(); // Clear any existing interval
+                
+                // Initial check
+                this.checkForUpdates();
+                
+                // Start periodic checking
+                this.intervalId = setInterval(() => {
+                    if (this.isActive) {
+                        this.checkForUpdates();
+                    }
+                }, this.updateInterval);
+                
+                console.log('✅ Real-time updates started (checking every ' + (this.updateInterval / 1000) + 's)');
+            }
+            
+            stop() {
+                if (this.intervalId) {
+                    clearInterval(this.intervalId);
+                    this.intervalId = null;
+                    console.log('⏸️ Real-time updates paused');
+                }
+            }
+            
+            setActiveSection(sectionId) {
+                this.currentSection = sectionId;
+                console.log('📍 Active section:', sectionId);
+            }
+            
+            async checkForUpdates() {
+                try {
+                    // Get current counts
+                    const response = await fetch('secretary_realtime_api.php?action=get_counts');
+                    const data = await response.json();
+                    
+                    if (!data.success) {
+                        console.warn('Failed to fetch updates:', data.message);
+                        return;
+                    }
+                    
+                    const counts = data.counts;
+                    
+                    // Check for changes and update UI
+                    this.handleCountChanges(counts);
+                    
+                    // Check for new items since last check
+                    const updateResponse = await fetch(
+                        `secretary_realtime_api.php?action=check_updates&last_check=${this.lastCheckTimestamp}`
+                    );
+                    const updateData = await updateResponse.json();
+                    
+                    if (updateData.success && updateData.updates.has_updates) {
+                        this.handleNewUpdates(updateData.updates);
+                    }
+                    
+                    // Update timestamp
+                    this.lastCheckTimestamp = counts.timestamp;
+                    this.previousCounts = counts;
+                    
+                } catch (error) {
+                    console.error('❌ Error checking for updates:', error);
+                }
+            }
+            
+            handleCountChanges(newCounts) {
+                // Update notification badges
+                if (newCounts.unread_notifications !== undefined) {
+                    const notifBadge = document.querySelector('.notification-badge');
+                    if (notifBadge) {
+                        if (newCounts.unread_notifications > 0) {
+                            notifBadge.textContent = newCounts.unread_notifications;
+                            notifBadge.style.display = 'flex';
+                        } else {
+                            notifBadge.style.display = 'none';
+                        }
+                    }
+                }
+                
+                // Update low stock badge
+                if (newCounts.low_stock !== undefined) {
+                    const stockBadge = document.querySelector('.stock-badge');
+                    if (stockBadge && newCounts.low_stock > 0) {
+                        stockBadge.textContent = newCounts.low_stock;
+                        stockBadge.style.display = 'flex';
+                    }
+                }
+                
+                // Check if counts increased
+                const hasNewMaintenance = this.previousCounts.pending_maintenance !== undefined && 
+                                         newCounts.pending_maintenance > this.previousCounts.pending_maintenance;
+                const hasNewSales = this.previousCounts.new_sales !== undefined && 
+                                   newCounts.new_sales > this.previousCounts.new_sales;
+                
+                // Show toast notifications for new items
+                if (hasNewMaintenance) {
+                    const diff = newCounts.pending_maintenance - this.previousCounts.pending_maintenance;
+                    this.showUpdateNotification('🔧 New Maintenance Request', `${diff} new request(s) need review`, 'maintenance');
+                }
+                
+                if (hasNewSales) {
+                    const diff = newCounts.new_sales - this.previousCounts.new_sales;
+                    this.showUpdateNotification('💼 New Sales Inquiry', `${diff} new inquiry(s) received`, 'sales');
+                }
+            }
+            
+            handleNewUpdates(updates) {
+                console.log('📬 New updates detected:', updates.sections);
+                
+                // Auto-refresh current section if it has updates
+                if (updates.sections.includes('maintenance') && 
+                    this.currentSection === 'service-requests') {
+                    this.refreshSection('maintenance');
+                }
+                
+                if (updates.sections.includes('sales') && 
+                    this.currentSection === 'service-requests') {
+                    this.refreshSection('sales');
+                }
+            }
+            
+            refreshSection(section) {
+                console.log('🔄 Auto-refreshing section:', section);
+                
+                switch(section) {
+                    case 'maintenance':
+                        if (typeof loadMaintenanceRequests === 'function') {
+                            loadMaintenanceRequests();
+                            console.log('✅ Maintenance requests refreshed');
+                        }
+                        break;
+                    case 'sales':
+                        if (typeof loadSalesInquiries === 'function') {
+                            loadSalesInquiries();
+                            console.log('✅ Sales inquiries refreshed');
+                        }
+                        break;
+                    case 'jobs':
+                        if (typeof loadJobsAwaitingAssignment === 'function') {
+                            loadJobsAwaitingAssignment();
+                            console.log('✅ Jobs awaiting assignment refreshed');
+                        }
+                        break;
+                }
+            }
+            
+            showUpdateNotification(title, message, type) {
+                // Create toast notification
+                const toastHTML = `
+                    <div class="realtime-toast ${type}" style="
+                        position: fixed;
+                        top: 80px;
+                        right: 20px;
+                        background: white;
+                        padding: 16px 20px;
+                        border-radius: 8px;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                        z-index: 10000;
+                        min-width: 300px;
+                        border-left: 4px solid var(--gold);
+                        animation: slideInRight 0.3s ease;
+                    ">
+                        <div style="font-weight: 600; color: var(--navy-dark); margin-bottom: 4px;">
+                            ${title}
+                        </div>
+                        <div style="color: var(--text-muted); font-size: 14px;">
+                            ${message}
+                        </div>
+                        <button onclick="this.parentElement.remove()" style="
+                            position: absolute;
+                            top: 8px;
+                            right: 8px;
+                            background: none;
+                            border: none;
+                            color: var(--text-muted);
+                            cursor: pointer;
+                            font-size: 18px;
+                            padding: 4px;
+                        ">&times;</button>
+                    </div>
+                `;
+                
+                document.body.insertAdjacentHTML('beforeend', toastHTML);
+                
+                // Auto-remove after 5 seconds
+                setTimeout(() => {
+                    const toasts = document.querySelectorAll('.realtime-toast');
+                    if (toasts.length > 0) {
+                        toasts[toasts.length - 1].remove();
+                    }
+                }, 5000);
+                
+                // Play notification sound (optional)
+                this.playNotificationSound();
+            }
+            
+            playNotificationSound() {
+                try {
+                    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIGmm98OScTgwOUKnn77RgGwU7k9jzzn0vBSF1xe/glEILElyx6OyrWBUIQ5zd8sFuIAUsgs/z3Ik2CBxqvvDlm0wMDlCq5+63YxsHO5LY9NB7LgUgdMXu35FEDBJarun');
+                    audio.volume = 0.3;
+                    audio.play().catch(() => {}); // Ignore errors if sound can't play
+                } catch (e) {
+                    // Silently fail if audio not supported
+                }
+            }
+            
+            manualRefresh() {
+                console.log('🔄 Manual refresh triggered');
+                this.lastCheckTimestamp = Math.floor(Date.now() / 1000) - 60; // Check last minute
+                this.checkForUpdates();
+                
+                // Refresh current visible content
+                switch(this.currentSection) {
+                    case 'service-requests':
+                        loadMaintenanceRequests();
+                        loadSalesInquiries();
+                        break;
+                    case 'job-scheduling':
+                        loadJobsAwaitingAssignment();
+                        loadScheduledJobs();
+                        break;
+                }
+            }
+        }
+        
+        // Initialize real-time update manager
+        const realtimeManager = new RealtimeUpdateManager();
+        
+        // Start updates when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                realtimeManager.start();
+            }, 2000); // Wait 2 seconds after page load
+        });
+        
+        // Track active section for smart updates
+        const originalNav = window.nav;
+        window.nav = function(sectionId, btn) {
+            originalNav(sectionId, btn);
+            realtimeManager.setActiveSection(sectionId);
+        };
+        
+        // Add manual refresh button functionality
+        function addRefreshButton() {
+            const headerRight = document.querySelector('.header-right');
+            if (headerRight && !document.getElementById('manual-refresh-btn')) {
+                const refreshBtn = document.createElement('button');
+                refreshBtn.id = 'manual-refresh-btn';
+                refreshBtn.className = 'icon-btn';
+                refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i>';
+                refreshBtn.title = 'Refresh Data';
+                refreshBtn.style.cssText = 'margin-right: 10px; transition: transform 0.3s;';
+                refreshBtn.onclick = function() {
+                    this.style.transform = 'rotate(360deg)';
+                    setTimeout(() => { this.style.transform = 'rotate(0deg)'; }, 300);
+                    realtimeManager.manualRefresh();
+                    toast('🔄 Refreshing data...');
+                };
+                
+                headerRight.insertBefore(refreshBtn, headerRight.firstChild);
+            }
+        }
+        
+        // Add refresh button after page loads
+        setTimeout(addRefreshButton, 1000);
+        
+        // Add CSS animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideInRight {
+                from {
+                    transform: translateX(400px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            
+            .realtime-toast {
+                animation: slideInRight 0.3s ease;
+            }
+            
+            .pulse-animation {
+                animation: pulse 2s infinite;
+            }
+            
+            @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.5; }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Pause updates when page is hidden, resume when visible
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                console.log('📱 Page hidden - pausing updates');
+                realtimeManager.stop();
+            } else {
+                console.log('📱 Page visible - resuming updates');
+                realtimeManager.start();
+            }
+        });
+        
+        console.log('✨ Real-time update system loaded');
     </script>
 
 </body>

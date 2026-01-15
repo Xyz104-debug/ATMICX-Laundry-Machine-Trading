@@ -146,7 +146,114 @@ if (!isset($_SESSION['name'])) {
         
         .notif-btn { position: relative; width: 40px; height: 40px; border-radius: 50%; background: var(--bg-body); border: 1px solid #e2e8f0; cursor: pointer; display: flex; justify-content: center; align-items: center; color: var(--navy-dark); transition: 0.2s; }
         .notif-btn:hover { background: #f1f5f9; }
-        .notif-badge { position: absolute; top: -2px; right: -2px; width: 10px; height: 10px; background: #ef4444; border: 2px solid #fff; border-radius: 50%; }
+        .notif-badge { 
+            position: absolute; 
+            top: -2px; 
+            right: -2px; 
+            min-width: 18px;
+            height: 18px; 
+            background: #ef4444; 
+            border: 2px solid #fff; 
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 700;
+            color: white;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+        }
+        .notif-badge.show { display: flex; }
+        
+        .notif-dropdown {
+            position: absolute;
+            top: 55px;
+            right: 0;
+            width: 380px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+            border: 1px solid #e2e8f0;
+            display: none;
+            z-index: 1000;
+            max-height: 500px;
+            overflow: hidden;
+            flex-direction: column;
+        }
+        .notif-dropdown.show { display: flex; }
+        
+        .notif-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            background: var(--navy-dark);
+            color: white;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .notif-header h4 { margin: 0; font-size: 16px; font-weight: 600; }
+        
+        .notif-body {
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 8px;
+        }
+        
+        .notif-item {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            gap: 12px;
+            align-items: start;
+            background: #f8fafc;
+        }
+        .notif-item:hover { background: #f1f5f9; }
+        .notif-item.unread { background: #eff6ff; border-left: 3px solid var(--gold); }
+        
+        .notif-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 14px;
+        }
+        .notif-icon.quotation { background: #dbeafe; color: #1e40af; }
+        .notif-icon.service { background: #d1fae5; color: #065f46; }
+        .notif-icon.payment { background: #fef3c7; color: #92400e; }
+        .notif-icon.machine { background: #e0e7ff; color: #4338ca; }
+        
+        .notif-content {
+            flex: 1;
+            min-width: 0;
+        }
+        .notif-message {
+            font-size: 13px;
+            color: var(--navy-dark);
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+        .notif-time {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        
+        .notif-empty {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+        .notif-empty i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            color: #e2e8f0;
+        }
 
         /* MODIFIED: Reduced padding for less whitespace */
         .dashboard-view { flex: 1; overflow-y: auto; padding: 24px 30px; scrollbar-width: thin; }
@@ -1477,6 +1584,11 @@ if (!isset($_SESSION['name'])) {
                 </button>
             </li>
             <li class="nav-item">
+                <button class="nav-btn" onclick="showSection('machines', this)" id="nav-machines">
+                    <i class="fas fa-cubes"></i> My Machines
+                </button>
+            </li>
+            <li class="nav-item">
                 <button class="nav-btn" onclick="showSection('feedback', this)" id="nav-feedback">
                     <i class="fas fa-comment-dots"></i> Feedback
                 </button>
@@ -1492,10 +1604,23 @@ if (!isset($_SESSION['name'])) {
         <header class="header">
             <h1 id="current-page-title">Home</h1>
             <div class="header-actions">
-                <button class="notif-btn">
+                <button class="notif-btn" onclick="toggleNotifications()">
                     <i class="fas fa-bell"></i>
-                    <span class="notif-badge"></span>
+                    <span class="notif-badge" id="notif-badge"></span>
                 </button>
+                
+                <div class="notif-dropdown" id="notif-dropdown">
+                    <div class="notif-header">
+                        <h4>Notifications</h4>
+                        <span id="notif-count" style="font-size: 12px; opacity: 0.8;"></span>
+                    </div>
+                    <div class="notif-body" id="notif-body">
+                        <div class="notif-empty">
+                            <i class="fas fa-bell-slash"></i>
+                            <p>No notifications</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </header>
 
@@ -1664,7 +1789,12 @@ if (!isset($_SESSION['name'])) {
                 </div>
                 
                 <div class="quotations-section">
-                    <h3 class="section-subtitle">All My Quotations</h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3 class="section-subtitle" style="margin: 0;">All My Quotations</h3>
+                        <button onclick="refreshQuotations()" class="btn btn-outline" style="padding: 8px 16px; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-sync-alt" id="refresh-icon"></i> Refresh
+                        </button>
+                    </div>
                     <div class="quotations-list" id="quotations-grid">
                         <!-- Quotations will be loaded here -->
                     </div>
@@ -1795,6 +1925,44 @@ if (!isset($_SESSION['name'])) {
                 </div>
             </div>
 
+            <!-- MY MACHINES SECTION -->
+            <div id="machines" class="section">
+                <h2 class="panel-title" style="margin-bottom: 25px;"><i class="fas fa-cubes"></i> My Machines</h2>
+                
+                <div class="panel" style="margin-bottom: 24px;">
+                    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 15px; color: var(--navy-dark);">Machine Inventory Summary</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px;">
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 12px; color: white;">
+                            <div style="font-size: 14px; opacity: 0.9;">Total Machines</div>
+                            <div style="font-size: 36px; font-weight: 800; margin: 10px 0;" id="total-machines-count">0</div>
+                            <div style="font-size: 12px; opacity: 0.8;">All equipment</div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); padding: 20px; border-radius: 12px; color: white;">
+                            <div style="font-size: 14px; opacity: 0.9;">Washers</div>
+                            <div style="font-size: 36px; font-weight: 800; margin: 10px 0;" id="total-washers-count">0</div>
+                            <div style="font-size: 12px; opacity: 0.8;">Washing machines</div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%); padding: 20px; border-radius: 12px; color: white;">
+                            <div style="font-size: 14px; opacity: 0.9;">Dryers</div>
+                            <div style="font-size: 36px; font-weight: 800; margin: 10px 0;" id="total-dryers-count">0</div>
+                            <div style="font-size: 12px; opacity: 0.8;">Drying machines</div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%); padding: 20px; border-radius: 12px; color: white;">
+                            <div style="font-size: 14px; opacity: 0.9;">Packages Purchased</div>
+                            <div style="font-size: 36px; font-weight: 800; margin: 10px 0;" id="total-packages-count">0</div>
+                            <div style="font-size: 12px; opacity: 0.8;">Investment bundles</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 15px; color: var(--navy-dark);">Complete Machine List</h3>
+                    <div id="machines-list-container">
+                        <!-- Machines will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -1858,34 +2026,106 @@ if (!isset($_SESSION['name'])) {
             { id: 10, name: "The Flagship Enterprise", sets: "20 Sets (20 Washers + 20 Dryers)", price: 8500000, value: "P-10-FlagshipEnterprise", inclusions: "Full franchise license (if applicable), complete brand kit, backup industrial generator for uninterrupted service, and a long-term service maintenance contract.", idealFor: "Establishing a major regional laundry center or a multi-site operation (e.g., two 10-set shops)." }
         ];
 
-        const OWNED_MACHINES = [
-            { id: "W-001", type: "Washer", model: "W-18", purchased: "2024-01-15", status: "Active" },
-            { id: "D-001", type: "Dryer", model: "D-25", purchased: "2024-01-15", status: "Active" },
-            { id: "D-002", type: "Dryer", model: "D-25", purchased: "2024-06-20", status: "Active" },
-            { id: "W-002", type: "Washer", model: "W-18", purchased: "2024-01-15", status: "Active" },
-            { id: "W-003", type: "Washer", model: "W-25", purchased: "2024-10-01", status: "Active" },
-        ];
+        let OWNED_MACHINES = []; // Will be loaded from database
+        let MACHINE_STATS = { total_washers: 0, total_dryers: 0, total_machines: 0, total_packages: 0 };
 
         let QUOTATIONS = []; // Will be loaded from database
+        
+        // Function to fetch owned machines from database
+        async function fetchOwnedMachines() {
+            try {
+                const response = await fetch('client_machines_api.php?action=get_owned_machines');
+                const text = await response.text();
+                console.log('Owned Machines API Response:', text);
+                
+                let result;
+                try {
+                    result = JSON.parse(text);
+                } catch (parseError) {
+                    console.error('JSON Parse Error:', parseError);
+                    console.error('Response text:', text);
+                    showToast('Invalid API response format for machines', 'error');
+                    return;
+                }
+                
+                if (result.success) {
+                    OWNED_MACHINES = result.machines.map(machine => ({
+                        id: machine.serial_number,
+                        type: machine.type,
+                        model: machine.model,
+                        purchased: machine.purchased_date,
+                        status: machine.status,
+                        quotation_id: machine.quotation_id
+                    }));
+                    
+                    MACHINE_STATS = result.stats;
+                    
+                    console.log(`Loaded ${OWNED_MACHINES.length} machines:`, OWNED_MACHINES);
+                    console.log('Machine Stats:', MACHINE_STATS);
+                    
+                    // Refresh displays that use machine data
+                    renderMaintenanceMachineList();
+                    renderDashboardOwnedMachines();
+                    renderAllMachines();
+                    updateMachineStatistics();
+                } else {
+                    console.error('Failed to fetch owned machines:', result.message);
+                    showToast('Failed to load machines: ' + result.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error fetching owned machines:', error);
+                showToast('Error loading machines. Using cached data.', 'warning');
+            }
+        }
         
         // Function to fetch quotations from database
         async function fetchQuotations() {
             try {
-                const response = await fetch('client_quotations_api.php?action=get_quotations');
-                const result = await response.json();
+                // Add cache-busting parameter
+                const cacheBuster = new Date().getTime();
+                const response = await fetch(`client_quotations_api.php?action=get_quotations&_=${cacheBuster}`);
+                const text = await response.text();
+                console.log('Raw API Response:', text);
+                
+                let result;
+                try {
+                    result = JSON.parse(text);
+                } catch (parseError) {
+                    console.error('JSON Parse Error:', parseError);
+                    console.error('Response text:', text);
+                    showToast('Invalid API response format', 'error');
+                    return;
+                }
                 
                 if (result.success) {
                     QUOTATIONS = result.quotations;
                     renderQuotations();
                     renderDashboardQuotes();
                 } else {
-                    console.error('Failed to fetch quotations:', result.message);
-                    showToast('Failed to load quotations', 'error');
+                    console.error('API Error:', result.message || 'Unknown error');
+                    showToast(result.message || 'Failed to load quotations', 'error');
                 }
             } catch (error) {
                 console.error('Error fetching quotations:', error);
                 showToast('Error loading quotations', 'error');
             }
+        }
+
+        // Manual refresh function with visual feedback
+        async function refreshQuotations() {
+            const icon = document.getElementById('refresh-icon');
+            if (icon) {
+                icon.classList.add('fa-spin');
+            }
+            
+            await fetchQuotations();
+            showToast('Quotations refreshed successfully', 'success');
+            
+            setTimeout(() => {
+                if (icon) {
+                    icon.classList.remove('fa-spin');
+                }
+            }, 1000);
         }
 
         let PAYMENT_HISTORY = []; // Will be loaded from database
@@ -1899,16 +2139,16 @@ if (!isset($_SESSION['name'])) {
                 if (result.success) {
                     // Filter to show only paid/verified quotations as payment history
                     PAYMENT_HISTORY = result.quotations
-                        .filter(q => ['Verified', 'Paid', 'Completed'].includes(q.Status))
+                        .filter(q => ['Verified', 'Approved', 'Paid', 'Completed', 'Payment Submitted', 'Awaiting Verification'].includes(q.status))
                         .map(q => ({
-                            ref: q.ref || `QT-${String(q.Quotation_ID).padStart(3, '0')}`,
-                            quotation_id: q.Quotation_ID,
-                            package: q.Package,
-                            amount: parseFloat(q.Amount),
-                            date: q.Date_Issued,
-                            status: q.Status === 'Verified' ? 'Confirmed' : q.Status,
-                            delivery_method: q.Delivery_Method,
-                            handling_fee: q.Handling_Fee
+                            ref: q.ref || `QT-${String(q.id).padStart(3, '0')}`,
+                            quotation_id: q.id,
+                            package: q.items || q.Package,
+                            amount: parseFloat(q.total || q.Amount),
+                            date: q.date || q.Date_Issued,
+                            status: q.status === 'Verified' ? 'Confirmed' : q.status,
+                            delivery_method: q.delivery_method || q.Delivery_Method,
+                            handling_fee: parseFloat(q.handling_fee || q.Handling_Fee || 0)
                         }));
                     renderPaymentHistory();
                 } else {
@@ -2713,7 +2953,7 @@ if (!isset($_SESSION['name'])) {
                     
                     // Map status to display format - WORKFLOW INTEGRATION
                     const lowerStatus = quote.status.toLowerCase();
-                    if (lowerStatus === 'pending') {
+                    if (lowerStatus === 'pending' || lowerStatus === 'approved' || lowerStatus === 'review & accept') {
                         statusText = 'Review & Accept';
                         statusClass = 'status-awaiting';
                     } else if (lowerStatus === 'accepted') {
@@ -2754,7 +2994,7 @@ if (!isset($_SESSION['name'])) {
                     
                     // Show action buttons based on status - WORKFLOW INTEGRATION
                     let actionButtons = '';
-                    if (lowerStatus === 'pending') {
+                    if (lowerStatus === 'pending' || lowerStatus === 'approved' || lowerStatus === 'review & accept') {
                         // Step 1: Client needs to accept or decline
                         actionButtons = `
                             <div class="quotation-actions">
@@ -3079,25 +3319,175 @@ if (!isset($_SESSION['name'])) {
             listContainer.innerHTML = '';
 
             if (OWNED_MACHINES.length === 0) {
-                listContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 13px;">No active machines found.</div>';
+                listContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 13px;">No active machines found. Purchase a package to get started!</div>';
                 return;
             }
 
             OWNED_MACHINES.slice(0, 3).forEach(machine => {
+                const purchaseDate = new Date(machine.purchased).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
                 const html = `
-                    <div class="schedule-item" style="cursor: default;">
+                    <div class="schedule-item" style="cursor: pointer;" onclick="showMachineDetails('${machine.id}')">
                         <div class="schedule-date" style="width: 70px; margin-right: 15px; padding-right: 15px;">
                             <div class="day" style="font-size: 16px;">${machine.model}</div>
                             <div class="month">${machine.type}</div>
                         </div>
                         <div class="schedule-details">
-                            <h4 style="margin-bottom: 2px;">Asset ID: ${machine.id}</h4>
-                            <p>Purchased: ${machine.purchased}</p>
+                            <h4 style="margin-bottom: 2px;">Serial: ${machine.id}</h4>
+                            <p>Purchased: ${purchaseDate}</p>
+                            <span class="status-badge badge-success" style="font-size: 11px; margin-top: 5px;">${machine.status}</span>
                         </div>
                     </div>
                 `;
                 listContainer.insertAdjacentHTML('beforeend', html);
             });
+        }
+        
+        // Function to show machine details
+        function showMachineDetails(serialNumber) {
+            const machine = OWNED_MACHINES.find(m => m.id === serialNumber);
+            if (machine) {
+                const purchaseDate = new Date(machine.purchased).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                showToast(`Machine: ${machine.model} ${machine.type}\nSerial: ${machine.id}\nPurchased: ${purchaseDate}\nStatus: ${machine.status}`, 'info');
+            }
+        }
+        
+        // Function to update machine statistics in dashboard
+        function updateMachineStatistics() {
+            // Update dashboard stat box
+            const statsContainer = document.querySelector('.stat-box:nth-child(3) .stat-number');
+            if (statsContainer && MACHINE_STATS) {
+                statsContainer.textContent = MACHINE_STATS.total_machines;
+            }
+            
+            // Update My Machines section statistics
+            if (document.getElementById('total-machines-count')) {
+                document.getElementById('total-machines-count').textContent = MACHINE_STATS.total_machines;
+            }
+            if (document.getElementById('total-washers-count')) {
+                document.getElementById('total-washers-count').textContent = MACHINE_STATS.total_washers;
+            }
+            if (document.getElementById('total-dryers-count')) {
+                document.getElementById('total-dryers-count').textContent = MACHINE_STATS.total_dryers;
+            }
+            if (document.getElementById('total-packages-count')) {
+                document.getElementById('total-packages-count').textContent = MACHINE_STATS.total_packages;
+            }
+        }
+        
+        // Function to render all machines in My Machines section
+        function renderAllMachines() {
+            const container = document.getElementById('machines-list-container');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            if (OWNED_MACHINES.length === 0) {
+                container.innerHTML = `
+                    <div style="padding: 60px 20px; text-align: center; color: var(--text-muted);">
+                        <i class="fas fa-box-open" style="font-size: 48px; opacity: 0.3; margin-bottom: 15px;"></i>
+                        <p style="font-size: 16px;">No machines found in your account.</p>
+                        <p style="font-size: 14px; margin-top: 10px;">Purchase a package from the <a href="#" onclick="showSection('shop', getNavButtonBySectionId('shop')); return false;" style="color: var(--primary); text-decoration: underline;">Shop & Invest</a> section to get started!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Group machines by type
+            const washers = OWNED_MACHINES.filter(m => m.type === 'Washer');
+            const dryers = OWNED_MACHINES.filter(m => m.type === 'Dryer');
+            
+            let html = '<div style="display: flex; flex-direction: column; gap: 24px;">';
+            
+            // Render Washers
+            if (washers.length > 0) {
+                html += `
+                    <div>
+                        <h4 style="font-size: 16px; font-weight: 700; color: var(--navy-dark); margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-cog" style="color: #48bb78;"></i> Washing Machines (${washers.length})
+                        </h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
+                `;
+                
+                washers.forEach(machine => {
+                    const purchaseDate = new Date(machine.purchased).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                    html += `
+                        <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; background: #ffffff; transition: all 0.2s ease; cursor: pointer;" onclick="showMachineDetails('${machine.id}')" onmouseover="this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)'; this.style.borderColor='#48bb78';" onmouseout="this.style.boxShadow='none'; this.style.borderColor='#e2e8f0';">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                                <div style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); width: 48px; height: 48px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px;">
+                                    <i class="fas fa-tshirt"></i>
+                                </div>
+                                <div style="flex: 1;">
+                                    <div style="font-size: 14px; font-weight: 700; color: var(--navy-dark);">${machine.model}</div>
+                                    <div style="font-size: 12px; color: var(--text-muted);">${machine.type}</div>
+                                </div>
+                            </div>
+                            <div style="border-top: 1px solid #f3f4f6; padding-top: 12px; font-size: 13px;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                                    <span style="color: var(--text-muted);">Serial:</span>
+                                    <span style="font-weight: 600; color: var(--navy-dark); font-family: monospace;">${machine.id}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                                    <span style="color: var(--text-muted);">Purchased:</span>
+                                    <span style="font-weight: 600; color: var(--navy-dark);">${purchaseDate}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span style="color: var(--text-muted);">Status:</span>
+                                    <span class="status-badge badge-success" style="font-size: 11px;">${machine.status}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div></div>';
+            }
+            
+            // Render Dryers
+            if (dryers.length > 0) {
+                html += `
+                    <div>
+                        <h4 style="font-size: 16px; font-weight: 700; color: var(--navy-dark); margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-wind" style="color: #f6ad55;"></i> Drying Machines (${dryers.length})
+                        </h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
+                `;
+                
+                dryers.forEach(machine => {
+                    const purchaseDate = new Date(machine.purchased).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                    html += `
+                        <div style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; background: #ffffff; transition: all 0.2s ease; cursor: pointer;" onclick="showMachineDetails('${machine.id}')" onmouseover="this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)'; this.style.borderColor='#f6ad55';" onmouseout="this.style.boxShadow='none'; this.style.borderColor='#e2e8f0';">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                                <div style="background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%); width: 48px; height: 48px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px;">
+                                    <i class="fas fa-fan"></i>
+                                </div>
+                                <div style="flex: 1;">
+                                    <div style="font-size: 14px; font-weight: 700; color: var(--navy-dark);">${machine.model}</div>
+                                    <div style="font-size: 12px; color: var(--text-muted);">${machine.type}</div>
+                                </div>
+                            </div>
+                            <div style="border-top: 1px solid #f3f4f6; padding-top: 12px; font-size: 13px;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                                    <span style="color: var(--text-muted);">Serial:</span>
+                                    <span style="font-weight: 600; color: var(--navy-dark); font-family: monospace;">${machine.id}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                                    <span style="color: var(--text-muted);">Purchased:</span>
+                                    <span style="font-weight: 600; color: var(--navy-dark);">${purchaseDate}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span style="color: var(--text-muted);">Status:</span>
+                                    <span class="status-badge badge-success" style="font-size: 11px;">${machine.status}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div></div>';
+            }
+            
+            html += '</div>';
+            container.innerHTML = html;
         }
 
         function renderDashboardQuotes() {
@@ -3149,20 +3539,21 @@ if (!isset($_SESSION['name'])) {
                 const result = await response.json();
                 
                 if (result.success) {
-                    showToast('Investment request sent to secretary successfully!', 'success');
+                    showToast('Investment request sent to secretary for review!', 'success');
                     
                     // Show additional details
                     setTimeout(() => {
-                        showToast(`Quotation ID: ${result.quotation_id}`, 'info');
-                    }, 1000);
+                        showToast(`Your request has been submitted. You will receive a quotation once reviewed by our team.`, 'info');
+                    }, 1500);
                     
                     setTimeout(() => {
-                        showToast(`Total Investment: ₱${result.total_amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`, 'info');
-                    }, 2000);
+                        showToast(`Estimated Total: ₱${result.total_amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`, 'info');
+                    }, 3000);
                     
                     // Reset form or disable further submissions
                     button.innerHTML = '<i class="fas fa-check-circle"></i> Request Sent';
                     button.style.backgroundColor = '#10b981';
+                    button.disabled = true;
                     
                 } else {
                     showToast(`Failed to send request: ${result.message}`, 'error');
@@ -3180,6 +3571,7 @@ if (!isset($_SESSION['name'])) {
         // Initialize the view
         document.addEventListener('DOMContentLoaded', () => {
             renderPackageOptions();
+            fetchOwnedMachines(); // Fetch real owned machines from database
             renderMaintenanceMachineList();
             fetchQuotations(); // Fetch real quotations from database
             fetchPaymentHistory(); // Load real payment data
@@ -3510,6 +3902,148 @@ if (!isset($_SESSION['name'])) {
                 console.error('Error fetching feedback history:', error);
             }
         }
+
+        // ===== NOTIFICATION SYSTEM =====
+        let notificationsOpen = false;
+        const clientId = <?php echo $_SESSION['client_id']; ?>;
+
+        async function loadNotifications() {
+            try {
+                const response = await fetch(`notification_api.php?action=get_notifications&role=client&client_id=${clientId}`, {
+                    credentials: 'include'
+                });
+                const result = await response.json();
+                
+                if (result.success && result.notifications) {
+                    displayNotifications(result.notifications);
+                    updateNotificationCount(result.count);
+                }
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+            }
+        }
+
+        function displayNotifications(notifications) {
+            const notifBody = document.getElementById('notif-body');
+            
+            if (!notifications || notifications.length === 0) {
+                notifBody.innerHTML = `
+                    <div class="notif-empty">
+                        <i class="fas fa-bell-slash"></i>
+                        <p>No new notifications</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            notifBody.innerHTML = notifications.map(notif => {
+                const iconClass = notif.type === 'quotation' ? 'quotation' : 
+                                 notif.type === 'service' ? 'service' : 
+                                 notif.type === 'machine' ? 'machine' : 'payment';
+                
+                return `
+                    <div class="notif-item ${notif.status === 'unread' ? 'unread' : ''}" 
+                         onclick="handleNotificationClick(${notif.related_id}, '${notif.type}')">
+                        <div class="notif-icon ${iconClass}">
+                            <i class="fas ${notif.icon}"></i>
+                        </div>
+                        <div class="notif-content">
+                            <div class="notif-message">${notif.message}</div>
+                            <div class="notif-time">${notif.time_ago}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function updateNotificationCount(count) {
+            const badge = document.getElementById('notif-badge');
+            const countSpan = document.getElementById('notif-count');
+            
+            if (count && count > 0) {
+                badge.textContent = count > 9 ? '9+' : count;
+                badge.classList.add('show');
+                countSpan.textContent = `${count} new`;
+            } else {
+                badge.classList.remove('show');
+                countSpan.textContent = '';
+            }
+        }
+
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notif-dropdown');
+            notificationsOpen = !notificationsOpen;
+            
+            if (notificationsOpen) {
+                dropdown.classList.add('show');
+                loadNotifications();
+            } else {
+                dropdown.classList.remove('show');
+            }
+        }
+
+        function handleNotificationClick(relatedId, type) {
+            // Navigate to relevant section based on notification type
+            if (type === 'quotation') {
+                showSection('quotations', getNavButtonBySectionId('quotations'));
+            } else if (type === 'service') {
+                showSection('service', getNavButtonBySectionId('service'));
+            } else if (type === 'machine') {
+                // Go to home to see owned machines
+                showSection('home', getNavButtonBySectionId('home'));
+            }
+            
+            // Close notification dropdown
+            toggleNotifications();
+        }
+
+        // Close notifications when clicking outside
+        document.addEventListener('click', function(event) {
+            const notifBtn = document.querySelector('.notif-btn');
+            const notifDropdown = document.getElementById('notif-dropdown');
+            
+            if (notificationsOpen && 
+                !notifBtn.contains(event.target) && 
+                !notifDropdown.contains(event.target)) {
+                toggleNotifications();
+            }
+        });
+
+        // Load notifications count on page load
+        async function loadNotificationCount() {
+            try {
+                const response = await fetch(`notification_api.php?action=get_unread_count&role=client&client_id=${clientId}`, {
+                    credentials: 'include'
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    updateNotificationCount(result.count);
+                }
+            } catch (error) {
+                console.error('Error loading notification count:', error);
+            }
+        }
+
+        // Real-time updates - Auto-refresh notifications every 5 seconds
+        setInterval(loadNotificationCount, 5000);
+        
+        // Auto-refresh quotations every 5 seconds for real-time updates
+        setInterval(() => {
+            if (document.getElementById('quotations')?.classList.contains('active')) {
+                fetchQuotations();
+            }
+        }, 5000);
+        
+        // Auto-refresh payment history every 5 seconds
+        setInterval(() => {
+            if (document.getElementById('transactions')?.classList.contains('active')) {
+                fetchPaymentHistory();
+            }
+        }, 5000);
+        
+        // Load initial notification count
+        loadNotificationCount();
     </script>
 </body>
 </html>

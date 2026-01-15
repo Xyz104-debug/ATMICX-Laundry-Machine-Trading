@@ -147,6 +147,106 @@ switch ($action) {
                 ")->fetchAll(PDO::FETCH_ASSOC);
                 
                 $notifications = array_merge($service_notifs, $sent_quotes, $stock_notifs);
+            } elseif ($role === 'client') {
+                // Get client ID
+                $client_id = $_GET['client_id'] ?? $user_id;
+                
+                if (!$client_id) {
+                    echo json_encode(['success' => false, 'message' => 'Client ID required']);
+                    exit;
+                }
+                
+                // Quotation status updates
+                $quote_notifs = $pdo->prepare("
+                    SELECT 
+                        CONCAT('Quotation ', 
+                            CASE Status
+                                WHEN 'Approved' THEN 'approved'
+                                WHEN 'Scheduled' THEN 'scheduled for installation'
+                                WHEN 'Completed' THEN 'completed'
+                                WHEN 'Payment Verified' THEN 'payment verified'
+                                WHEN 'Awaiting Manager Approval' THEN 'is being reviewed'
+                                ELSE LOWER(Status)
+                            END,
+                            ': ', Package
+                        ) as message,
+                        'quotation' as type,
+                        CASE Status
+                            WHEN 'Approved' THEN 'fa-check-circle'
+                            WHEN 'Scheduled' THEN 'fa-calendar-check'
+                            WHEN 'Completed' THEN 'fa-check-double'
+                            WHEN 'Payment Verified' THEN 'fa-money-check-alt'
+                            WHEN 'Awaiting Manager Approval' THEN 'fa-clock'
+                            ELSE 'fa-file-invoice'
+                        END as icon,
+                        Quotation_ID as related_id,
+                        Date_Issued as created_at
+                    FROM quotation
+                    WHERE Client_ID = ?
+                    AND (Status IN ('Approved', 'Scheduled', 'Completed', 'Payment Verified', 'Awaiting Manager Approval')
+                         OR Date_Issued >= DATE_SUB(NOW(), INTERVAL 7 DAY))
+                    ORDER BY Date_Issued DESC
+                    LIMIT 5
+                ");
+                $quote_notifs->execute([$client_id]);
+                $quote_results = $quote_notifs->fetchAll(PDO::FETCH_ASSOC);
+                
+                // Service completion notifications for owned machines
+                $service_notifs = $pdo->prepare("
+                    SELECT 
+                        CONCAT('Service ', LOWER(type), ' ', 
+                            CASE Status
+                                WHEN 'completed' THEN 'completed'
+                                WHEN 'scheduled' THEN 'scheduled'
+                                WHEN 'in_progress' THEN 'in progress'
+                                ELSE LOWER(Status)
+                            END,
+                            ' for your ', location) as message,
+                        'service' as type,
+                        CASE Status
+                            WHEN 'completed' THEN 'fa-check-circle'
+                            WHEN 'scheduled' THEN 'fa-calendar-alt'
+                            WHEN 'in_progress' THEN 'fa-tools'
+                            ELSE 'fa-wrench'
+                        END as icon,
+                        Service_ID as related_id,
+                        Service_Date as created_at
+                    FROM service
+                    WHERE Client_ID = ?
+                    AND Status IN ('scheduled', 'completed', 'in_progress')
+                    ORDER BY Service_Date DESC
+                    LIMIT 3
+                ");
+                $service_notifs->execute([$client_id]);
+                $service_results = $service_notifs->fetchAll(PDO::FETCH_ASSOC);
+                
+                // Owned machines needing attention
+                $machine_notifs = $pdo->prepare("
+                    SELECT 
+                        CONCAT('Your ', Asset_Type, ' (', Asset_ID, ') has a ', 
+                            CASE 
+                                WHEN EXISTS (SELECT 1 FROM service WHERE asset_id = a.Asset_ID AND Status = 'scheduled' LIMIT 1) 
+                                THEN 'scheduled service'
+                                ELSE 'completed service'
+                            END
+                        ) as message,
+                        'machine' as type,
+                        'fa-cog' as icon,
+                        a.Asset_ID as related_id,
+                        s.Service_Date as created_at
+                    FROM asset a
+                    JOIN service s ON a.Asset_ID = s.asset_id
+                    WHERE a.Client_ID = ?
+                    AND s.Status IN ('scheduled', 'completed')
+                    AND s.Service_Date >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+                    GROUP BY a.Asset_ID
+                    ORDER BY s.Service_Date DESC
+                    LIMIT 3
+                ");
+                $machine_notifs->execute([$client_id]);
+                $machine_results = $machine_notifs->fetchAll(PDO::FETCH_ASSOC);
+                
+                $notifications = array_merge($quote_results, $service_results, $machine_results);
             }
             
             // Sort by timestamp
@@ -209,6 +309,34 @@ switch ($action) {
                     as total_count
                 ")->fetch(PDO::FETCH_ASSOC);
                 $count = $result['total_count'];
+            } elseif ($role === 'client') {
+                // Get client ID
+                $client_id = $_GET['client_id'] ?? $user_id;
+                
+                if (!$client_id) {
+                    $count = 0;
+                } else {
+                    // Count quotations and services with updates
+                    $stmt = $pdo->prepare("
+                        SELECT 
+                            (SELECT COUNT(*) FROM quotation 
+                             WHERE Client_ID = ? 
+                             AND (Status IN ('Approved', 'Scheduled', 'Completed', 'Payment Verified', 'Awaiting Manager Approval')
+                                  OR Date_Issued >= DATE_SUB(NOW(), INTERVAL 7 DAY))) +
+                            (SELECT COUNT(*) FROM service 
+                             WHERE Client_ID = ? 
+                             AND Status IN ('scheduled', 'completed', 'in_progress')) +
+                            (SELECT COUNT(DISTINCT a.Asset_ID) FROM asset a
+                             JOIN service s ON a.Asset_ID = s.asset_id
+                             WHERE a.Client_ID = ?
+                             AND s.Status IN ('scheduled', 'completed')
+                             AND s.Service_Date >= DATE_SUB(NOW(), INTERVAL 30 DAY))
+                        as total_count
+                    ");
+                    $stmt->execute([$client_id, $client_id, $client_id]);
+                    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                    $count = $result['total_count'];
+                }
             }
             
             echo json_encode(['success' => true, 'count' => $count]);

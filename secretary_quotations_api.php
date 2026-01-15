@@ -283,6 +283,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                             q.Client_ID,
                             q.Package,
                             q.Amount,
+                            q.Handling_Fee,
+                            q.Delivery_Method,
                             q.Date_Issued,
                             q.Status,
                             c.Name as Client_Name,
@@ -291,7 +293,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                             c.email as Client_Email
                         FROM quotation q
                         LEFT JOIN client c ON q.Client_ID = c.Client_ID
-                        WHERE q.Status = 'Pending'
+                        WHERE q.Status IN ('Pending', 'Awaiting Secretary Review')
                         ORDER BY q.Date_Issued DESC";
                 
                 $stmt = $pdo->prepare($sql);

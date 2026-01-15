@@ -172,14 +172,14 @@ switch ($action) {
             }
             
             if ($quotation_id) {
-                $quotation_query = "SELECT q.*, s.Service_ID as service_request_id, s.type as service_type, s.location as asset_type 
+                $quotation_query = "SELECT q.*, s.Service_ID as service_request_id
                                    FROM quotation q 
                                    LEFT JOIN service s ON q.service_request_id = s.Service_ID 
                                    WHERE q.Quotation_ID = ?";
                 $stmt = $pdo->prepare($quotation_query);
                 $stmt->execute([$quotation_id]);
             } elseif ($service_id) {
-                $quotation_query = "SELECT q.*, s.Service_ID as service_request_id, s.type as service_type, s.location as asset_type 
+                $quotation_query = "SELECT q.*, s.Service_ID as service_request_id
                                    FROM quotation q 
                                    LEFT JOIN service s ON q.service_request_id = s.Service_ID 
                                    WHERE q.service_request_id = ?";
@@ -614,6 +614,57 @@ switch ($action) {
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(['success' => false, 'message' => 'Error fetching quote details: ' . $e->getMessage()]);
+        }
+        break;
+    
+    case 'get_payment_details':
+        $quotation_id = $_GET['quotation_id'] ?? null;
+        
+        if (!$quotation_id) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Quotation ID required']);
+            exit;
+        }
+        
+        try {
+            // Get payment details with proof file
+            $sql = "SELECT 
+                        p.Payment_ID,
+                        p.Amount_Paid,
+                        p.payment_date,
+                        p.proof_file_path,
+                        p.Proof_Image,
+                        p.Status,
+                        q.Quotation_ID,
+                        q.Package,
+                        q.Amount,
+                        c.Client_ID,
+                        c.Name as Client_Name,
+                        c.Contact_Num,
+                        c.Email,
+                        CONCAT('QT-', LPAD(q.Quotation_ID, 4, '0')) as reference
+                    FROM payment p
+                    INNER JOIN quotation q ON p.quotation_id = q.Quotation_ID
+                    INNER JOIN client c ON q.Client_ID = c.Client_ID
+                    WHERE q.Quotation_ID = ?
+                    ORDER BY p.payment_date DESC
+                    LIMIT 1";
+            
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$quotation_id]);
+            $payment = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$payment) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Payment not found for this quotation']);
+                exit;
+            }
+            
+            echo json_encode(['success' => true, 'payment' => $payment]);
+            
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error fetching payment details: ' . $e->getMessage()]);
         }
         break;
         

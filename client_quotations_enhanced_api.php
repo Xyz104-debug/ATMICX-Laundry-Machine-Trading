@@ -25,12 +25,10 @@ try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
-    // Get quotations including service-related ones
+    // Get quotations - simplified query without service table joins for now
     $stmt = $pdo->prepare("
-        SELECT q.Quotation_ID, q.Package, q.Amount, q.Date_Issued, q.Status, q.Delivery_Method,
-               q.service_request_id, s.Service_ID, s.problem_description
+        SELECT q.Quotation_ID, q.Package, q.Amount, q.Date_Issued, q.Status, q.Delivery_Method
         FROM quotation q
-        LEFT JOIN service s ON q.service_request_id = s.Service_ID
         WHERE q.Client_ID = ?
         ORDER BY q.Date_Issued DESC
     ");
@@ -40,9 +38,7 @@ try {
     // Format quotations for client display
     $formatted_quotations = [];
     foreach ($quotations as $quote) {
-        $reference = $quote['service_request_id'] ? 
-            "SR-" . str_pad($quote['service_request_id'], 3, '0', STR_PAD_LEFT) : 
-            "QT-" . str_pad($quote['Quotation_ID'], 4, '0', STR_PAD_LEFT);
+        $reference = "QT-" . str_pad($quote['Quotation_ID'], 4, '0', STR_PAD_LEFT);
             
         $formatted_quotations[] = [
             'id' => $quote['Quotation_ID'],
@@ -52,9 +48,9 @@ try {
             'date_issued' => $quote['Date_Issued'],
             'status' => $quote['Status'],
             'delivery_method' => $quote['Delivery_Method'],
-            'is_service_request' => !empty($quote['service_request_id']),
-            'service_id' => $quote['service_request_id'],
-            'problem_description' => $quote['problem_description']
+            'is_service_request' => false,
+            'service_id' => null,
+            'problem_description' => null
         ];
     }
     
@@ -67,7 +63,7 @@ try {
     error_log("Client quotations error: " . $e->getMessage());
     echo json_encode([
         'success' => false, 
-        'message' => 'Failed to load quotations'
+        'message' => 'Failed to load quotations: ' . $e->getMessage()
     ]);
 }
 ?>

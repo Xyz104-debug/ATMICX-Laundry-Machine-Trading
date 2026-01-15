@@ -63,8 +63,13 @@ try {
         exit;
     }
 
-    // Hash password
-    $password_hash = password_hash($password, PASSWORD_DEFAULT);
+    // Hash password using Argon2id
+    $options = [
+        'memory_cost' => 65536,
+        'time_cost' => 4,
+        'threads' => 1
+    ];
+    $password_hash = password_hash($password, PASSWORD_ARGON2ID, $options);
 
     // Insert new client
     $stmt = $pdo->prepare("INSERT INTO client (Name, Email, Password_Hash, Contact_Num, Address) VALUES (?, ?, ?, ?, ?)");

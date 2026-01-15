@@ -8,6 +8,16 @@ header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST');
 header('Access-Control-Allow-Headers: Content-Type');
+header('Cache-Control: no-cache, no-store, must-revalidate');
+header('Pragma: no-cache');
+header('Expires: 0');
+
+// Error logging function
+function logError($message) {
+    $logFile = __DIR__ . '/logs/system/api_errors.log';
+    $timestamp = date('Y-m-d H:i:s');
+    file_put_contents($logFile, "[$timestamp] $message\n", FILE_APPEND);
+}
 
 // Check if client is logged in - allow flexible authentication
 $debug_mode = isset($_GET['debug']) && $_GET['debug'] === 'test';
@@ -23,6 +33,7 @@ if ($debug_mode) {
         $_SESSION['client_id'] = $_SESSION['user_id'];
         $_SESSION['role'] = 'client';
     } else {
+        logError('Session check failed - No client_id or user_id in session');
         http_response_code(403);
         echo json_encode(['success' => false, 'message' => 'Unauthorized. Please log in as a client.']);
         exit;
@@ -39,8 +50,9 @@ try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username_db, $password_db);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (Exception $e) {
+    logError('Database connection failed: ' . $e->getMessage());
     http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Database connection failed']);
+    echo json_encode(['success' => false, 'message' => 'Database connection failed: ' . $e->getMessage()]);
     exit;
 }
 
@@ -104,6 +116,9 @@ switch ($action) {
         
     case 'get_quotations':
         try {
+            // Debug logging
+            logError("get_quotations called for client_id: " . $client_id);
+            
             $sql = "SELECT 
                         q.Quotation_ID,
                         q.Package,
@@ -116,6 +131,7 @@ switch ($action) {
                     FROM quotation q
                     LEFT JOIN user u ON q.User_ID = u.User_ID
                     WHERE q.Client_ID = ?
+                    AND q.Status NOT IN ('Awaiting Secretary Review', 'Pending Manager Approval', 'Awaiting Manager Approval')
                     ORDER BY q.Date_Issued DESC";
             
             $stmt = $pdo->prepare($sql);
@@ -184,6 +200,7 @@ switch ($action) {
             ]);
             
         } catch (Exception $e) {
+            logError('Error in get_quotations: ' . $e->getMessage() . ' | Client ID: ' . $client_id);
             http_response_code(500);
             echo json_encode(['success' => false, 'message' => 'Error fetching quotations: ' . $e->getMessage()]);
         }
@@ -241,7 +258,7 @@ switch ($action) {
             // Update quotation status to accepted (ready for payment)
             $sql = "UPDATE quotation 
                     SET Status = 'Accepted' 
-                    WHERE Quotation_ID = ? AND Client_ID = ? AND Status = 'Pending'";
+                    WHERE Quotation_ID = ? AND Client_ID = ? AND Status IN ('Pending', 'Approved', 'Review & Accept')";
             
             $stmt = $pdo->prepare($sql);
             $result = $stmt->execute([$quotation_id, $client_id]);
@@ -306,7 +323,7 @@ switch ($action) {
             // Update quotation status to declined
             $sql = "UPDATE quotation 
                     SET Status = 'Declined' 
-                    WHERE Quotation_ID = ? AND Client_ID = ? AND Status IN ('Pending', 'Awaiting Approval')";
+                    WHERE Quotation_ID = ? AND Client_ID = ? AND Status IN ('Pending', 'Awaiting Approval', 'Approved', 'Review & Accept')";
             
             $stmt = $pdo->prepare($sql);
             $result = $stmt->execute([$quotation_id, $client_id]);

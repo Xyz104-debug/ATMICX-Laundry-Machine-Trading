@@ -36,6 +36,49 @@ try {
         }
     }
     
+    // 1b. Update quotation table structure
+    echo "\n1b. Updating quotation table structure...\n";
+    
+    $quotationAlterQueries = [
+        "ALTER TABLE quotation ADD COLUMN IF NOT EXISTS Proof_File VARCHAR(500) NULL AFTER Handling_Fee",
+        "ALTER TABLE quotation ADD COLUMN IF NOT EXISTS Created_By VARCHAR(255) NULL AFTER Proof_File",
+        "ALTER TABLE quotation ADD COLUMN IF NOT EXISTS service_request_id INT NULL AFTER Created_By"
+    ];
+    
+    foreach ($quotationAlterQueries as $query) {
+        try {
+            $pdo->exec($query);
+            echo "  ✓ " . substr($query, 0, 50) . "...\n";
+        } catch (Exception $e) {
+            echo "  - " . substr($query, 0, 50) . "... (already exists)\n";
+        }
+    }
+    
+    // 1c. Update service table structure
+    echo "\n1c. Updating service table structure...\n";
+    
+    $serviceAlterQueries = [
+        "ALTER TABLE service ADD COLUMN IF NOT EXISTS type VARCHAR(100) NULL AFTER Status",
+        "ALTER TABLE service ADD COLUMN IF NOT EXISTS description TEXT NULL AFTER type",
+        "ALTER TABLE service ADD COLUMN IF NOT EXISTS location VARCHAR(255) NULL AFTER description",
+        "ALTER TABLE service ADD COLUMN IF NOT EXISTS date_requested DATETIME DEFAULT CURRENT_TIMESTAMP AFTER location",
+        "ALTER TABLE service ADD COLUMN IF NOT EXISTS client_id INT NULL AFTER date_requested",
+        "ALTER TABLE service ADD COLUMN IF NOT EXISTS Priority VARCHAR(50) DEFAULT 'normal' AFTER client_id",
+        "ALTER TABLE service ADD COLUMN IF NOT EXISTS estimated_cost DECIMAL(10,2) DEFAULT 0 AFTER Priority",
+        "ALTER TABLE service ADD COLUMN IF NOT EXISTS scheduled_date DATE NULL AFTER estimated_cost",
+        "ALTER TABLE service ADD COLUMN IF NOT EXISTS scheduled_time TIME NULL AFTER scheduled_date",
+        "ALTER TABLE service ADD COLUMN IF NOT EXISTS assigned_team VARCHAR(255) NULL AFTER scheduled_time"
+    ];
+    
+    foreach ($serviceAlterQueries as $query) {
+        try {
+            $pdo->exec($query);
+            echo "  ✓ " . substr($query, 0, 50) . "...\n";
+        } catch (Exception $e) {
+            echo "  - " . substr($query, 0, 50) . "... (already exists)\n";
+        }
+    }
+    
     // 2. Add foreign key constraints if missing
     echo "\n2. Adding foreign key constraints...\n";
     

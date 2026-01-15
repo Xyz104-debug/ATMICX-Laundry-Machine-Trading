@@ -198,11 +198,11 @@ function handleSubmitRequest($pdo, $auth) {
         
         // Insert maintenance request into service table
         $stmt = $pdo->prepare("
-            INSERT INTO service (Client_ID, type, client_name, problem_description, location, priority, estimated_cost, Status) 
-            VALUES (?, 'maintenance', ?, ?, ?, ?, ?, 'pending_secretary_review')
+            INSERT INTO service (Client_ID, type, description, location, Priority, estimated_cost, Status, date_requested) 
+            VALUES (?, 'maintenance', ?, ?, ?, ?, 'pending_secretary_review', NOW())
         ");
         
-        $stmt->execute([$client_id, $client_name, $problem_description, $location, $priority, $estimated_cost]);
+        $stmt->execute([$client_id, $problem_description, $location, $priority, $estimated_cost]);
         $service_id = $pdo->lastInsertId();
         
         $pdo->commit();
@@ -216,7 +216,7 @@ function handleSubmitRequest($pdo, $auth) {
     } catch (Exception $e) {
         $pdo->rollback();
         error_log("Service request submission error: " . $e->getMessage());
-        echo json_encode(['success' => false, 'message' => 'Failed to submit service request']);
+        echo json_encode(['success' => false, 'message' => 'Failed to submit service request: ' . $e->getMessage()]);
     }
 }
 
@@ -225,12 +225,13 @@ function handleListRequests($pdo, $auth) {
         if ($auth['type'] === 'client') {
             // Client can only see their own requests
             $stmt = $pdo->prepare("
-                SELECT s.Service_ID, s.client_name, s.problem_description, s.location, s.priority, 
-                       s.Status as status, s.estimated_cost, s.scheduled_date, s.scheduled_time, s.assigned_team, 
-                       s.created_at, s.updated_at
+                SELECT s.Service_ID, c.Name as client_name, s.description as problem_description, 
+                       s.location, s.Priority as priority, s.Status as status, s.estimated_cost,
+                       s.date_requested as created_at, s.Service_Date as updated_at
                 FROM service s
+                LEFT JOIN client c ON s.Client_ID = c.Client_ID
                 WHERE s.Client_ID = ? AND s.type = 'maintenance'
-                ORDER BY s.created_at DESC
+                ORDER BY s.date_requested DESC
             ");
             $stmt->execute([$auth['id']]);
         } else {
@@ -245,20 +246,21 @@ function handleListRequests($pdo, $auth) {
             }
             
             $stmt = $pdo->prepare("
-                SELECT s.Service_ID, s.client_name, s.problem_description, s.location, s.priority,
-                       s.Status as status, s.estimated_cost, s.scheduled_date, s.scheduled_time, s.assigned_team,
-                       s.created_at, s.updated_at
+                SELECT s.Service_ID, c.Name as client_name, s.description as problem_description, 
+                       s.location, s.Priority as priority, s.Status as status, s.estimated_cost,
+                       s.date_requested as created_at, s.Service_Date as updated_at
                 FROM service s
+                LEFT JOIN client c ON s.Client_ID = c.Client_ID
                 $where_clause
                 ORDER BY 
-                    CASE s.priority 
+                    CASE s.Priority
                         WHEN 'urgent' THEN 1
                         WHEN 'high' THEN 2  
                         WHEN 'medium' THEN 3
                         WHEN 'low' THEN 4
                         ELSE 5
                     END,
-                    s.created_at DESC
+                    s.date_requested DESC
             ");
             $stmt->execute($params);
         }
@@ -270,12 +272,12 @@ function handleListRequests($pdo, $auth) {
                 'client_name' => $row['client_name'],
                 'problem_description' => $row['problem_description'],
                 'location' => $row['location'],
-                'priority' => $row['priority'],
+                'priority' => $row['priority'] ?? 'medium',
                 'status' => $row['status'],
-                'estimated_cost' => $row['estimated_cost'],
-                'scheduled_date' => $row['scheduled_date'],
-                'scheduled_time' => $row['scheduled_time'],
-                'assigned_team' => $row['assigned_team'],
+                'estimated_cost' => floatval($row['estimated_cost'] ?? 0),
+                'scheduled_date' => null,
+                'scheduled_time' => null,
+                'assigned_team' => null,
                 'created_at' => $row['created_at'],
                 'updated_at' => $row['updated_at']
             ];
@@ -360,7 +362,7 @@ function handleScheduleTeam($pdo, $auth) {
                 scheduled_date = ?,
                 scheduled_time = ?,
                 assigned_team = ?,
-                priority = ?
+                Priority = ?
             WHERE Service_ID = ? AND type = 'maintenance'
         ");
         $stmt->execute([$schedule_date, $schedule_time, $team, $priority, $request_id]);
@@ -426,7 +428,7 @@ function handleSecretaryReview($pdo, $auth) {
             $stmt = $pdo->prepare("
                 UPDATE service 
                 SET Status = 'pending_manager_approval',
-                    updated_at = CURRENT_TIMESTAMP
+                    Service_Date = CURRENT_TIMESTAMP
                 WHERE Service_ID = ? AND type = 'maintenance' AND Status = 'pending_secretary_review'
             ");
         } else {
@@ -434,7 +436,7 @@ function handleSecretaryReview($pdo, $auth) {
             $stmt = $pdo->prepare("
                 UPDATE service 
                 SET Status = 'rejected_by_secretary',
-                    updated_at = CURRENT_TIMESTAMP
+                    Service_Date = CURRENT_TIMESTAMP
                 WHERE Service_ID = ? AND type = 'maintenance' AND Status = 'pending_secretary_review'
             ");
         }
@@ -456,7 +458,7 @@ function handleSecretaryReview($pdo, $auth) {
     } catch (Exception $e) {
         $pdo->rollback();
         error_log("Secretary review error: " . $e->getMessage());
-        echo json_encode(['success' => false, 'message' => 'Failed to process review']);
+        echo json_encode(['success' => false, 'message' => 'Failed to process review: ' . $e->getMessage()]);
     }
 }
 
@@ -481,7 +483,7 @@ function handleManagerApproval($pdo, $auth) {
             $stmt = $pdo->prepare("
                 UPDATE service 
                 SET Status = 'approved',
-                    updated_at = CURRENT_TIMESTAMP
+                    Service_Date = CURRENT_TIMESTAMP
                 WHERE Service_ID = ? AND type = 'maintenance' AND Status = 'pending_manager_approval'
             ");
             $stmt->execute([$request_id]);
@@ -492,7 +494,7 @@ function handleManagerApproval($pdo, $auth) {
             
             // Get service details to create quotation
             $stmt = $pdo->prepare("
-                SELECT Client_ID, client_name, problem_description, estimated_cost, priority
+                SELECT Client_ID, description, Priority, estimated_cost
                 FROM service 
                 WHERE Service_ID = ? AND type = 'maintenance'
             ");
@@ -501,12 +503,13 @@ function handleManagerApproval($pdo, $auth) {
             
             if ($service) {
                 // Create quotation for approved service
-                $package_description = "Maintenance Service - " . $service['problem_description'];
+                $package_description = "Maintenance Service - " . ($service['description'] ?? 'Service Request');
+                $estimated_cost = floatval($service['estimated_cost'] ?? 5000); // Use service cost or default
                 $stmt = $pdo->prepare("
                     INSERT INTO quotation (Client_ID, Package, Amount, Date_Issued, Status, Delivery_Method, service_request_id) 
                     VALUES (?, ?, ?, CURDATE(), 'Approved - Awaiting Payment', 'On-Site Service', ?)
                 ");
-                $stmt->execute([$service['Client_ID'], $package_description, $service['estimated_cost'], $request_id]);
+                $stmt->execute([$service['Client_ID'], $package_description, $estimated_cost, $request_id]);
                 $quotation_id = $pdo->lastInsertId();
             }
         } else {
@@ -514,15 +517,14 @@ function handleManagerApproval($pdo, $auth) {
             $stmt = $pdo->prepare("
                 UPDATE service 
                 SET Status = 'rejected_by_manager',
-                    updated_at = CURRENT_TIMESTAMP
+                    Service_Date = CURRENT_TIMESTAMP
                 WHERE Service_ID = ? AND type = 'maintenance' AND Status = 'pending_manager_approval'
             ");
-        }
-        
-        $stmt->execute([$request_id]);
-        
-        if ($stmt->rowCount() === 0) {
-            throw new Exception('Request not found or not pending manager approval');
+            $stmt->execute([$request_id]);
+            
+            if ($stmt->rowCount() === 0) {
+                throw new Exception('Request not found or not pending manager approval');
+            }
         }
         
         $pdo->commit();

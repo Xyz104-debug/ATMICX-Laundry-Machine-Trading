@@ -137,7 +137,12 @@ if ($method === 'POST') {
 
             // Generate a temporary password for new staff (to be changed later)
             $tempPassword = bin2hex(random_bytes(4)); // 8 hex chars
-            $passwordHash = password_hash($tempPassword, PASSWORD_DEFAULT);
+            $options = [
+                'memory_cost' => 65536,
+                'time_cost' => 4,
+                'threads' => 1
+            ];
+            $passwordHash = password_hash($tempPassword, PASSWORD_ARGON2ID, $options);
 
             // Insert new user
             $stmt = $pdo->prepare(

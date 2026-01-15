@@ -184,9 +184,53 @@ switch ($action) {
             echo json_encode(['success' => false, 'message' => 'Failed to get client profile: ' . $e->getMessage()]);
         }
         break;
-        
-    default:
-        echo json_encode(['success' => false, 'message' => 'Invalid action']);
+    
+    case 'update_client':
+        try {
+            $client_id = $_POST['client_id'] ?? '';
+            $name = $_POST['name'] ?? '';
+            $email = $_POST['email'] ?? '';
+            $contact = $_POST['contact'] ?? '';
+            $business_name = $_POST['business_name'] ?? '';
+            $address = $_POST['address'] ?? '';
+            
+            if (!$client_id || !$name || !$email || !$contact || !$address) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Missing required fields']);
+                exit;
+            }
+            
+            // Update client information
+            $stmt = $pdo->prepare("
+                UPDATE client 
+                SET Name = :name,
+                    Email = :email,
+                    Contact_Num = :contact,
+                    Business_Name = :business_name,
+                    Address = :address
+                WHERE Client_ID = :client_id
+            ");
+            
+            $result = $stmt->execute([
+                'name' => $name,
+                'email' => $email,
+                'contact' => $contact,
+                'business_name' => $business_name,
+                'address' => $address,
+                'client_id' => $client_id
+            ]);
+            
+            if ($result) {
+                ATMICXLogger::logAPI('update_client', true, "Client ID: $client_id");
+                echo json_encode(['success' => true, 'message' => 'Client profile updated successfully']);
+            } else {
+                throw new Exception('Failed to update client profile');
+            }
+            
+        } catch (Exception $e) {
+            ATMICXLogger::logError('Update client error: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Failed to update client: ' . $e->getMessage()]);
+        }
         break;
 }
 ?>
